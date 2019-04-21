@@ -3,8 +3,8 @@
 
 
 label_maps = {
-    # UCF-101 Dataset
-    'UCF-101':
+    # UCF101 Dataset
+    'UCF101':
     {
     'ApplyEyeMakeup'    : 1,                    
     'ApplyLipstick'     : 2,                

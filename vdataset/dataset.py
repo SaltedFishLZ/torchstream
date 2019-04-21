@@ -28,7 +28,7 @@ __supported_video_files__ = {
 #           Dataset Structure Style and Supporting
 # ---------------------------------------------------------------- #
 # NOTE: You shall not store other files in the dataset !!! 
-# * 1. UCF-101 style:
+# * 1. UCF101 style:
 #   Your video dataset must have the following file orgnization:
 #   Data Path
 #   ├── Class 0
@@ -51,8 +51,8 @@ __supported_video_files__ = {
 #   These should be specified via [use_imgs]
 #
 # * 2. sth-sth style:
-__supported_dataset_stucture_styles__ = ['UCF-101']
-__supported_dataset__ = ['UCF-101', 'HMDB51', 'Weizmann']
+__supported_dataset_stucture_styles__ = ['UCF101']
+__supported_dataset__ = ['UCF101', 'HMDB51', 'Weizmann']
 
 
 class VideoCollector(object):
@@ -109,7 +109,7 @@ class VideoCollector(object):
         = (video, relative path, class id, label)
         here, video may refers to a collection of images
         '''
-        if ("UCF-101" == style):
+        if ("UCF101" == style):
             # get all labels
             labels = []
             for _label in os.listdir(path):
@@ -221,12 +221,12 @@ if __name__ == "__main__":
 
     dir_path = os.path.dirname(os.path.realpath(__file__))
 
-    raw_dataset = os.path.join("/home/zheng/Datasets", 'Weizmann', 'Weizmann-raw')
-    new_dataset = os.path.join("/home/zheng/Datasets", 'Weizmann', 'Weizmann-img')
+    raw_dataset = os.path.join("/home/zheng/Datasets", 'UCF101', 'UCF101-raw')
+    new_dataset = os.path.join("/home/zheng/Datasets", 'UCF101', 'UCF101-img')
 
     tasks = generate_preprocess_tasks(
-        raw_dataset, new_dataset, 'UCF-101', label_maps['Weizmann'])
-    process_num = min(mp.cpu_count()*2, len(tasks)+1)
+        raw_dataset, new_dataset, 'UCF101', label_maps['UCF101'])
+    process_num = min(mp.cpu_count()*6, len(tasks)+1)
 
     task_queue = mp.Queue()
     # Init process
