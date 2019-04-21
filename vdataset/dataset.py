@@ -14,6 +14,7 @@ from sklearn.model_selection import train_test_split
 
 
 import video
+from label_map import *
 
 # supported input data modality and corresponding file types
 __supported_modalities__ = ['RGB']
@@ -51,7 +52,7 @@ __supported_video_files__ = {
 #
 # * 2. sth-sth style:
 __supported_dataset_stucture_styles__ = ['UCF-101']
-__supported_dataset__ = ['UCF-101']
+__supported_dataset__ = ['UCF-101', 'HMDB51', 'Weizmann']
 
 
 class VideoCollector(object):
@@ -147,18 +148,7 @@ class VideoCollector(object):
 
 
 
-weizmann_label_map = {
-    'bend' : 1,
-    'jack' : 2,
-    'jump' : 3,
-    'pjump': 4,
-    'run'  : 5,
-    'side' : 6,
-    'skip' : 7,
-    'walk' : 8,
-    'wave1': 9,
-    'wave2': 10
-}
+
 
 
 
@@ -235,10 +225,8 @@ if __name__ == "__main__":
     new_dataset = os.path.join("/home/zheng/Datasets", 'Weizmann', 'Weizmann-img')
 
     tasks = generate_preprocess_tasks(
-        raw_dataset, new_dataset, 'UCF-101', weizmann_label_map)
+        raw_dataset, new_dataset, 'UCF-101', label_maps['Weizmann'])
     process_num = min(mp.cpu_count()*2, len(tasks)+1)
-
-    print("?")
 
     task_queue = mp.Queue()
     # Init process
