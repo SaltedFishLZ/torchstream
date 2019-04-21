@@ -223,7 +223,7 @@ def generate_preprocess_tasks(src_path, tgt_path, style, label_map):
 def task_executor(task_queue):
     while True:
         task = task_queue.get()
-        if ('Done' == task):
+        if (None == task):
             break
         _preprocess(task)
 
@@ -231,31 +231,27 @@ if __name__ == "__main__":
 
     dir_path = os.path.dirname(os.path.realpath(__file__))
 
-    raw_dataset = os.path.join(dir_path, 'Weizmann', 'Weizmann-raw')
-    new_dataset = os.path.join(dir_path, 'Weizmann', 'Weizmann-img')
-    # parser = VideoCollector(
-    #     raw_dataset,
-    #     'UCF-101', weizmann_label_map)
-    # print(parser.__get_samples__())
-
-    # preprocess(raw_dataset, new_dataset, 'UCF-101', weizmann_label_map)
+    raw_dataset = os.path.join("/home/zheng/Datasets", 'Weizmann', 'Weizmann-raw')
+    new_dataset = os.path.join("/home/zheng/Datasets", 'Weizmann', 'Weizmann-img')
 
     tasks = generate_preprocess_tasks(
         raw_dataset, new_dataset, 'UCF-101', weizmann_label_map)
-    process_num = min(mp.cpu_count()+2, len(tasks)+1)
+    process_num = min(mp.cpu_count()*2, len(tasks)+1)
 
-    task_queue = Queue()
+    print("?")
+
+    task_queue = mp.Queue()
     # Init process
     process_list = []
-    for i in range(process_num):
-        p = Process(target=task_executor, args=(task_queue,))
+    for _i in range(process_num):
+        p = mp.Process(target=task_executor, args=(task_queue,))
         p.start()
         process_list.append(p)
 
     for _task in tasks:
         task_queue.put(_task)
     for i in range(process_num):
-        task_queue.put('Done')
+        task_queue.put(None)
 
     for p in process_list:
         p.join()
