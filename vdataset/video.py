@@ -336,11 +336,15 @@ class SegmentedImageSequence(ImageSequence):
     Although you can use data transform to get a segmented video, it has to
     load all frames and select some frames in it. It is not efficient.
     '''
-    def __init__(self, vid_path, file_type = 'jpg',
+    def __init__(self, vid_path, num_seg,
+            file_type = 'jpg',
             gray_in=False, gray_out=False):
+        
         super(SegmentedImageSequence, self).__init__(
             vid_path, file_type, gray_in, gray_out
         )
+
+        pass
     
 
 
@@ -360,14 +364,14 @@ if __name__ == "__main__":
 
         test_components = {
             'basic':True,
-            '__get_frame__':True,
-            '__get_frames__':False
+            '__get_frame__':False,
+            '__get_frames__':True
         }
         test_configuration = {
             'video_gray' : False,
             'varray_gray' : True,
-            'frames_gray' : True,
-            'imgseq_gray' : True
+            'frames_gray' : False,
+            'imgseq_gray' : False
         }
 
         if (test_components['basic']):
@@ -375,7 +379,7 @@ if __name__ == "__main__":
             #  Basic Test   #
             # ------------- # 
             dir_path = os.path.dirname(os.path.realpath(__file__))
-            vid_path = os.path.join(dir_path, "test.avi")
+            vid_path = os.path.join(dir_path, "test.mp4")
             varray = video2ndarray(vid_path,
                     gray_in=test_configuration['video_gray'],
                     gray_out=test_configuration['varray_gray'])
@@ -393,7 +397,6 @@ if __name__ == "__main__":
                     gray_in=test_configuration['frames_gray'],
                     gray_out=test_configuration['imgseq_gray']
                     )
-            print(_seq.file_count)
 
             if (test_components['__get_frame__']):
                 # __get_frame__ test
