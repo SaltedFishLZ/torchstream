@@ -8,6 +8,10 @@
 # ndarray is Numpy ndarray
 # video is a video file path
 
+__test__    =   True
+__verbose__ =   True
+__vverbose__=   True
+
 import os
 import sys
 import copy
@@ -18,9 +22,7 @@ import cv2
 import numpy as np 
 import psutil
 
-__test__    =   True
-__verbose__ =   True
-__vverbose__=   True
+
 
 
 def video2ndarray(vid_path, gray_in=False, gray_out=False):
@@ -95,6 +97,7 @@ def video2frames(vid_path, tgt_path):
     '''
     Read 1 video from ${vid_path} and dump frames to ${tgt_path}.
     ${vid_path} includes file name. ${tgt_path} is the directory for images.
+    TODO: format string for frames
     '''
     cap = cv2.VideoCapture(vid_path)
     cnt = 0
@@ -135,6 +138,7 @@ def ndarray2frames(vid_array, tgt_path, gray_in=False, gray_out=False):
     '''
     Dump 1 video array (4d np array: [frame][height][width][channel]) to
     ${tgt_path}. ${tgt_path} is the directory for images.
+    TODO: format string for file name
     '''
     # check santity
     if (os.path.exists(tgt_path)):
@@ -263,24 +267,27 @@ class ImageSequence(object):
     pointers
     '''
     def __init__(self, vid_path, file_type = 'jpg',
-            gray_in=False, gray_out=False):
+            gray_in=False, gray_out=False,
+            seek_file=True):
         '''
+        TODO: format string for file name
         '''
         self.vid_path = (vid_path)
         self.file_type = (file_type)
-        self.file_count = 0
-        self.file_list = []
         self.gray_in = gray_in
         self.gray_out = gray_out
-
+        
+        self.file_count = 0
+        self.file_list = []
         # seek valid file paths and add them in file list
-        _fcnt = 0
-        _file_path = self._get_file_path(_fcnt)
-        while (os.path.exists(_file_path)):
-            self.file_list.append(_file_path)
-            _fcnt += 1
+        if (seek_file):
+            _fcnt = 0
             _file_path = self._get_file_path(_fcnt)
-        self.file_count = _fcnt
+            while (os.path.exists(_file_path)):
+                self.file_list.append(_file_path)
+                _fcnt += 1
+                _file_path = self._get_file_path(_fcnt)
+            self.file_count = _fcnt
 
     def _get_file_path(self, idx):
         '''
@@ -336,22 +343,61 @@ class SegmentedImageSequence(ImageSequence):
     Although you can use data transform to get a segmented video, it has to
     load all frames and select some frames in it. It is not efficient.
     '''
-    def __init__(self, vid_path, num_seg,
+    def __init__(self, vid_path, seg_num,
             file_type = 'jpg',
             gray_in=False, gray_out=False):
         
         super(SegmentedImageSequence, self).__init__(
             vid_path, file_type, gray_in, gray_out
         )
+        self.seg_num = seg_num
+        self.snipt_list = []
 
+    def __ImageSequence__(self):
+        '''
+        Casting function
+        '''
+        # TODO
+        vid_path = copy.deepcopy(self.vid_path)
+        file_type = copy.deepcopy(self.file_type)
+        gray_in = copy.deepcopy(self.gray_in)
+        gray_out = copy.deepcopy(self.gray_out)
+        # NOTE: here we replace file_count with seg_num
+        file_count = copy.deepcopy(self.seg_num)
+        file_list = copy.deepcopy(self.snipt_list)
+
+        _img_seq = ImageSequence(vid_path, file_type,
+                gray_in=gray_in, gray_out=gray_out,
+                seek_file=False)
+        _img_seq.file_list = file_list
+        _img_seq.file_count = file_count
+        # TODO
+        return(_img_seq)
+
+class ClippedImageSequence(ImageSequence):
+    '''
+    This class is used to manage segmented video.
+    Although you can use data transform to get a segmented video, it has to
+    load all frames and select some frames in it. It is not efficient.
+    '''
+    def __init__(self, vid_path, clip_len,
+            file_type = 'jpg',
+            gray_in=False, gray_out=False):
+
+        super(ClippedImageSequence, self).__init__(
+            vid_path, file_type, gray_in, gray_out
+        )   
+
+    def __ImageSequence__(self):
+        '''
+        Casting function
+        '''
+        vid_path = copy.deepcopy(self.vid_path)
+        file_type = copy.deepcopy(self.file_type)
+        gray_in = copy.deepcopy(self.gray_in)
+        gray_out = copy.deepcopy(self.gray_out)        
+        # TODO
         pass
-    
-
-
-    
-
-
-
 
 
 

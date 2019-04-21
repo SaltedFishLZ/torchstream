@@ -1,3 +1,7 @@
+# zip files
+*.zip
+*.rar
+
 # Images
 *.bmp
 *.jpg
