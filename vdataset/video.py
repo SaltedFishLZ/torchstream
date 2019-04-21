@@ -23,6 +23,16 @@ import numpy as np
 import psutil
 
 
+def failure_suspection(vid_path, operation = 'CapRead'):
+    # suspections: (0) memory overflow, (1) video not exists (2) unknown
+    vm_dict = psutil.virtual_memory()._asdict()
+    if (vm_dict['percent'] > 95):
+        reason = "memory usage {}".format(vm_dict['percent'])
+    elif (not os.path.exists(vid_path)):
+        reason = "file not exists"
+    else:
+        reason = "unknown error"
+    return(reason)
 
 
 def video2ndarray(vid_path, gray_in=False, gray_out=False):
@@ -30,7 +40,24 @@ def video2ndarray(vid_path, gray_in=False, gray_out=False):
     Read video from given file path ${vid_path} and return the 4-d np array.
     data layout [frame][height][width][channel]
     '''
+    # Check santity
+    # TODO: currenly don't support input grayscale video
+    assert (not gray_in), "Grayscale/1-channel input not supported"
+    if (os.path.exists(vid_path)):
+        pass
+    else:
+        warn_str = "[video2frames] src video {} missing".format(vid_path)
+        logging.warning(warn_str)
+        return(False)
+        
+    # open VideoCapture
     cap = cv2.VideoCapture(vid_path)
+    if (not cap.isOpened()):
+        warn_str = "[video2ndarray] cannot open video {} \
+            via cv2.VideoCapture ".format(vid_path)
+        logging.warning(warn_str)
+        cap.release()
+        return None
     cnt = 0
 
     # get video shape and other parameters
@@ -41,36 +68,31 @@ def video2ndarray(vid_path, gray_in=False, gray_out=False):
     # Zheng Liang, I canot find any OpenCV API to get channels of a video
     ret, frame = cap.read()
     if (False == ret):
-        # assemble warning string
-        warning_str = "Cannot open video {}: ".format(vid_path)
-        vm_dict = psutil.virtual_memory()._asdict()
-        # suspection: memory overflow
-        if (vm_dict['percent'] > 95):
-            warning_str += "memory usage {}".format(vm_dict['percent'])
-        elif (not os.path.exists(vid_path)):
-            warning_str += "file not exists"
-        else:
-            warning_str += "unknown error"
-
-        logging.warning(warning_str)
+        warn_str = "[video2ndarray] cannot read frame {} from video {} \
+            via cv2.VideoCapture.read(): ".format(cnt, vid_path)
+        warn_str += failure_suspection(vid_path)
+        logging.warning(warn_str)
         return(None)
-    # TODO: currenly don't support input grayscale video
-    assert (not gray_in), "Grayscale/single-channel input video not supported"
     f_c = frame.shape[2]
     if (gray_out):
         varray_shape = (f_n, f_h, f_w, 1)
     else:
         varray_shape = (f_n, f_h, f_w, f_c)
 
-    if (True == __vverbose__):
-        print('video {} shape:'.format(vid_path) + str(varray_shape))
+    if (__verbose__):
+        info_str = '[video2ndarray] video {} shape: {}'.format(
+            vid_path, varray_shape)
+        logging.info(info_str)
+        if (True == __vverbose__):
+            print(info_str)
 
     # try to allocate memory for the frames
     try:
         buf = np.empty(varray_shape, np.dtype('float32'))
     except MemoryError:
-        warning_str = "No memory for np array of video {}".format(vid_path)
-        logging.warning(warning_str)
+        warn_str = "[video2ndarray] no memory for Numpy.ndarray of \
+            video {}".format(vid_path)
+        logging.warning(warn_str)
         cap.release()
         return None
 
@@ -89,47 +111,76 @@ def video2ndarray(vid_path, gray_in=False, gray_out=False):
         cnt += 1
         
     cap.release()
+
+    # output status
     if (True == __verbose__):
-        logging.info('video2ndarray finished: video {}'.format(vid_path))
+        info_str = '[video2ndarray] successful: video {}'.format(vid_path)
+        logging.info(info_str)
+        if (__vverbose__):
+            print(info_str)
     return buf
 
-def video2frames(vid_path, tgt_path):
+def video2frames(vid_path, tgt_path, gray_in=False, gray_out=False):
     '''
     Read 1 video from ${vid_path} and dump frames to ${tgt_path}.
     ${vid_path} includes file name. ${tgt_path} is the directory for images.
     TODO: format string for frames
     '''
-    cap = cv2.VideoCapture(vid_path)
-    cnt = 0
     # check santity
+    # TODO: currenly don't support input grayscale video
+    assert (not gray_in), "Grayscale/1-channel input not supported"    
     if (os.path.exists(vid_path)):
         pass
     else:
-        warning_str = "Source {} in video2frames not exists.".format(vid_path)
+        warn_str = "[video2frames] src video {} missing".format(vid_path)
+        logging.warning(warn_str)
         return(False)
     if (os.path.exists(tgt_path)):
         pass
     else:
-        warning_str = "Target {} in video2frames not exists".format(tgt_path)
-        warning_str += ", makedirs for it"
-        logging.warning(warning_str)
+        warn_str = "[video2frames] tgt path {} missing".format(tgt_path)
+        warn_str += ", makedirs for it"
+        logging.warning(warn_str)
         os.makedirs(tgt_path)
-    # dump frames
+
+    # open VideoCapture
+    cap = cv2.VideoCapture(vid_path)
+    if (not cap.isOpened()):
+        warn_str = "[video2frames] cannot open video {} \
+            via cv2.VideoCapture ".format(vid_path)
+        logging.warning(warn_str)
+        cap.release()
+        return None
+    cnt = 0
+
+    # dump frames, don't need to get shape of frames
     f_n = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     for _i in range(f_n):
         ret, frame = cap.read()
         if (False == ret):
-            warning_str = "Read video {} failed".format(vid_path)
-            logging.warning(warning_str)
+            warn_str = "[video2frames] cannot read frame {} from video {} \
+                via cv2.VideoCapture.read(): ".format(_i, vid_path)
+            logging.warning(warn_str)
             return(False, cnt)
+        # read frame successfully
         cnt += 1
-        img_path = os.path.join(tgt_path, "{}.jpg".format(_i))
+
+        # color space conversion
+        if (gray_in != gray_out):
+            if (gray_out):
+                frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+        # write image files
+        img_path = os.path.join(tgt_path, "{}.jpg".format(_i))        
         ret = cv2.imwrite(img_path, frame)
-        assert ret, "Cannot dump frames"
-    if (True == __verbose__):
-        logging.info('video2frames: successful: tgt {}'.format(tgt_path))
-    if (__vverbose__):
-        print("video2frames: dumps {} frames".format(cnt))
+        assert ret, "Cannot write image file {}".format(img_path)
+    
+    if (__verbose__):
+        info_str = '[video2frames] successful: tgt {}, {} frames'.format(
+            tgt_path, cnt)
+        logging.info(info_str)
+        if (__vverbose__):
+            print(info_str)
     
     return (True, cnt)
 
@@ -144,16 +195,15 @@ def ndarray2frames(vid_array, tgt_path, gray_in=False, gray_out=False):
     if (os.path.exists(tgt_path)):
         pass
     else:
-        warning_str = "ndarray2frames: target {} not exists".format(tgt_path)
-        warning_str += ", makedirs for it"
-        logging.warning(warning_str)
+        warn_str = "[ndarray2frames]: target {} missing".format(tgt_path)
+        warn_str += ", makedirs for it"
+        logging.warning(warn_str)
         os.makedirs(tgt_path)
     assert (not ((vid_array.shape[3] != 1) and (True == gray_in))), \
-        "Video array is not a grayscale one."
+        "Video array is not a grayscale one, mismatch."
     assert (not ((vid_array.shape[3] != 3) and (False == gray_in))), \
-        "Video array is not a RGB one."
-    if (__vverbose__):
-        print("vid_array shape: " + str(vid_array.shape))
+        "Video array is not a RGB one, mismatch"
+    
     # dump pictures
     f_n = vid_array.shape[0]
     cnt = 0
@@ -176,19 +226,21 @@ def ndarray2frames(vid_array, tgt_path, gray_in=False, gray_out=False):
             cnt += 1
         else:
             break
-    # check status
+    
+    # output status
     if (cnt == f_n):
         if (True == __verbose__):
-            logging.info('ndarray2frames: successful, tgt {}'.format(tgt_path))
-        if (__vverbose__):
-            print("ndarray2frames dumps {} frames".format(cnt))        
-        return(True, cnt)
+            info_str = '[ndarray2frames] successful, tgt {}'.format(tgt_path)
+            info_str += ', shape {}'.format(vid_array.shape)
+            logging.info(info_str)
+            if (__vverbose__):
+                print(info_str)        
     else:
-        if (True == __verbose__):
-            logging.warning('ndarray2frames: failed, tgt {}'.format(tgt_path))
-        if (__vverbose__):
-            print("ndarray2frames dumps {} frames".format(cnt))                
+        warn_str = '[ndarray2frames] failed, tgt {}'.format(tgt_path)
+        warn_str += ', cannot dump all frames'
+        logging.warning(warn_str)          
         return(False, cnt)
+    return(True, cnt)
 
 
 def frame2ndarray(frame, gray_in=False, gray_out=False):
@@ -424,14 +476,23 @@ if __name__ == "__main__":
             # ------------- #
             #  Basic Test   #
             # ------------- # 
+            # read video to varray
             dir_path = os.path.dirname(os.path.realpath(__file__))
-            vid_path = os.path.join(dir_path, "test.mp4")
+            vid_path = os.path.join(dir_path, "test.avi")
             varray = video2ndarray(vid_path,
                     gray_in=test_configuration['video_gray'],
                     gray_out=test_configuration['varray_gray'])
 
+            # dump video to frames
+            ret, f_n = video2frames(vid_path,
+                    os.path.join(dir_path, "test_video2frames"), 
+                    gray_in=test_configuration['video_gray'],
+                    gray_out=test_configuration['frames_gray'])
+            print('Dumping frames finished, {} frames'.format(f_n))
+
             # dump varray to frames
-            ret, f_n = ndarray2frames(varray, dir_path, 
+            ret, f_n = ndarray2frames(varray,
+                    os.path.join(dir_path, "test_ndarray2frames"), 
                     gray_in=test_configuration['varray_gray'],
                     gray_out=test_configuration['frames_gray'])
             print('Dumping frames finished, {} frames'.format(f_n))
@@ -439,7 +500,8 @@ if __name__ == "__main__":
             # ----------------- #
             #   Advanced Test   #
             # ----------------- # 
-            _seq = ImageSequence(dir_path,
+            _seq = ImageSequence(
+                    os.path.join(dir_path, "test_ndarray2frames"),
                     gray_in=test_configuration['frames_gray'],
                     gray_out=test_configuration['imgseq_gray']
                     )
@@ -489,4 +551,7 @@ if __name__ == "__main__":
                 pass
             else:
                 for _i in range(f_n):
-                    os.remove(os.path.join(dir_path, "{}.jpg".format(_i)))
+                    os.remove(os.path.join(
+                        dir_path, "test_video2frames", "{}.jpg".format(_i)))
+                    os.remove(os.path.join(
+                        dir_path, "test_array2frames", "{}.jpg".format(_i)))

@@ -187,7 +187,8 @@ def _preprocess(task_dict):
     src_vid = task_dict['src_vid']
     tgt_vid = task_dict['tgt_vid']
     os.makedirs(tgt_vid)
-    video.video2frames(src_vid, tgt_vid)
+    ret = video.video2frames(src_vid, tgt_vid)
+    return(ret)
 
 def preprocess(src_path, tgt_path, style, label_map):
     '''
@@ -215,7 +216,14 @@ def task_executor(task_queue):
         task = task_queue.get()
         if (None == task):
             break
-        _preprocess(task)
+        ret = _preprocess(task)
+        # retry it
+        cnt = 10
+        while ((not ret) and (cnt > 0)):
+            ret = _preprocess(task)
+            cnt -= 1
+        if (not ret):
+            print("Task {} failed after 10 trails!!!".format(task))
 
 if __name__ == "__main__":
 
