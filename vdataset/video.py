@@ -23,26 +23,52 @@ import numpy as np
 import psutil
 
 
-def failure_suspection(vid_path, operation = 'CapRead'):
+__supported_color_space__ = ["BGR", "RGB", "GRAY"]
+
+
+_frame_num_err_limit_ = 5
+
+def failure_suspection(vid_path, operation = "CapRead"):
     # suspections: (0) memory overflow, (1) video not exists (2) unknown
     vm_dict = psutil.virtual_memory()._asdict()
-    if (vm_dict['percent'] > 95):
-        reason = "memory usage {}".format(vm_dict['percent'])
+    if (vm_dict["percent"] > 95):
+        reason = "memory usage {}".format(vm_dict["percent"])
     elif (not os.path.exists(vid_path)):
         reason = "file not exists"
     else:
         reason = "unknown error"
     return(reason)
 
+def convert_frame_color(frame, color_in, color_out):
+    if (color_in == color_out):
+        return(frame)
+    if (color_in, color_out) == ("BGR", "GRAY"):
+        output = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)[:,:,np.newaxis]
+    elif (color_in, color_out) == ("BGR", "RGB"):
+        output = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    elif (color_in, color_out) == ("RGB", "GRAY"):
+        output = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)[:,:,np.newaxis]
+    elif (color_in, color_out) == ("RGB", "BGR"):
+        output = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+    elif (color_in, color_out) == ("GRAY", "BGR"):
+        output = frame[:,:,0]
+        output = cv2.cvtColor(output, cv2.COLOR_GRAY2BGR)
+    elif (color_in, color_out) == ("GRAY", "RGB"):
+        output = frame[:,:,0]
+        output = cv2.cvtColor(output, cv2.COLOR_GRAY2RGB)        
+    else:
+        assert True, "Unsupported color conversion"
+    
+    return(output)
 
-def video2ndarray(vid_path, gray_in=False, gray_out=False):
+def video2ndarray(vid_path, color_in="BGR", color_out="RGB"):
     '''
     Read video from given file path ${vid_path} and return the 4-d np array.
     data layout [frame][height][width][channel]
     '''
     # Check santity
-    # TODO: currenly don't support input grayscale video
-    assert (not gray_in), "Grayscale/1-channel input not supported"
+    # TODO: currenly only support input BGR video
+    assert ("BGR" == color_in), "Grayscale/1-channel input not supported"
     if (os.path.exists(vid_path)):
         pass
     else:
@@ -66,6 +92,9 @@ def video2ndarray(vid_path, gray_in=False, gray_out=False):
     f_w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     # TODO: get video channels more elegantly
     # Zheng Liang, I canot find any OpenCV API to get channels of a video
+    # NOTE: OpenCV Warning
+    # Although VideoCapture.get(cv2.CAP_PROP_FRAME_COUNT) might be inaccurate,
+    # if you cannot read the first frame, it is definetely wrong!
     ret, frame = cap.read()
     if (False == ret):
         warn_str = "[video2ndarray] cannot read frame {} from video {} \
@@ -74,13 +103,13 @@ def video2ndarray(vid_path, gray_in=False, gray_out=False):
         logging.warning(warn_str)
         return(None)
     f_c = frame.shape[2]
-    if (gray_out):
+    if (color_out == "GRAY"):
         varray_shape = (f_n, f_h, f_w, 1)
     else:
         varray_shape = (f_n, f_h, f_w, f_c)
 
     if (__verbose__):
-        info_str = '[video2ndarray] video {} shape: {}'.format(
+        info_str = "[video2ndarray] video {} estimated shape: {}".format(
             vid_path, varray_shape)
         logging.info(info_str)
         if (True == __vverbose__):
@@ -88,7 +117,7 @@ def video2ndarray(vid_path, gray_in=False, gray_out=False):
 
     # try to allocate memory for the frames
     try:
-        buf = np.empty(varray_shape, np.dtype('float32'))
+        buf = np.empty(varray_shape, np.dtype("float32"))
     except MemoryError:
         warn_str = "[video2ndarray] no memory for Numpy.ndarray of \
             video {}".format(vid_path)
@@ -97,38 +126,47 @@ def video2ndarray(vid_path, gray_in=False, gray_out=False):
         return None
 
     # keep reading frames from the video
-    if (gray_out):
-        buf[cnt] = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)[:,:,np.newaxis]
-    else:
-        buf[cnt] = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    # NOTE: 
+    # Since OpenCV doesn't give accurate frames via CAP_PROP_FRAME_COUNT,
+    # we choose the following strategy: how many frames you can decode/read
+    # is the frame number.
+    buf[cnt,:,:,:] = convert_frame_color(frame, color_in, color_out)
     cnt += 1
     while ((cnt < f_n) and ret):
         ret, frame = cap.read()
-        if (gray_out):
-            buf[cnt] = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)[:,:,np.newaxis]
-        else:
-            buf[cnt] = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)        
-        cnt += 1
-        
+        if (not ret):
+            break
+        buf[cnt,:,:,:] = convert_frame_color(frame, color_in, color_out)       
+        cnt += 1 
     cap.release()
+
+    # check frame number
+    if (f_n > cnt):        
+        if ((f_n-cnt) > _frame_num_err_limit_):
+            warn_str = "[video2ndarray] CAP_PROP_FRAME_COUNT {} frames, \
+                Read {} frames".format(f_n, cnt)
+            logging.warn(warn_str)
+        # slice the buffder
+        buf = buf[:cnt,:,:,:]
 
     # output status
     if (True == __verbose__):
-        info_str = '[video2ndarray] successful: video {}'.format(vid_path)
+        info_str = "[video2ndarray] successful: video {}, actual shape {}"\
+            .format(vid_path, buf.shape)
         logging.info(info_str)
         if (__vverbose__):
             print(info_str)
     return buf
 
-def video2frames(vid_path, tgt_path, gray_in=False, gray_out=False):
+def video2frames(vid_path, tgt_path, color_in="BGR", color_out="BGR"):
     '''
     Read 1 video from ${vid_path} and dump frames to ${tgt_path}.
     ${vid_path} includes file name. ${tgt_path} is the directory for images.
     TODO: format string for frames
     '''
     # check santity
-    # TODO: currenly don't support input grayscale video
-    assert (not gray_in), "Grayscale/1-channel input not supported"    
+    # TODO: currenly only support input BGR video
+    assert ("BGR" == color_in), "Grayscale/1-channel input not supported"
     if (os.path.exists(vid_path)):
         pass
     else:
@@ -152,31 +190,34 @@ def video2frames(vid_path, tgt_path, gray_in=False, gray_out=False):
         cap.release()
         return None
     cnt = 0
+    ret = True
 
     # dump frames, don't need to get shape of frames
     f_n = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-    for _i in range(f_n):
+    while ((cnt < f_n) and ret):
         ret, frame = cap.read()
         if (False == ret):
-            warn_str = "[video2frames] cannot read frame {} from video {} \
-                via cv2.VideoCapture.read(): ".format(_i, vid_path)
-            logging.warning(warn_str)
-            return(False, cnt)
-        # read frame successfully
-        cnt += 1
-
+            break
         # color space conversion
-        if (gray_in != gray_out):
-            if (gray_out):
-                frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-
+        frame = convert_frame_color(frame, color_in, color_out)
         # write image files
-        img_path = os.path.join(tgt_path, "{}.jpg".format(_i))        
+        img_path = os.path.join(tgt_path, "{}.jpg".format(cnt))   
         ret = cv2.imwrite(img_path, frame)
         assert ret, "Cannot write image file {}".format(img_path)
-    
+        # dump frame successfully
+        cnt += 1
+
+    assert cnt > 0, "Cannot read empty video"
+
+    # check frame number
+    if (abs(f_n - cnt) > _frame_num_err_limit_):
+        warn_str = "[video2ndarray] CAP_PROP_FRAME_COUNT {} frames, \
+            Read {} frames".format(f_n, cnt)
+        logging.warn(warn_str)
+
+    # output status
     if (__verbose__):
-        info_str = '[video2frames] successful: tgt {}, {} frames'.format(
+        info_str = "[video2frames] successful: tgt {}, {} frames".format(
             tgt_path, cnt)
         logging.info(info_str)
         if (__vverbose__):
@@ -185,7 +226,7 @@ def video2frames(vid_path, tgt_path, gray_in=False, gray_out=False):
     return (True, cnt)
 
 
-def ndarray2frames(vid_array, tgt_path, gray_in=False, gray_out=False):
+def ndarray2frames(vid_array, tgt_path, color_in="RGB", color_out="BGR"):
     '''
     Dump 1 video array (4d np array: [frame][height][width][channel]) to
     ${tgt_path}. ${tgt_path} is the directory for images.
@@ -199,9 +240,9 @@ def ndarray2frames(vid_array, tgt_path, gray_in=False, gray_out=False):
         warn_str += ", makedirs for it"
         logging.warning(warn_str)
         os.makedirs(tgt_path)
-    assert (not ((vid_array.shape[3] != 1) and (True == gray_in))), \
+    assert (not ((vid_array.shape[3] != 1) and (True == color_in))), \
         "Video array is not a grayscale one, mismatch."
-    assert (not ((vid_array.shape[3] != 3) and (False == gray_in))), \
+    assert (not ((vid_array.shape[3] != 3) and (False == color_in))), \
         "Video array is not a RGB one, mismatch"
     
     # dump pictures
@@ -209,67 +250,46 @@ def ndarray2frames(vid_array, tgt_path, gray_in=False, gray_out=False):
     cnt = 0
     for _i in range(f_n):
         img_path = os.path.join(tgt_path, "{}.jpg".format(_i))
-        if (True == gray_in):
-            image = vid_array[_i]
-            image.resize(image.shape[0], image.shape[1])
-            if (False == gray_out):
-                image = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
-            else:
-                pass
-        else:
-            if (False == gray_out):
-                image = cv2.cvtColor(vid_array[_i], cv2.COLOR_RGB2BGR)
-            else:
-                image = cv2.cvtColor(vid_array[_i], cv2.COLOR_RGB2GRAY)
-        ret = cv2.imwrite(img_path, image)
-        if ret:
-            cnt += 1
-        else:
-            break
+        frame = vid_array[_i, :, :, :]
+        frame = convert_frame_color(frame, color_in, color_out)
+        ret = cv2.imwrite(img_path, frame)
+        assert ret, "Cannot write image file {}".format(img_path)
+        cnt += 1
     
     # output status
-    if (cnt == f_n):
-        if (True == __verbose__):
-            info_str = '[ndarray2frames] successful, tgt {}'.format(tgt_path)
-            info_str += ', shape {}'.format(vid_array.shape)
-            logging.info(info_str)
-            if (__vverbose__):
-                print(info_str)        
-    else:
-        warn_str = '[ndarray2frames] failed, tgt {}'.format(tgt_path)
-        warn_str += ', cannot dump all frames'
-        logging.warning(warn_str)          
-        return(False, cnt)
+    if (True == __verbose__):
+        info_str = "[ndarray2frames] successful, tgt {}".format(tgt_path)
+        info_str += ", shape {}".format(vid_array.shape)
+        logging.info(info_str)
+        if (__vverbose__):
+            print(info_str)        
+
     return(True, cnt)
 
 
-def frame2ndarray(frame, gray_in=False, gray_out=False):
+def frame2ndarray(frame, color_in="BGR", color_out="RGB"):
     '''
     frame:      the file name of the image file;
-    gray_in:    the input image is gray/single-channel or not;
-    gray_out:   the output image is gray/single-channel or not;
+    color_in:    the input image is gray/single-channel or not;
+    color_out:   the output image is gray/single-channel or not;
     return:     a Numpy ndarray, data layout = [height][weight][channel];
     '''
-    # santity check, TODO
-    assert (gray_in == gray_out), "Color conversion not supported"
+    # santity check
+    # TODO
     # read image
-    if (gray_in):
-        img = cv2.imread(frame, cv2.IMREAD_GRAYSCALE)
-        img = img[:, :, np.newaxis]
-    else:
-        img = cv2.imread(frame, cv2.IMREAD_COLOR)
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    img = cv2.imread(frame)
+    img = convert_frame_color(img, color_in, color_out)
     # output status
     if (__verbose__):
-        info_str = "frame2ndarray: reads image {} successful.".format(frame)
-        info_str += "Shape = " + str(img.shape)
+        info_str = "[frame2ndarray] successful: reads image {},".format(frame)
+        info_str += "shape " + str(img.shape)
         logging.info(info_str)
         if (__vverbose__):
             print(info_str)
     # convert data type
-    return(img.astype(np.dtype('float32')))
+    return(img.astype(np.dtype("float32")))
     
-def frames2ndarray(frames, gray_in=False, gray_out=False):
+def frames2ndarray(frames, color_in="BGR", color_out="RGB"):
     '''
     frames: a list of image file paths
     return: a Numpy ndarray, data layout = [frame][height][weight][channel]
@@ -277,32 +297,29 @@ def frames2ndarray(frames, gray_in=False, gray_out=False):
     # get video shape & check santity
     _f = len(frames)
     assert _f > 0, "Cannot accept empty video"
-    img = frame2ndarray(frames[0], gray_in, gray_out)
+    img = frame2ndarray(frames[0], color_in, color_out)
     _h = img.shape[0]
     _w = img.shape[1]
     _c = img.shape[2]
     varray_shape = (_f, _h, _w, _c)
-    buff = np.empty(varray_shape, np.dtype('float32'))
+    buff = np.empty(varray_shape, np.dtype("float32"))
     # reading frames to ndarray
     buff[0, :, :, :] = img
     cnt = 1
     while (cnt < _f):
-        buff[cnt, :, :, :] = frame2ndarray(frames[cnt], gray_in, gray_out)
+        buff[cnt, :, :, :] = frame2ndarray(frames[cnt], color_in, color_out)
         cnt += 1
     # output status
     if (__verbose__):
-        info_str = "frames2ndarray: {} frames read successful".format(cnt)
+        info_str = "[frames2ndarray] successful:{} frames read".format(cnt)
         logging.info(info_str)
         if (__vverbose__):
             print(info_str)
     return(buff)
 
 
-def imshow_float(caption, image, gray_in = False):
-    if (gray_in):
-        _i = cv2.cvtColor(image[:,:,0], cv2.COLOR_GRAY2BGR)
-    else:
-        _i = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+def imshow_float(caption, image, color_in = "RGB"):
+    _i = convert_frame_color(image, color_in, "BGR")
     # must convert to uint8, see:
     # https://stackoverflow.com/questions/48331211/how-to-use-cv2-imshow-correctly-for-the-float-image-returned-by-cv2-distancet
     _i = _i.astype(np.uint8)
@@ -318,16 +335,16 @@ class ImageSequence(object):
     use any padding zero in the file name! And this class only stores file
     pointers
     '''
-    def __init__(self, vid_path, file_type = 'jpg',
-            gray_in=False, gray_out=False,
+    def __init__(self, vid_path, file_type = "jpg",
+            color_in="BGR", color_out="RGB",
             seek_file=True):
         '''
         TODO: format string for file name
         '''
-        self.vid_path = (vid_path)
-        self.file_type = (file_type)
-        self.gray_in = gray_in
-        self.gray_out = gray_out
+        self.vid_path = copy.deepcopy(vid_path)
+        self.file_type = copy.deepcopy(file_type)
+        self.color_in = copy.deepcopy(color_in)
+        self.color_out = copy.deepcopy(color_out)
         
         self.file_count = 0
         self.file_list = []
@@ -357,7 +374,7 @@ class ImageSequence(object):
         assert (idx < self.file_count), "Image index overflow"
         _fpath = self._get_file_path(idx)
         # call frame2ndarray to get array
-        array = frame2ndarray(_fpath, self.gray_in, self.gray_out)
+        array = frame2ndarray(_fpath, self.color_in, self.color_out)
         # output status
         if (__verbose__):
             info_str = "ImageSequence: __get_frame__ success, "
@@ -379,7 +396,7 @@ class ImageSequence(object):
         for idx in indices:
             _fpaths.append(self._get_file_path(idx))
         # call frames2ndarray to get array
-        array = frames2ndarray(_fpaths, self.gray_in, self.gray_out)
+        array = frames2ndarray(_fpaths, self.color_in, self.color_out)
         # output status
         if (__verbose__):
             info_str = "ImageSequence: __get_frames__ success, "
@@ -397,10 +414,9 @@ class SegmentedImageSequence(ImageSequence):
     '''
     def __init__(self, vid_path, seg_num,
             file_type = 'jpg',
-            gray_in=False, gray_out=False):
-        
+            color_in="BGR", color_out="RGB"):
         super(SegmentedImageSequence, self).__init__(
-            vid_path, file_type, gray_in, gray_out
+            vid_path, file_type, color_in, color_out
         )
         self.seg_num = seg_num
         self.snipt_list = []
@@ -412,14 +428,14 @@ class SegmentedImageSequence(ImageSequence):
         # TODO
         vid_path = copy.deepcopy(self.vid_path)
         file_type = copy.deepcopy(self.file_type)
-        gray_in = copy.deepcopy(self.gray_in)
-        gray_out = copy.deepcopy(self.gray_out)
+        color_in = copy.deepcopy(self.color_in)
+        color_out = copy.deepcopy(self.color_out)
         # NOTE: here we replace file_count with seg_num
         file_count = copy.deepcopy(self.seg_num)
         file_list = copy.deepcopy(self.snipt_list)
 
         _img_seq = ImageSequence(vid_path, file_type,
-                gray_in=gray_in, gray_out=gray_out,
+                color_in=color_in, color_out=color_out,
                 seek_file=False)
         _img_seq.file_list = file_list
         _img_seq.file_count = file_count
@@ -434,10 +450,10 @@ class ClippedImageSequence(ImageSequence):
     '''
     def __init__(self, vid_path, clip_len,
             file_type = 'jpg',
-            gray_in=False, gray_out=False):
+            color_in="BGR", color_out="RGB"):
 
         super(ClippedImageSequence, self).__init__(
-            vid_path, file_type, gray_in, gray_out
+            vid_path, file_type, color_in, color_out
         )   
 
     def __ImageSequence__(self):
@@ -446,8 +462,8 @@ class ClippedImageSequence(ImageSequence):
         '''
         vid_path = copy.deepcopy(self.vid_path)
         file_type = copy.deepcopy(self.file_type)
-        gray_in = copy.deepcopy(self.gray_in)
-        gray_out = copy.deepcopy(self.gray_out)        
+        color_in = copy.deepcopy(self.color_in)
+        color_out = copy.deepcopy(self.color_out)        
         # TODO
         pass
 
@@ -462,14 +478,14 @@ if __name__ == "__main__":
 
         test_components = {
             'basic':True,
-            '__get_frame__':False,
-            '__get_frames__':True
+            '__get_frame__':True,
+            '__get_frames__':False
         }
         test_configuration = {
-            'video_gray' : False,
-            'varray_gray' : True,
-            'frames_gray' : False,
-            'imgseq_gray' : False
+            'video_color'   : "BGR",
+            'varray_color'  : "GRAY",
+            'frames_color'  : "RGB",
+            'imgseq_color'  : "RGB"
         }
 
         if (test_components['basic']):
@@ -480,21 +496,22 @@ if __name__ == "__main__":
             dir_path = os.path.dirname(os.path.realpath(__file__))
             vid_path = os.path.join(dir_path, "test.avi")
             varray = video2ndarray(vid_path,
-                    gray_in=test_configuration['video_gray'],
-                    gray_out=test_configuration['varray_gray'])
+                    color_in=test_configuration['video_color'],
+                    color_out=test_configuration['varray_color'])
+            print(varray.shape)
 
             # dump video to frames
             ret, f_n = video2frames(vid_path,
                     os.path.join(dir_path, "test_video2frames"), 
-                    gray_in=test_configuration['video_gray'],
-                    gray_out=test_configuration['frames_gray'])
+                    color_in=test_configuration['video_color'],
+                    color_out=test_configuration['frames_color'])
             print('Dumping frames finished, {} frames'.format(f_n))
 
             # dump varray to frames
             ret, f_n = ndarray2frames(varray,
                     os.path.join(dir_path, "test_ndarray2frames"), 
-                    gray_in=test_configuration['varray_gray'],
-                    gray_out=test_configuration['frames_gray'])
+                    color_in=test_configuration['varray_color'],
+                    color_out=test_configuration['frames_color'])
             print('Dumping frames finished, {} frames'.format(f_n))
             
             # ----------------- #
@@ -502,8 +519,8 @@ if __name__ == "__main__":
             # ----------------- # 
             _seq = ImageSequence(
                     os.path.join(dir_path, "test_ndarray2frames"),
-                    gray_in=test_configuration['frames_gray'],
-                    gray_out=test_configuration['imgseq_gray']
+                    color_in=test_configuration['frames_color'],
+                    color_out=test_configuration['imgseq_color']
                     )
 
             if (test_components['__get_frame__']):
@@ -528,19 +545,19 @@ if __name__ == "__main__":
 
                 frame_0 = frames[0, :, :, :]
                 imshow_float('{}'.format(_f[0]), frame_0,
-                    gray_in=test_configuration['imgseq_gray'])       
+                    color_in=test_configuration['imgseq_color'])       
 
                 frame_1 = frames[1, :, :, :]
                 imshow_float('{}'.format(_f[1]), frame_1,
-                    gray_in=test_configuration['imgseq_gray'])    
+                    color_in=test_configuration['imgseq_color'])    
 
                 frame_2 = frames[2, :, :, :]
                 imshow_float('{}'.format(_f[2]), frame_2,
-                    gray_in=test_configuration['imgseq_gray'])
+                    color_in=test_configuration['imgseq_color'])
 
                 frame_3 = frames[3, :, :, :]
                 imshow_float('{}'.format(_f[3]), frame_3,
-                    gray_in=test_configuration['imgseq_gray'])
+                    color_in=test_configuration['imgseq_color'])
 
                 (cv2.waitKey(0) & 0xFF == ord('q'))
                 cv2.destroyAllWindows()

@@ -6,6 +6,7 @@ __vverbose__=   True
 import os
 import sys
 import copy
+import logging
 import multiprocessing as mp
 
 from sklearn.model_selection import train_test_split
@@ -186,7 +187,8 @@ class VideoCollector(object):
 def _preprocess(task_dict):
     src_vid = task_dict['src_vid']
     tgt_vid = task_dict['tgt_vid']
-    os.makedirs(tgt_vid)
+    if (not os.path.exists(tgt_vid)):
+        os.makedirs(tgt_vid)
     ret = video.video2frames(src_vid, tgt_vid)
     return(ret)
 
@@ -220,6 +222,10 @@ def task_executor(task_queue):
         # retry it
         cnt = 10
         while ((not ret) and (cnt > 0)):
+            info_str = "Retry task {}".format(task)
+            logging.info(info_str)
+            if (__vverbose__):
+                print(info_str)
             ret = _preprocess(task)
             cnt -= 1
         if (not ret):
@@ -230,7 +236,7 @@ if __name__ == "__main__":
     dir_path = os.path.dirname(os.path.realpath(__file__))
 
     raw_dataset = os.path.join("/home/zheng/Datasets", 'UCF101', 'UCF101-raw')
-    new_dataset = os.path.join("/home/zheng/Datasets", 'UCF101', 'UCF101-img')
+    new_dataset = os.path.join("/home/zheng/Datasets", 'UCF101', 'UCF101-img-1')
 
     tasks = generate_preprocess_tasks(
         raw_dataset, new_dataset, 'UCF101', label_maps['UCF101'])
