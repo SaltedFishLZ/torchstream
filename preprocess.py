@@ -29,8 +29,8 @@ def generate_preprocess_tasks(src_path, tgt_path, style, label_map):
     samples = parser.__get_samples__()
     tasks = []  
     for _sample in samples:
-        src_vid = _sample[0]
-        tgt_vid = os.path.join(tgt_path, _sample[1])
+        src_vid = _sample.path
+        tgt_vid = os.path.join(tgt_path, _sample.lbl, _sample.name)
         tasks.append({'src_vid': src_vid, 'tgt_vid':tgt_vid})
     return(tasks)
 

@@ -11,8 +11,8 @@ import importlib
 
 # import torch
 
-import video
-import UCF101, HMDB51, Weizmann
+from . import video
+from . import UCF101, HMDB51, Weizmann
 
 # supported input data modality and corresponding file types
 __supported_modalities__ = ['RGB']
