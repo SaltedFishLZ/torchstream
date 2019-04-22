@@ -7,11 +7,11 @@ import os
 import sys
 import copy
 import logging
+import importlib
 import multiprocessing as mp
 
-from vdataset import video
-from vdataset.dataset import VideoCollector
-from vdataset.label_map import *
+from vdataset import video, label_maps, __supported_datasets__
+from vdataset import VideoCollector
 
 def preprocess(task_dict):
     src_vid = task_dict['src_vid']
@@ -53,17 +53,17 @@ def task_executor(task_queue):
             print("Task {} failed after 10 trails!!!".format(task))
 
 
-
-
 if __name__ == "__main__":
 
     dir_path = os.path.dirname(os.path.realpath(__file__))
 
-    raw_dataset = os.path.join("/home/zheng/Datasets", 'UCF101', 'UCF101-raw')
-    new_dataset = os.path.join("/home/zheng/Datasets", 'UCF101', 'UCF101-img')
+    DATASET = "HMDB51"
+    dataset_mod = importlib.import_module("vdataset.{}".format(DATASET))
+    raw_dataset = dataset_mod.raw_data_path
+    prc_dataset = dataset_mod.prc_data_path
 
     tasks = generate_preprocess_tasks(
-        raw_dataset, new_dataset, 'UCF101', label_maps['UCF101'])
+        raw_dataset, prc_dataset, __supported_datasets__[DATASET], label_maps[DATASET])
     process_num = min(mp.cpu_count()*6, len(tasks)+1)
 
     task_queue = mp.Queue()

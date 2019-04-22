@@ -59,8 +59,9 @@ __supported_video_files__ = {
 #   different folders ["train", "val", "test"]. Currently, the test set
 #   has no annotations. While training set and validation set each follows
 #   the UCF101 style
-__supported_dataset_stucture_styles__ = ['UCF101']
-__supported_dataset__ = {
+__supported_dataset_styles__ = ['UCF101']
+# key: dataset name, value: structure styles
+__supported_datasets__ = {
     # UCF101 styled datasets
     'UCF101':'UCF101', 'HMDB51':'UCF101', 'Weizmann':'UCF101',
     }
@@ -112,7 +113,7 @@ class VideoCollector(object):
         '''
         '''
         # santity check
-        assert (style in __supported_dataset_stucture_styles__), \
+        assert (style in __supported_dataset_styles__), \
             "Unsupported Dataset Struture Style"
         self.root = copy.deepcopy(root)
         self.style = copy.deepcopy(style)
@@ -202,7 +203,7 @@ class VideoCollector(object):
 if __name__ == "__main__":
     collector = VideoCollector(
         Weizmann.raw_data_path,
-        __supported_dataset__['Weizmann'],
+        __supported_datasets__['Weizmann'],
         label_maps['Weizmann']
         )
     

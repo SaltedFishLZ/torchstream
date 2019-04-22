@@ -207,7 +207,9 @@ def video2frames(vid_path, tgt_path, color_in="BGR", color_out="BGR"):
         # dump frame successfully
         cnt += 1
 
-    assert cnt > 0, "Cannot read empty video"
+    # assert cnt > 0, "Cannot read empty video"
+    if (0 == cnt):
+        logging.warn("Empty video {}".format(vid_path))
 
     # check frame number
     if (abs(f_n - cnt) > _frame_num_err_limit_):
@@ -296,7 +298,9 @@ def frames2ndarray(frames, color_in="BGR", color_out="RGB"):
     '''
     # get video shape & check santity
     _f = len(frames)
-    assert _f > 0, "Cannot accept empty video"
+    # assert _f > 0, "Cannot accept empty video"
+    if (0 == _f):
+        logging.warn("Empty frames {}".format(vid_path))
     img = frame2ndarray(frames[0], color_in, color_out)
     _h = img.shape[0]
     _w = img.shape[1]
