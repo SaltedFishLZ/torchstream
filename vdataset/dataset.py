@@ -7,15 +7,12 @@ import os
 import sys
 import copy
 import logging
-import multiprocessing as mp
-
-from sklearn.model_selection import train_test_split
+import importlib
 
 # import torch
 
-
 import video
-from label_map import *
+import UCF101, HMDB51, Weizmann
 
 # supported input data modality and corresponding file types
 __supported_modalities__ = ['RGB']
@@ -25,10 +22,12 @@ __supported_modality_files__ = {
 __supported_video_files__ = {
     'RGB' : ['avi', 'mp4']
 }
+
 # ---------------------------------------------------------------- #
 #           Dataset Structure Style and Supporting
 # ---------------------------------------------------------------- #
 # NOTE: You shall not store other files in the dataset !!! 
+#
 # * 1. UCF101 style:
 #   Your video dataset must have the following file orgnization:
 #   Data Path
@@ -50,61 +49,88 @@ __supported_video_files__ = {
 #   ...
 #   Or you can storage video files like video_0.mp4
 #   These should be specified via [use_imgs]
-#
-# * 2. sth-sth style:
+#   This style applies to the following datasets:
+#   * UCF101
+#   * HMDB51
+#   * Weizmann
+#   
+# * 2. Kinetics style:
+#   Kinetics Dataset already split training, validation, testing into
+#   different folders ["train", "val", "test"]. Currently, the test set
+#   has no annotations. While training set and validation set each follows
+#   the UCF101 style
 __supported_dataset_stucture_styles__ = ['UCF101']
-__supported_dataset__ = ['UCF101', 'HMDB51', 'Weizmann']
+__supported_dataset__ = {
+    # UCF101 styled datasets
+    'UCF101':'UCF101', 'HMDB51':'UCF101', 'Weizmann':'UCF101',
+    }
+
+
+label_maps = {
+    'UCF101' : UCF101.label_map,
+    'HMDB51' : HMDB51.label_map,
+    'Weizmann': Weizmann.label_map,
+}
+
+class Sample(object):
+    '''
+    An video sample struct containing the meta-data of a video sample
+    '''
+    def __init__(self, path, name, ext, lbl="default", cid=0):
+        '''
+        path: compelete sample path
+        name: file name (without any extension and path)
+        ext:  file extension (e.g., avi, mp4), '.' excluded, if it == None
+              or "", it means the sample is sliced into several images (not
+              limited to RGB modality) and the images are stored in the folder
+              which is the "path" mentioned above.
+        lbl:  label of the sample, is a unique string in certain dataset
+        cid:  class id of the sample, is the numerical representation of label
+        '''
+        self.path   =   copy.deepcopy(path)
+        self.name   =   copy.deepcopy(name)
+        self.ext    =   copy.deepcopy(ext)
+        self.lbl    =   copy.deepcopy(lbl)
+        self.cid    =   copy.deepcopy(cid)
+
+    def __repr__(self):
+        string = str(self.name)
+        string += "[path]  : {}\n".format(self.path)
+        string += "[label] : {}\n".format(self.lbl)
+        string += "[cid]   : {}\n".format(self.cid)
+        return(string)
+
 
 
 class VideoCollector(object):
     '''
-
+    A helper class which maintains all sample's meta-data of a certain dataset
+    We only deal with Meta-data in it
+    TODO: support multiple data format and multiple input modality
     '''
-    def __init__(self, path, style, label_map,
-        data_mod = "RGB", file_ext= "avi",
-        seek_file=True):
+    def __init__(self, root, style, label_map, 
+                mod = "RGB", ext= "avi", 
+                seek_file=True, split=None):
         '''
-        file_ext is '' or image formats(e.g., 'jpg') means the video is a
-        collection of images
         '''
         # santity check
         assert (style in __supported_dataset_stucture_styles__), \
             "Unsupported Dataset Struture Style"
-        self.path = copy.deepcopy(path)
+        self.root = copy.deepcopy(root)
         self.style = copy.deepcopy(style)
         self.label_map = copy.deepcopy(label_map)
-        self.data_mod = copy.deepcopy(data_mod)
-        self.file_ext = copy.deepcopy(file_ext)
+        self.mod = copy.deepcopy(mod)
+        self.ext = copy.deepcopy(ext)
 
         self.samples = []
         if (True == seek_file):
             # NOTE: here we use list.extend !!!
             self.samples.extend(
-                self.collect_samples(self.path, self.style, self.label_map,
-                    self.data_mod, self.file_ext))
+                self.collect_samples(self.root, self.style, self.label_map,
+                    self.mod, self.ext))
 
     @staticmethod
-    def is_true_video(data_mod, file_ext):
-        '''
-        NOTE: currently only support RGB modality
-        '''
-        if (("RGB" == data_mod) and 
-            (file_ext in __supported_video_files__[data_mod])):
-            return(True)
-        else:
-            return(False)
-
-    @staticmethod
-    def strip_file_ext(path, ext):
-        suffix = "." + ext
-        if (__strict__):
-            assert (suffix in path), "Incorrect path, should be *.<ext>"
-            assert (suffix == path[-len(suffix):]), \
-                "Incorrect path, file extension should be placed at the end"
-        return(path[:-len(suffix)])
-
-    @staticmethod
-    def collect_samples(path, style, label_map, data_mod, file_ext):
+    def collect_samples(root, style, label_map, mod, ext):
         '''
         collect a list of samples = list of samples, while each sample
         = (video, relative path, class id, label)
@@ -113,8 +139,8 @@ class VideoCollector(object):
         if ("UCF101" == style):
             # get all labels
             labels = []
-            for _label in os.listdir(path):
-                if (os.path.isdir(os.path.join(path, _label))):
+            for _label in os.listdir(root):
+                if (os.path.isdir(os.path.join(root, _label))):
                     labels.append(_label)
             # TODO: check whether we need to sort it
             labels = sorted(labels)
@@ -122,22 +148,20 @@ class VideoCollector(object):
             # NOTE: each sample is a tuple = 
             # (vid_path, relative_addr, class_id, label)
             samples = []
-            if (VideoCollector.is_true_video(data_mod, file_ext)):
-                for _label in labels:
-                    for _video in os.listdir(os.path.join(path, _label)):
-                        _path = os.path.join(path, _label, _video)
-                        _rpath = os.path.join(_label, _video)
-                        _rpath = VideoCollector.strip_file_ext(_rpath, file_ext)
-                        _sample = (_path, _rpath, label_map[_label], _label)
-                        samples.append(_sample)
+            for _label in labels:
+                for _video in os.listdir(os.path.join(root, _label)):
+                    _path = os.path.join(root, _label, _video)
+                    _sample = (_path, _rpath, label_map[_label], _label)
+                    samples.append(_sample)
                 # return results
                 return(samples)
             else:
                 for _label in labels:
-                    for _video in os.listdir(os.path.join(path, _label)):
-                        _path = os.path.join(path, _label, _video)
+                    for _video in os.listdir(os.path.join(root, _label)):
+                        _path = os.path.join(root, _label, _video)
                         _rpath = os.path.join(_label, _video)
-                        _sample = (_path, _rpath, label_map[_label], _label)
+                        _sample = Sample(_path, _video, ext,\
+                                    _label, label_map[_label])
                         samples.append(_sample)
                 # return results
                 return(samples)                
@@ -184,79 +208,11 @@ class VideoCollector(object):
 #         assert True, "VideoDataset is abstract, __getitem__ must be overrided"
 
 
-def _preprocess(task_dict):
-    src_vid = task_dict['src_vid']
-    tgt_vid = task_dict['tgt_vid']
-    if (not os.path.exists(tgt_vid)):
-        try:
-            os.makedirs(tgt_vid)
-        except FileExistsError:
-            pass
-    ret = video.video2frames(src_vid, tgt_vid)
-    return(ret)
-
-def preprocess(src_path, tgt_path, style, label_map):
-    '''
-    Single core pre-processing
-    '''
-    parser = VideoCollector(src_path, style, label_map, seek_file=True)
-    samples = parser.__get_samples__()    
-    for _sample in samples:
-        src_vid = _sample[0]
-        tgt_vid = os.path.join(tgt_path, _sample[1])
-        _preprocess({'src_vid': src_vid, 'tgt_vid':tgt_vid})
-
-def generate_preprocess_tasks(src_path, tgt_path, style, label_map):
-    parser = VideoCollector(src_path, style, label_map, seek_file=True)
-    samples = parser.__get_samples__()
-    tasks = []  
-    for _sample in samples:
-        src_vid = _sample[0]
-        tgt_vid = os.path.join(tgt_path, _sample[1])
-        tasks.append({'src_vid': src_vid, 'tgt_vid':tgt_vid})
-    return(tasks)
-
-def task_executor(task_queue):
-    while True:
-        task = task_queue.get()
-        if (None == task):
-            break
-        ret = _preprocess(task)
-        # retry it
-        cnt = 10
-        while ((not ret) and (cnt > 0)):
-            info_str = "Retry task {}".format(task)
-            logging.info(info_str)
-            if (__vverbose__):
-                print(info_str)
-            ret = _preprocess(task)
-            cnt -= 1
-        if (not ret):
-            print("Task {} failed after 10 trails!!!".format(task))
 
 if __name__ == "__main__":
-
-    dir_path = os.path.dirname(os.path.realpath(__file__))
-
-    raw_dataset = os.path.join("/home/zheng/Datasets", 'UCF101', 'UCF101-raw')
-    new_dataset = os.path.join("/home/zheng/Datasets", 'UCF101', 'UCF101-img-1')
-
-    tasks = generate_preprocess_tasks(
-        raw_dataset, new_dataset, 'UCF101', label_maps['UCF101'])
-    process_num = min(mp.cpu_count()*6, len(tasks)+1)
-
-    task_queue = mp.Queue()
-    # Init process
-    process_list = []
-    for _i in range(process_num):
-        p = mp.Process(target=task_executor, args=(task_queue,))
-        p.start()
-        process_list.append(p)
-
-    for _task in tasks:
-        task_queue.put(_task)
-    for i in range(process_num):
-        task_queue.put(None)
-
-    for p in process_list:
-        p.join()
+    VideoCollector(
+        Weizmann.raw_data_path,
+        __supported_dataset__['Weizmann'],
+        label_maps['Weizmann']
+        )
+    
