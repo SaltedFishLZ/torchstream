@@ -188,7 +188,10 @@ def _preprocess(task_dict):
     src_vid = task_dict['src_vid']
     tgt_vid = task_dict['tgt_vid']
     if (not os.path.exists(tgt_vid)):
-        os.makedirs(tgt_vid)
+        try:
+            os.makedirs(tgt_vid)
+        except FileExistsError:
+            pass
     ret = video.video2frames(src_vid, tgt_vid)
     return(ret)
 
