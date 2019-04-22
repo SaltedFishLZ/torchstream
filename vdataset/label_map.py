@@ -1,5 +1,5 @@
 
-
+import Weizmann
 
 
 label_maps = {
@@ -109,19 +109,6 @@ label_maps = {
     'YoYo'              : 101         
     },
 
-    # Weizmann Dataset
-    # http://www.wisdom.weizmann.ac.il/~vision/SpaceTimeActions.html
-    'Weizmann':
-    {
-    'bend'  : 1,
-    'jack'  : 2,
-    'jump'  : 3,
-    'pjump' : 4,
-    'run'   : 5,
-    'side'  : 6,
-    'skip'  : 7,
-    'walk'  : 8,
-    'wave1' : 9,
-    'wave2' : 10
-    },
+
+    'Weizmann': Weizmann.label_map,
 }
