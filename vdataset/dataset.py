@@ -76,7 +76,7 @@ class Sample(object):
     '''
     An video sample struct containing the meta-data of a video sample
     '''
-    def __init__(self, path, name, ext, lbl="default", cid=0):
+    def __init__(self, path, name, ext, lbl="default", cid=-1):
         '''
         path: compelete sample path
         name: file name (without any extension and path)
@@ -94,13 +94,11 @@ class Sample(object):
         self.cid    =   copy.deepcopy(cid)
 
     def __repr__(self):
-        string = str(self.name)
-        string += "[path]  : {}\n".format(self.path)
-        string += "[label] : {}\n".format(self.lbl)
-        string += "[cid]   : {}\n".format(self.cid)
+        string = str(self.name) + '\n'
+        string += "[label] : {}  \t".format(self.lbl)
+        string += "[cid] : {} \t".format(self.cid)
+        string += "[path] : {}".format(self.path)
         return(string)
-
-
 
 class VideoCollector(object):
     '''
@@ -144,6 +142,7 @@ class VideoCollector(object):
                     labels.append(_label)
             # TODO: check whether we need to sort it
             labels = sorted(labels)
+             
             # get all videos' file paths and annotations
             # NOTE: each sample is a tuple = 
             # (vid_path, relative_addr, class_id, label)
@@ -151,20 +150,11 @@ class VideoCollector(object):
             for _label in labels:
                 for _video in os.listdir(os.path.join(root, _label)):
                     _path = os.path.join(root, _label, _video)
-                    _sample = (_path, _rpath, label_map[_label], _label)
-                    samples.append(_sample)
-                # return results
-                return(samples)
-            else:
-                for _label in labels:
-                    for _video in os.listdir(os.path.join(root, _label)):
-                        _path = os.path.join(root, _label, _video)
-                        _rpath = os.path.join(_label, _video)
-                        _sample = Sample(_path, _video, ext,\
-                                    _label, label_map[_label])
-                        samples.append(_sample)
-                # return results
-                return(samples)                
+                    _sample = Sample(_path, _video, ext, 
+                                  _label, label_map[_label])
+                    samples.append(copy.deepcopy(_sample))
+            # return results
+            return(samples)               
         else:
             assert True, "Unsupported Dataset Struture Style"        
 
@@ -210,9 +200,11 @@ class VideoCollector(object):
 
 
 if __name__ == "__main__":
-    VideoCollector(
+    collector = VideoCollector(
         Weizmann.raw_data_path,
         __supported_dataset__['Weizmann'],
         label_maps['Weizmann']
         )
     
+    for _sample in collector.__get_samples__():
+        print(_sample)    
