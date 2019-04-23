@@ -13,7 +13,7 @@ import importlib
 import torch
 import torch.utils.data as torchdata
 
-from __init__ import __supported_datasets__, __supported_dataset_styles__, \
+from .__init__ import __supported_datasets__, __supported_dataset_styles__, \
     __supported_modalities__, __supported_modality_files__
 import video, metadata
 

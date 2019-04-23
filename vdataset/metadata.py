@@ -16,7 +16,7 @@ import importlib
 import video
 import UCF101, HMDB51, Weizmann
 
-from __init__ import __supported_dataset_styles__, __supported_datasets__
+from .__init__ import __supported_dataset_styles__, __supported_datasets__
 
 
 class Sample(object):
