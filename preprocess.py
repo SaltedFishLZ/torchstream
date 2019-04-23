@@ -57,7 +57,7 @@ if __name__ == "__main__":
 
     dir_path = os.path.dirname(os.path.realpath(__file__))
 
-    DATASET = "UCF101"
+    DATASET = "Weizmann"
     dataset_mod = importlib.import_module("vdataset.{}".format(DATASET))
     raw_dataset = dataset_mod.raw_data_path
     prc_dataset = dataset_mod.prc_data_path
