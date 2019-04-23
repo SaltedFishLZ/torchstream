@@ -36,24 +36,35 @@ for _split in __supported_splits__:
         'train_set': copy.deepcopy(train_set),
         'test_set': copy.deepcopy(test_set)}
 
-def for_train(sample, split='1'):
-    assert split in __supported_splits__, "Unsupported split"
-    _name = sample.name
-    _label = sample.lbl
-    _rec = '_'.join([_label, _name])
-    if (_rec in aux_dict[split]["train_set"]):
-        return True
-    else:
-        return False
+class for_train(object):
+    def __init__(self, split='1'):
+        assert split in __supported_splits__, "Unsupported split"
+        self.split = split
+    def __call__(self, sample):
+        _name = sample.name
+        _label = sample.lbl
+        _rec = '_'.join([_label, _name])
+        if (_rec in aux_dict[self.split]["train_set"]):
+            return True
+        else:
+            return False
 
-def for_test(sample, split='1'):
-    assert split in __supported_splits__, "Unsupported split"
-    _rec = {"name": sample.name, "label": sample.lbl}
-    if (_rec in aux_dict[split]["test_set"]):
-        return True
-    else:
-        return False
+class for_test(object):
+    def __init__(self, split='1'):
+        assert split in __supported_splits__, "Unsupported split"
+        self.split = split
+    def __call__(self, sample):
+        _name = sample.name
+        _label = sample.lbl
+        _rec = '_'.join([_label, _name])
+        if (_rec in aux_dict[self.split]["test_set"]):
+            return True
+        else:
+            return False
 
-def for_val(sample, split='1'):
-    return(for_test(sample, split))
-
+# set the same as test set
+class for_val(object):
+    def __init__(self, split="1"):
+        self.for_test = for_test(split=split)
+    def __call__(self, sample):
+        return(self.for_test(sample))

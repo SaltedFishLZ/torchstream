@@ -2,11 +2,20 @@
 # for this dataset, we use ALL SAMPLES for 
 # training, validation and testing
 
-def for_train(sample):
-    return(True)
+class for_train(object):
+    def __init__(self):
+        pass
+    def __call__(self, sample):
+        return(True)
 
-def for_val(sample):
-    return(True)
+class for_val(object):
+    def __init__(self):
+        pass
+    def __call__(self, sample):
+        return(True)
 
-def for_test(sample):
-    return(True)
+class for_test(object):
+    def __init__(self):
+        pass
+    def __call__(self, sample):
+        return(True)

@@ -55,8 +55,9 @@ class VideoCollector(object):
     '''
     def __init__(self, root, style, label_map, 
                 mod = "RGB", ext= "avi", 
-                seek_file=True, split=None):
+                seek_file=True, part=None):
         '''
+        part = None: all data are collected
         '''
         # santity check
         assert (style in __supported_dataset_styles__), \
@@ -106,6 +107,13 @@ class VideoCollector(object):
             return(labels, samples)               
         else:
             assert True, "Unsupported Dataset Struture Style"        
+
+    def __filter_samples__(self, sample_filter):
+        filtered_samples = []
+        for _sample in self.samples:
+            if (sample_filter(_sample)):
+                filtered_samples.append(_sample)
+        self.samples = filtered_samples
 
     def __get_samples__(self):
         return(self.samples)
