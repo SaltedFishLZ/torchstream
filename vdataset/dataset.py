@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 __test__    =   True
 __strict__  =   True
 __verbose__ =   True
