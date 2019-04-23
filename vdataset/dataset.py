@@ -15,7 +15,7 @@ import torch.utils.data as torchdata
 
 from .__init__ import __supported_datasets__, __supported_dataset_styles__, \
     __supported_modalities__, __supported_modality_files__
-import video, metadata
+from . import video, metadata
 
 
 
@@ -47,7 +47,7 @@ class VideoDataset(torchdata.Dataset):
 
         # collect metadata
         self.dataset_style = __supported_datasets__[self.dataset]
-        self.dataset_mod = importlib.import_module("{}".format(dataset))
+        self.dataset_mod = importlib.import_module(".{}".format(dataset))
         self.label_map = self.dataset_mod.label_map
         self.metadata_collector = metadata.VideoCollector(
             root = self.root, style = self.dataset_style,
@@ -80,7 +80,7 @@ class VideoDataset(torchdata.Dataset):
 if __name__ == "__main__":
 
     DATASET = "UCF101"
-    dataset_mod = importlib.import_module("{}".format(DATASET))
+    dataset_mod = importlib.import_module(".{}".format(DATASET))
 
     allset = VideoDataset(
         dataset_mod.prc_data_path, DATASET)

@@ -128,8 +128,6 @@ class VideoCollector(object):
         return(self.samples)
 
     def __check_integrity__(self, dataset_mod):
-        # assert (dataset in __supported_datasets__), "Unsupported Dataset"
-        # dataset_mod = importlib.import_module(".{}".format(DATASET))
         
         # check class number
         if (sorted(self.labels) != sorted(dataset_mod.__classes__)):
