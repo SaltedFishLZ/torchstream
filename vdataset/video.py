@@ -23,7 +23,7 @@ import numpy as np
 import psutil
 
 
-from __init__ import __supported_color_space__
+from .__init__ import __supported_color_space__
 
 # local setting
 _frame_num_err_limit_ = 5
