@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+# Dataset Meta Data Management Module
+#
+#
 __test__    =   True
 __strict__  =   True
 __verbose__ =   True
@@ -10,12 +13,10 @@ import copy
 import logging
 import importlib
 
-# import torch
-
 from . import video
 from . import UCF101, HMDB51, Weizmann
 
-from .__init__ import __supported_datasets__, __supported_dataset_styles__
+from .__init__ import __supported_dataset_styles__, __supported_datasets__
 
 
 class Sample(object):
@@ -66,12 +67,14 @@ class VideoCollector(object):
         self.mod = copy.deepcopy(mod)
         self.ext = copy.deepcopy(ext)
 
+        self.labels = []
         self.samples = []
         if (True == seek_file):
+            labels, samples = self.collect_samples(self.root, self.style, 
+                self.label_map, self.mod, self.ext)
             # NOTE: here we use list.extend !!!
-            self.samples.extend(
-                self.collect_samples(self.root, self.style, self.label_map,
-                    self.mod, self.ext))
+            self.labels.extend(labels)
+            self.samples.extend(samples)
 
     @staticmethod
     def collect_samples(root, style, label_map, mod, ext):
@@ -100,60 +103,62 @@ class VideoCollector(object):
                                   _label, label_map[_label])
                     samples.append(copy.deepcopy(_sample))
             # return results
-            return(samples)               
+            return(labels, samples)               
         else:
             assert True, "Unsupported Dataset Struture Style"        
 
     def __get_samples__(self):
         return(self.samples)
 
+    def __check_integrity__(self, dataset):
+        assert (dataset in __supported_datasets__), "Unsupported Dataset"
+        dataset_mod = importlib.import_module(".{}".format(DATASET))
+        
+        # check class number
+        if (sorted(self.labels) != sorted(dataset_mod.__classes__)):
+            warn_str = "Integrity check failed, "
+            warn_str += "class numbver mismatch"
+            logging.warn(warn_str)
+            return False
+        
+        # check sample number
+        # count samples for each class
+        _sample_count_dict = dict(zip(self.labels, len(self.labels)*[0]))
+        for _sample in self.samples:
+            _sample_count_dict[_sample.lbl] += 1
+        passed = True
+        # check sample number for each class
+        for _label in self.labels:
+            _sample_count = _sample_count_dict[_label]
+            ref_sample_count = dataset_mod.__samples__[_label]
+            if (type(ref_sample_count) == list):
+                if (not (_sample >= ref_sample_count[0])
+                    and (_sample_count <= ref_sample_count[1]) ):
+                    passed = False
+            elif (type(ref_sample_count) == int):
+                if (ref_sample_count != _sample_count):
+                    passed = False
+            else:
+                assert True, "Incorrect reference sample number"
+            if (not passed):
+                warn_str = "Integrity check failed, "
+                warn_str += "sample numbver mismatch for class [{}]".\
+                    format(_label)
+                logging.warn(warn_str)
+                break
 
-    def __check_integrity__(self):
-        pass
-
-
-
-
-
-
-# class VideoDataset(torch.utils.data.Dataset):
-#     '''
-#     This shall be an abstract base class. It should never be used in deployment.
-#     '''
-#     def __init__(self,
-#         data_path,
-#         modalities = {'RGB': 'jpg'},
-#         use_imgs = True,
-#         ):
-#         # data_path santity check
-#         assert os.path.exists(data_path), "Dataset path not exists"
-#         self.data_path = copy.deepcopy(data_path)
-#         # modality santity check
-#         for _mod in modalities:
-#             assert _mod in __supported_modalities__, 'Unsupported Modality'
-#             assert modalities[_mod] in __supported_modality_files__[_mod], \
-#                 ("Unspported input file type for modality: {}".format(_mod))
-#         self.modalities = copy.deepcopy(modalities)
-#         # NOTE: currently, video is specified for RGB data (although some flow
-#         # visualization solutions use video for flow too)
-#         self.use_imgs = True
-
-#     def __len__(self):
-#         pass
-
-#     def __getitem__(self, idx):
-#         assert True, "VideoDataset is abstract, __getitem__ must be overrided"
+        return True
 
 
 
 if __name__ == "__main__":
 
     DATASET = 'Weizmann'
-    dataset_mod = importlib.import_module("vdataset.{}".format(DATASET))
+    dataset_mod = importlib.import_module(".{}".format(DATASET))
 
     collector = VideoCollector(
-        Weizmann.raw_data_path,
-        __init__.__supported_datasets__[DATASET],
+        dataset_mod.raw_data_path,
+        __supported_datasets__[DATASET],
         dataset_mod.label_map
         )
     

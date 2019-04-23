@@ -10,8 +10,8 @@ import logging
 import importlib
 import multiprocessing as mp
 
-from vdataset import video, label_maps, __supported_datasets__
-from vdataset import VideoCollector
+from vdataset import video, __supported_datasets__
+from vdataset.metadata import VideoCollector
 
 def preprocess(task_dict):
     src_vid = task_dict['src_vid']
@@ -63,7 +63,7 @@ if __name__ == "__main__":
     prc_dataset = dataset_mod.prc_data_path
 
     tasks = generate_preprocess_tasks(
-        raw_dataset, prc_dataset, __supported_datasets__[DATASET], label_maps[DATASET])
+        raw_dataset, prc_dataset, __supported_datasets__[DATASET], dataset_mod.label_map)
     process_num = min(mp.cpu_count()*6, len(tasks)+1)
 
     task_queue = mp.Queue()

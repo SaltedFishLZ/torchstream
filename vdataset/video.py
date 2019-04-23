@@ -23,9 +23,9 @@ import numpy as np
 import psutil
 
 
-__supported_color_space__ = ["BGR", "RGB", "GRAY"]
+from __init__ import __supported_color_space__
 
-
+# local setting
 _frame_num_err_limit_ = 5
 
 def failure_suspection(vid_path, operation = "CapRead"):

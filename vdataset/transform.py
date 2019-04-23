@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import torchvision
 import random
 from PIL import Image, ImageOps
