@@ -11,6 +11,7 @@ import logging
 import importlib
 
 import torch
+import torch.utils.data as torchdata
 
 from __init__ import __supported_datasets__, __supported_dataset_styles__, \
     __supported_modalities__, __supported_modality_files__
@@ -18,7 +19,7 @@ import video, metadata
 
 
 
-class VideoDataset(torch.utils.data.Dataset):
+class VideoDataset(torchdata.Dataset):
     '''
     This shall be an abstract base class. It should never be used in deployment.
     '''
@@ -33,9 +34,12 @@ class VideoDataset(torch.utils.data.Dataset):
         assert dataset in __supported_datasets__, "Unsupported Dataset"
         for _mod in modalities:
             assert _mod in __supported_modalities__, 'Unsupported Modality'
-            assert modalities[_mod] in __supported_modality_files__[_mod], \
-                ("Unspported input file type for modality: {}".format(_mod))
-        
+            print(__supported_modality_files__[_mod])
+            for _ext in modalities[_mod]:
+                assert _ext in __supported_modality_files__[_mod],\
+                    ("Unspported input file type: {} for modality: {}"\
+                    .format(_ext, _mod))
+       
         self.root = copy.deepcopy(root)
         self.dataset = copy.deepcopy(dataset)
         self.part = copy.deepcopy(part)
@@ -47,9 +51,9 @@ class VideoDataset(torch.utils.data.Dataset):
         self.label_map = self.dataset_mod.label_map
         self.metadata_collector = metadata.VideoCollector(
             root = self.root, style = self.dataset_style,
-            label_map = self.dataset_mod,
+            label_map = self.label_map,
             # currently only support 1 modality and sliced pictures
-            mod = self.modalities[0], ext = "", part=self.part
+            mod = "RGB", ext = "", part=self.part
         )
 
         # filter samples
@@ -78,13 +82,13 @@ if __name__ == "__main__":
     dataset_mod = importlib.import_module("{}".format(DATASET))
 
     allset = VideoDataset(
-        allset.raw_data_path, DATASET)
+        dataset_mod.raw_data_path, DATASET)
     print(allset.__len__())
 
     trainset = VideoDataset(
-        trainset.raw_data_path, DATASET)
+        dataset_mod.raw_data_path, DATASET, part="train")
     print(trainset.__len__())
 
     testset = VideoDataset(
-        testset.raw_data_path, DATASET)
+        dataset_mod.raw_data_path, DATASET, part="test")
     print(testset.__len__())
