@@ -1,10 +1,6 @@
 # Weizmann Dataset
 # http://www.wisdom.weizmann.ac.il/~vision/SpaceTimeActions.html
 
-# from .data_path import raw_data_path, prc_data_path
-# from .label_map import label_map
-# from .data_split import for_train, for_val, for_test
-
 # class list
 __classes__ = [
     "bend",
@@ -34,8 +30,16 @@ __samples__ = {
     "wave2" :   9,
 }
 
-__all__ = ["raw_data_path", "prc_data_path", "label_map", "for_train",
-        "for_val", "for_test"]
+
+from .data_path import raw_data_path, prc_data_path
+from .label_map import label_map
+from .data_split import for_train, for_val, for_test
+
+__all__ = [
+    "__classes__", "__samples__",
+    "raw_data_path", "prc_data_path",
+    "label_map", "for_train", "for_val", "for_test"
+]
 
 if __name__ == "__main__":
     print("common Data of Weizmann Dataset")

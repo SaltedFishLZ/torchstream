@@ -13,10 +13,10 @@ import copy
 import logging
 import importlib
 
-from . import video
-from . import UCF101, HMDB51, Weizmann
+import video
+import UCF101, HMDB51, Weizmann
 
-from .__init__ import __supported_dataset_styles__, __supported_datasets__
+from __init__ import __supported_dataset_styles__, __supported_datasets__
 
 
 class Sample(object):
@@ -110,9 +110,9 @@ class VideoCollector(object):
     def __get_samples__(self):
         return(self.samples)
 
-    def __check_integrity__(self, dataset):
-        assert (dataset in __supported_datasets__), "Unsupported Dataset"
-        dataset_mod = importlib.import_module(".{}".format(DATASET))
+    def __check_integrity__(self, dataset_mod):
+        # assert (dataset in __supported_datasets__), "Unsupported Dataset"
+        # dataset_mod = importlib.import_module(".{}".format(DATASET))
         
         # check class number
         if (sorted(self.labels) != sorted(dataset_mod.__classes__)):
@@ -154,7 +154,7 @@ class VideoCollector(object):
 if __name__ == "__main__":
 
     DATASET = 'Weizmann'
-    dataset_mod = importlib.import_module(".{}".format(DATASET))
+    dataset_mod = importlib.import_module("{}".format(DATASET))
 
     collector = VideoCollector(
         dataset_mod.raw_data_path,
@@ -163,4 +163,8 @@ if __name__ == "__main__":
         )
     
     for _sample in collector.__get_samples__():
-        print(_sample)    
+        print(_sample) 
+
+    check = collector.__check_integrity__(dataset_mod)  
+    if (check):
+        print("passed")
