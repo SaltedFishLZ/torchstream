@@ -66,6 +66,7 @@ class VideoDataset(torchdata.Dataset):
                 sample_filter = self.dataset_mod.for_test()
             else:
                 assert True, "?"
+            # filtering data
             self.metadata_collector.__filter_samples__(sample_filter)
 
     def __len__(self):
@@ -82,7 +83,7 @@ if __name__ == "__main__":
     dataset_mod = importlib.import_module("{}".format(DATASET))
 
     allset = VideoDataset(
-        dataset_mod.raw_data_path, DATASET)
+        dataset_mod.prc_data_path, DATASET)
     print(allset.__len__())
 
     trainset = VideoDataset(

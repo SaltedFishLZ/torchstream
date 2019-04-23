@@ -99,8 +99,13 @@ class VideoCollector(object):
             samples = []
             for _label in labels:
                 for _video in os.listdir(os.path.join(root, _label)):
+                    if (ext not in [None, ""]):
+                        # split file extension
+                        _name = _video[:-(len(ext)+1)]
+                    else:
+                        _name = copy.deepcopy(_video)
                     _path = os.path.join(root, _label, _video)
-                    _sample = Sample(_path, _video, ext, 
+                    _sample = Sample(_path, _name, ext, 
                                   _label, label_map[_label])
                     samples.append(copy.deepcopy(_sample))
             # return results
@@ -110,12 +115,14 @@ class VideoCollector(object):
 
     def __filter_samples__(self, sample_filter):
         filtered_samples = []
+        # debug
         for _sample in self.samples:
+            print(_sample)
             if (sample_filter(_sample)):
                 filtered_samples.append(_sample)
             else:
                 # DEBUG
-                print(_sample)
+                print(str(_sample.name) + " added")
                 pass
         self.samples = filtered_samples
 
@@ -165,13 +172,14 @@ class VideoCollector(object):
 
 if __name__ == "__main__":
 
-    DATASET = "HMDB51"
+    DATASET = "UCF101"
     dataset_mod = importlib.import_module("{}".format(DATASET))
 
     collector = VideoCollector(
-        dataset_mod.raw_data_path,
+        dataset_mod.prc_data_path,
         __supported_datasets__[DATASET],
-        dataset_mod.label_map
+        dataset_mod.label_map,
+        ext=""
         )
     
     for _sample in collector.__get_samples__():
@@ -180,3 +188,10 @@ if __name__ == "__main__":
     check = collector.__check_integrity__(dataset_mod)  
     if (check):
         print("passed")
+
+    # debug
+    for _sample in collector.__get_samples__():
+        if (_sample.name == "v_LongJump_g19_c03"):
+            from UCF101.data_split import for_train
+            _filter = for_train()
+            print(_filter(_sample))

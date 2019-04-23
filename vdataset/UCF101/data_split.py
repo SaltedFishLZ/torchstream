@@ -13,7 +13,8 @@ class for_train(object):
         list_file = os.path.join(dir_path, list_file)   
         f = open(list_file, "r")
         for _line in f:
-            _rel_path = _line.split('\n')[0]
+            _rel_path = _line.split('\n')[0]     # remove \n
+            _rel_path = _rel_path.split(' ')[0]  # remove class id
             self.train_set.add(_rel_path)
         f.close()
 
@@ -33,7 +34,8 @@ class for_test(object):
         list_file = os.path.join(dir_path, list_file)   
         f = open(list_file, "r")
         for _line in f:
-            _rel_path = _line.split('\n')[0]
+            _rel_path = _line.split('\n')[0]    # remove \n
+            _rel_path = _rel_path.split(' ')[0] # remove class id
             self.test_set.add(_rel_path)
         f.close()
 
@@ -53,5 +55,7 @@ class for_val(object):
 
 
 if __name__ == "__main__":
+    # self-test
     train_filter = for_train()
     print(train_filter.train_set)
+
