@@ -5,7 +5,7 @@
 __test__    =   True
 __strict__  =   True
 __verbose__ =   True
-__vverbose__=   True
+__vverbose__=   False
 
 import os
 import sys
@@ -132,7 +132,7 @@ class VideoCollector(object):
             _sample_count = _sample_count_dict[_label]
             ref_sample_count = dataset_mod.__samples__[_label]
             if (type(ref_sample_count) == list):
-                if (not (_sample >= ref_sample_count[0])
+                if (not (_sample_count >= ref_sample_count[0])
                     and (_sample_count <= ref_sample_count[1]) ):
                     passed = False
             elif (type(ref_sample_count) == int):
@@ -153,7 +153,7 @@ class VideoCollector(object):
 
 if __name__ == "__main__":
 
-    DATASET = 'Weizmann'
+    DATASET = "HMDB51"
     dataset_mod = importlib.import_module("{}".format(DATASET))
 
     collector = VideoCollector(
