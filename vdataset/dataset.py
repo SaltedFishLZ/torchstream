@@ -13,9 +13,9 @@ import importlib
 import torch
 import torch.utils.data as torchdata
 
-from .__init__ import __supported_datasets__, __supported_dataset_styles__, \
+from __init__ import __supported_datasets__, __supported_dataset_styles__, \
     __supported_modalities__, __supported_modality_files__
-from . import video, metadata
+import video, metadata
 
 
 
@@ -23,7 +23,7 @@ class VideoDataset(torchdata.Dataset):
     '''
     This shall be an abstract base class. It should never be used in deployment.
     '''
-    def __init__(self, root, dataset, part = None,
+    def __init__(self, root, dataset, part = None, split="1",
         modalities = {'RGB': ['jpg']}
         ):
         # TODO: support for raw videos!
@@ -43,11 +43,12 @@ class VideoDataset(torchdata.Dataset):
         self.root = copy.deepcopy(root)
         self.dataset = copy.deepcopy(dataset)
         self.part = copy.deepcopy(part)
+        self.split = split
         self.modalities = copy.deepcopy(modalities)
 
         # collect metadata
         self.dataset_style = __supported_datasets__[self.dataset]
-        self.dataset_mod = importlib.import_module(".{}".format(dataset))
+        self.dataset_mod = importlib.import_module("{}".format(dataset))
         self.label_map = self.dataset_mod.label_map
         self.metadata_collector = metadata.VideoCollector(
             root = self.root, style = self.dataset_style,
@@ -59,11 +60,11 @@ class VideoDataset(torchdata.Dataset):
         # filter samples
         if (self.part != None):
             if (self.part == "train"):
-                sample_filter = self.dataset_mod.for_train()
+                sample_filter = self.dataset_mod.for_train(split=self.split)
             elif (self.part == "val"):
-                sample_filter = self.dataset_mod.for_val()
+                sample_filter = self.dataset_mod.for_val(split=self.split)
             elif (self.part == "test"):
-                sample_filter = self.dataset_mod.for_test()
+                sample_filter = self.dataset_mod.for_test(split=self.split)
             else:
                 assert True, "?"
             # filtering data
@@ -79,14 +80,20 @@ class VideoDataset(torchdata.Dataset):
 
 if __name__ == "__main__":
 
-    DATASET = "UCF101"
-    dataset_mod = importlib.import_module(".{}".format(DATASET))
+    DATASET = "HMDB51"
+    dataset_mod = importlib.import_module("{}".format(DATASET))
 
     allset = VideoDataset(
-        dataset_mod.prc_data_path, DATASET)
+        dataset_mod.prc_data_path, DATASET, split="1")
     print(allset.__len__())
 
     trainset = VideoDataset(
-        dataset_mod.prc_data_path, DATASET, part="train")
+        dataset_mod.prc_data_path, DATASET, part="train", split="1")
     print(trainset.__len__())
 
+    testset = VideoDataset(
+        dataset_mod.prc_data_path, DATASET, part="test", split="1")
+    print(testset.__len__())
+
+
+   

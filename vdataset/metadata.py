@@ -13,8 +13,8 @@ import copy
 import logging
 import importlib
 
-from . import video
-from .__init__ import __supported_dataset_styles__, __supported_datasets__
+import video
+from __init__ import __supported_dataset_styles__, __supported_datasets__
 
 
 class Sample(object):
@@ -113,14 +113,10 @@ class VideoCollector(object):
 
     def __filter_samples__(self, sample_filter):
         filtered_samples = []
-        # debug
         for _sample in self.samples:
-            print(_sample)
             if (sample_filter(_sample)):
                 filtered_samples.append(_sample)
             else:
-                # DEBUG
-                print(str(_sample.name) + " added")
                 pass
         self.samples = filtered_samples
 
@@ -169,7 +165,7 @@ class VideoCollector(object):
 if __name__ == "__main__":
 
     DATASET = "UCF101"
-    dataset_mod = importlib.import_module(".{}".format(DATASET))
+    dataset_mod = importlib.import_module("{}".format(DATASET))
 
     collector = VideoCollector(
         dataset_mod.prc_data_path,

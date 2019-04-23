@@ -15,11 +15,12 @@ class for_train(object):
         for _line in f:
             _rel_path = _line.split('\n')[0]     # remove \n
             _rel_path = _rel_path.split(' ')[0]  # remove class id
+            _rel_path = _rel_path.split('.')[0]  # remove file extension
             self.train_set.add(_rel_path)
         f.close()
 
     def __call__(self, sample):
-        if ("{}/{}.{}".format(sample.lbl, sample.name, sample.ext) 
+        if ("{}/{}".format(sample.lbl, sample.name) 
             in self.train_set):
             return True
         else:
@@ -36,11 +37,12 @@ class for_test(object):
         for _line in f:
             _rel_path = _line.split('\n')[0]    # remove \n
             _rel_path = _rel_path.split(' ')[0] # remove class id
+            _rel_path = _rel_path.split('.')[0] # remove file extension
             self.test_set.add(_rel_path)
         f.close()
 
     def __call__(self, sample):
-        if ("{}/{}.{}".format(sample.lbl, sample.name, sample.ext) 
+        if ("{}/{}".format(sample.lbl, sample.name) 
             in self.test_set):
             return True
         else:

@@ -20,8 +20,9 @@ for _split in __supported_splits__:
         f = open(_file, "r")
         for _line in f:
             text = _line.split('\n')[0] # remove \n
-            text = text.split(' ')
+            text = text.split(' ')      # split name and type
             _name = text[0]
+            _name = _name.split('.')[0]
             _rec = '_'.join([_label, _name])
             # NOTE: Read split_readme.txt for more details. This is
             # HMDB official annotation:
@@ -70,4 +71,10 @@ class for_val(object):
         return(self.for_test(sample))
 
 if __name__ == "__main__":
-    print(aux_dict['train_set'])
+    print("Split 1:")
+    print("Train - ")
+    print(len(aux_dict['1']['train_set']))
+    
+    print("Split 2:")
+    print("Train - ")
+    
