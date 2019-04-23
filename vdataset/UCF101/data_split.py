@@ -50,3 +50,8 @@ class for_val(object):
         self.for_test = for_test(split=split)
     def __call__(self, sample):
         return(self.for_test(sample))
+
+
+if __name__ == "__main__":
+    train_filter = for_train()
+    print(train_filter.train_set)

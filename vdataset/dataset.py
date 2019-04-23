@@ -89,6 +89,3 @@ if __name__ == "__main__":
         dataset_mod.raw_data_path, DATASET, part="train")
     print(trainset.__len__())
 
-    testset = VideoDataset(
-        dataset_mod.raw_data_path, DATASET, part="test")
-    print(testset.__len__())

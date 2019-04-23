@@ -113,6 +113,10 @@ class VideoCollector(object):
         for _sample in self.samples:
             if (sample_filter(_sample)):
                 filtered_samples.append(_sample)
+            else:
+                # DEBUG
+                print(_sample)
+                pass
         self.samples = filtered_samples
 
     def __get_samples__(self):
