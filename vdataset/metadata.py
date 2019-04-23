@@ -13,9 +13,7 @@ import copy
 import logging
 import importlib
 
-import video
-import UCF101, HMDB51, Weizmann
-
+from . import video
 from .__init__ import __supported_dataset_styles__, __supported_datasets__
 
 
@@ -173,7 +171,7 @@ class VideoCollector(object):
 if __name__ == "__main__":
 
     DATASET = "UCF101"
-    dataset_mod = importlib.import_module("{}".format(DATASET))
+    dataset_mod = importlib.import_module(".{}".format(DATASET))
 
     collector = VideoCollector(
         dataset_mod.prc_data_path,
