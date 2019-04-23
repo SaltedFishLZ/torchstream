@@ -30,7 +30,6 @@ __samples__ = {
     "wave2" :   9,
 }
 
-
 from .data_path import raw_data_path, prc_data_path
 from .label_map import label_map
 from .data_split import for_train, for_val, for_test

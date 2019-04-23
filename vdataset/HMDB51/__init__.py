@@ -1,10 +1,5 @@
 # HMDB51 Dataset
 
-# from .data_path import raw_data_path, prc_data_path
-# from .label_map import label_map
-# from .data_split import __supported_splits__, for_train, for_val, for_test
-
-
 __classes__ = [
     "brush_hair"    ,
     "cartwheel"     ,
@@ -66,9 +61,16 @@ __classes__ = [
 # So we estimate it as [101, int(2**31)]
 __samples__ = dict(zip(__classes__, 51*[[101, int(2**31)]]))
 
-__all__ = ["raw_data_path", "prc_data_path", "label_map",
-        "__supported_splits__", "for_train", "for_val", "for_test"]
-        
+from .data_path import raw_data_path, prc_data_path
+from .label_map import label_map
+from .data_split import for_train, for_val, for_test
+
+__all__ = [
+    "__classes__", "__samples__",
+    "raw_data_path", "prc_data_path",
+    "label_map", "for_train", "for_val", "for_test"
+]
+
 if __name__ == "__main__":
-    print("common Data of UCF101 Dataset")
+    print("common Data of Weizmann Dataset")
     print(__samples__)
