@@ -16,6 +16,7 @@ import os
 import sys
 import copy
 import glob
+import math
 import logging
 
 import cv2
@@ -335,39 +336,45 @@ def imshow_float(caption, image, color_in = "RGB"):
 class ImageSequence(object):
     '''
     This class is used to manage a video folder containing video frames.
+    The folder shall looks like this:
+    video path
+    ├── frame 0
+    ├── frame 1
+    ├── ...
+    └── frame N
     NOTE: each frame image must be named as %d.<ext> (e.g., 233.jpg), not
     use any padding zero in the file name! And this class only stores file
     pointers
+    TODO: support multiple modalities (multiple file extension)
     '''
-    def __init__(self, vid_path, file_type = "jpg",
-            color_in="BGR", color_out="RGB",
-            seek_file=True):
+    def __init__(self, path, 
+            ext = "jpg", color_in="BGR", color_out="RGB"):
         '''
         TODO: format string for file name
         '''
-        self.vid_path = copy.deepcopy(vid_path)
-        self.file_type = copy.deepcopy(file_type)
+        self.path = copy.deepcopy(path)
+        self.ext = copy.deepcopy(ext)
         self.color_in = copy.deepcopy(color_in)
         self.color_out = copy.deepcopy(color_out)
         
-        self.file_count = 0
-        self.file_list = []
+        self.fcount = 0
+        self.files = []
         # seek valid file paths and add them in file list
-        if (seek_file):
-            _fcnt = 0
+        _fcnt = 0
+        _file_path = self._get_file_path(_fcnt)
+        while (os.path.exists(_file_path)):
+            self.files.append(_file_path)
+            _fcnt += 1
             _file_path = self._get_file_path(_fcnt)
-            while (os.path.exists(_file_path)):
-                self.file_list.append(_file_path)
-                _fcnt += 1
-                _file_path = self._get_file_path(_fcnt)
-            self.file_count = _fcnt
+        assert (_fcnt > 0), "Empty video folder {}".format(path)
+        self.fcount = _fcnt
 
     def _get_file_path(self, idx):
         '''
         a helper function to get the path of a certain frame in the sequence
         '''
-        _filename = str(idx) + "." + str(self.file_type)
-        _file_path = os.path.join(self.vid_path, _filename)
+        _filename = str(idx) + "." + str(self.ext)
+        _file_path = os.path.join(self.path, _filename)
         return(_file_path)
 
     def __get_frame__(self, idx):
@@ -375,9 +382,10 @@ class ImageSequence(object):
         return a Numpy ndarray, data layout: [height][weight][channel]
         '''
         # generate path & santity check
-        assert (idx < self.file_count), "Image index overflow"
+        assert (idx < self.fcount), "Image index {} overflow"\
+            .format(idx)
         _fpath = self._get_file_path(idx)
-        # call frame2ndarray to get array
+        # call frame2ndarray to get image array
         array = frame2ndarray(_fpath, self.color_in, self.color_out)
         # output status
         if (__verbose__):
@@ -391,10 +399,11 @@ class ImageSequence(object):
         '''
         data layout: [frame][height][weight][channel]
         '''
-        # only enable santity check on debug mode
+        # only enable santity check on debug mode for higher perfomance
         if (__debug__):
             for idx in indices:
-                assert (idx < self.file_count), "Image index overflow"
+                assert (idx < self.fcount), "Image index {} overflow"\
+                    .format(idx)
         # generate file paths
         _fpaths = []
         for idx in indices:
@@ -410,69 +419,59 @@ class ImageSequence(object):
         return(array)
 
 
+
+class ClippedImageSequence(ImageSequence):
+    '''
+    This class is used to manage clipped video.
+    Although you can use data transform to clip an entire video, it has to
+    load all frames and select some frames in it. It is not efficient if you
+    have preprocessed the video and dump all frames.
+    '''
+    def __init__(self, path, clip_len,
+            ext = 'jpg', color_in="BGR", color_out="RGB"):
+
+        super(ClippedImageSequence, self).__init__(
+            vid_path, ext, color_in, color_out)
+        assert (clip_len > self.fcount), \
+            "Clip length exceeds the length of original video"
+        self.clip_len = copy.deepcopy(clip_len)
+        # random jitter in time dimension, and re-sample frames
+        offset = np.random.randint(self.fcount - clip_len)
+        new_files = []
+        for _idx in range(clip_len):
+            new_files.append(self.files[offset + _idx])
+        self.files = new_files
+        self.fcount = copy.deepcopy(clip_len)
+
+
+
 class SegmentedImageSequence(ImageSequence):
     '''
     This class is used to manage segmented video.
     Although you can use data transform to get a segmented video, it has to
     load all frames and select some frames in it. It is not efficient.
     '''
-    def __init__(self, vid_path, seg_num,
-            file_type = 'jpg',
-            color_in="BGR", color_out="RGB"):
+    def __init__(self, path, seg_num,
+            ext = 'jpg', color_in="BGR", color_out="RGB"):
+        
         super(SegmentedImageSequence, self).__init__(
-            vid_path, file_type, color_in, color_out
-        )
-        self.seg_num = seg_num
-        self.snipt_list = []
-
-    def __ImageSequence__(self):
-        '''
-        Casting function
-        '''
-        # TODO
-        vid_path = copy.deepcopy(self.vid_path)
-        file_type = copy.deepcopy(self.file_type)
-        color_in = copy.deepcopy(self.color_in)
-        color_out = copy.deepcopy(self.color_out)
-        # NOTE: here we replace file_count with seg_num
-        file_count = copy.deepcopy(self.seg_num)
-        file_list = copy.deepcopy(self.snipt_list)
-
-        _img_seq = ImageSequence(vid_path, file_type,
-                color_in=color_in, color_out=color_out,
-                seek_file=False)
-        _img_seq.file_list = file_list
-        _img_seq.file_count = file_count
-        # TODO
-        return(_img_seq)
-
-class ClippedImageSequence(ImageSequence):
-    '''
-    This class is used to manage segmented video.
-    Although you can use data transform to get a segmented video, it has to
-    load all frames and select some frames in it. It is not efficient.
-    '''
-    def __init__(self, vid_path, clip_len,
-            file_type = 'jpg',
-            color_in="BGR", color_out="RGB"):
-
-        super(ClippedImageSequence, self).__init__(
-            vid_path, file_type, color_in, color_out
-        )   
-
-    def __ImageSequence__(self):
-        '''
-        Casting function
-        '''
-        vid_path = copy.deepcopy(self.vid_path)
-        file_type = copy.deepcopy(self.file_type)
-        color_in = copy.deepcopy(self.color_in)
-        color_out = copy.deepcopy(self.color_out)        
-        # TODO
-        pass
-
-
-
+            path, ext, color_in, color_out)
+        assert (seg_num > 0), "Segment number must > 0"
+        assert (self.fcount > seg_num), \
+            "Segment number exceeds the length of original video"
+        
+        # ((a + b - 1) // b) == ceil(a/b)
+        _interval = (self.fcount + seg_num - 1) // seg_num
+        _residual = self.fcount - _interval * (seg_num - 1)
+        _snipts = []
+        # original TSN random time jitter
+        for _i in range(seg_num - 1):
+            _idx = _i * _interval + np.random.randint(_interval)
+            _snipts.append(self.files[_idx])
+        _idx =  _interval * (seg_num - 1) + np.random.randint(_residual)
+        _snipts.append(self.files[_idx])
+        self.files = _snipts
+        self.fcount = copy.deepcopy(seg_num)
 
 
 
@@ -482,8 +481,8 @@ if __name__ == "__main__":
 
         test_components = {
             'basic':True,
-            '__get_frame__':True,
-            '__get_frames__':False
+            '__get_frame__':False,
+            '__get_frames__':True
         }
         test_configuration = {
             'video_color'   : "BGR",
@@ -521,8 +520,15 @@ if __name__ == "__main__":
             # ----------------- #
             #   Advanced Test   #
             # ----------------- # 
-            _seq = ImageSequence(
+            # _seq = ImageSequence(
+            #         os.path.join(dir_path, "test_ndarray2frames"),
+            #         color_in=test_configuration['frames_color'],
+            #         color_out=test_configuration['imgseq_color']
+            #         )
+
+            _seq = SegmentedImageSequence(
                     os.path.join(dir_path, "test_ndarray2frames"),
+                    seg_num = 16,
                     color_in=test_configuration['frames_color'],
                     color_out=test_configuration['imgseq_color']
                     )
@@ -533,7 +539,7 @@ if __name__ == "__main__":
                 frame = _seq.__get_frame__(_f)
                 imshow_float('{}'.format(_f), frame)
 
-                _f = _seq.file_count - 1
+                _f = _seq.fcount - 1
                 frame = _seq.__get_frame__(_f)
                 imshow_float('{}'.format(_f), frame)
 
@@ -543,7 +549,7 @@ if __name__ == "__main__":
             if (test_components['__get_frames__']):
                 # get frames test
                 _n = 4
-                step = (_seq.file_count - 1) // _n
+                step = (_seq.fcount - 1) // _n
                 _f = [0, step * 1, step * 2, step * 3]
                 frames = _seq.__get_frames__(_f)
 
