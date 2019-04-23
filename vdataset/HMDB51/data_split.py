@@ -19,7 +19,7 @@ for _split in __supported_splits__:
         _file = os.path.join(splits_folder, _file)
         f = open(_file, "r")
         for _line in f:
-            text = _line.split('\n')[0]
+            text = _line.split('\n')[0] # remove \n
             text = text.split(' ')
             _name = text[0]
             _rec = '_'.join([_label, _name])
@@ -68,3 +68,6 @@ class for_val(object):
         self.for_test = for_test(split=split)
     def __call__(self, sample):
         return(self.for_test(sample))
+
+if __name__ == "__main__":
+    print(aux_dict['train_set'])

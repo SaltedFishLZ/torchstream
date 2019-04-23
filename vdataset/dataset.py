@@ -87,6 +87,6 @@ if __name__ == "__main__":
     print(allset.__len__())
 
     trainset = VideoDataset(
-        dataset_mod.raw_data_path, DATASET, part="train")
+        dataset_mod.prc_data_path, DATASET, part="train")
     print(trainset.__len__())
 
