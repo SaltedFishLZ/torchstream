@@ -21,7 +21,8 @@ from . import video, metadata
 
 class VideoDataset(torchdata.Dataset):
     '''
-    This shall be an abstract base class. It should never be used in deployment.
+    NOTE: This shall be an abstract base class.
+    It should never be used in deployment !!!
     '''
     def __init__(self, root, dataset, part = None, split="1",
         modalities = {'RGB': ['jpg']}
@@ -76,6 +77,16 @@ class VideoDataset(torchdata.Dataset):
     def __getitem__(self, idx):
         assert True, "VideoDataset is abstract, __getitem__ must be overrided"
 
+
+class ClippedVideoDataset(VideoDataset):
+    '''
+    '''
+    pass
+
+class SegmentedVideoDataset(VideoDataset):
+    '''
+    '''
+    pass
 
 
 if __name__ == "__main__":

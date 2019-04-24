@@ -427,22 +427,23 @@ class ClippedImageSequence(ImageSequence):
     load all frames and select some frames in it. It is not efficient if you
     have preprocessed the video and dump all frames.
     '''
-    def __init__(self, path, clip_len,
+    def __init__(self, path, clip_len, 
             ext = 'jpg', color_in="BGR", color_out="RGB"):
-
         super(ClippedImageSequence, self).__init__(
             vid_path, ext, color_in, color_out)
-        assert (clip_len > self.fcount), \
+        self.fcount = copy.deepcopy(clip_len)
+        self.files = self.__clip__(self.files, self.fcount, clip_len)
+
+    @staticmethod
+    def __clip__(files, fcount, clip_len):
+        assert (clip_len > fcount), \
             "Clip length exceeds the length of original video"
-        self.clip_len = copy.deepcopy(clip_len)
         # random jitter in time dimension, and re-sample frames
-        offset = np.random.randint(self.fcount - clip_len)
+        offset = np.random.randint(fcount - clip_len)
         new_files = []
         for _idx in range(clip_len):
-            new_files.append(self.files[offset + _idx])
-        self.files = new_files
-        self.fcount = copy.deepcopy(clip_len)
-
+            new_files.append(files[offset + _idx])
+        return(new_files)
 
 
 class SegmentedImageSequence(ImageSequence):
@@ -453,27 +454,27 @@ class SegmentedImageSequence(ImageSequence):
     '''
     def __init__(self, path, seg_num,
             ext = 'jpg', color_in="BGR", color_out="RGB"):
-        
         super(SegmentedImageSequence, self).__init__(
-            path, ext, color_in, color_out)
+            path, ext, color_in, color_out)    
+        self.fcount = copy.deepcopy(seg_num)
+        self.files = self.__segment__(self.files, self.fcount, seg_num)
+
+    @staticmethod
+    def __segment__(files, fcount, seg_num):
         assert (seg_num > 0), "Segment number must > 0"
         assert (self.fcount > seg_num), \
             "Segment number exceeds the length of original video"
-        
         # ((a + b - 1) // b) == ceil(a/b)
-        _interval = (self.fcount + seg_num - 1) // seg_num
-        _residual = self.fcount - _interval * (seg_num - 1)
+        _interval = (fcount + seg_num - 1) // seg_num
+        _residual = fcount - _interval * (seg_num - 1)
         _snipts = []
         # original TSN random time jitter
         for _i in range(seg_num - 1):
             _idx = _i * _interval + np.random.randint(_interval)
-            _snipts.append(self.files[_idx])
+            _snipts.append(files[_idx])
         _idx =  _interval * (seg_num - 1) + np.random.randint(_residual)
-        _snipts.append(self.files[_idx])
-        self.files = _snipts
-        self.fcount = copy.deepcopy(seg_num)
-
-
+        _snipts.append(files[_idx])
+        return(_snipts)
 
 if __name__ == "__main__":
     

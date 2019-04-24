@@ -74,7 +74,12 @@ if __name__ == "__main__":
     print("Split 1:")
     print("Train - ")
     print(len(aux_dict['1']['train_set']))
-    
+    print("Test - ")
+    print(len(aux_dict['1']['test_set']))
+
     print("Split 2:")
     print("Train - ")
+    print(len(aux_dict['2']['train_set']))
+    print("Test - ")
+    print(len(aux_dict['2']['test_set']))
     
