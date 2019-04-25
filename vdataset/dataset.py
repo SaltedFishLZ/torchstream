@@ -80,6 +80,7 @@ class VideoDataset(torchdata.Dataset):
 
 class ClippedVideoDataset(VideoDataset):
     '''
+    This dataset is for clipped videos
     '''
     pass
 
