@@ -9,6 +9,7 @@
 # video is a video file path
 
 __test__    =   True
+__strict__  =   True
 __verbose__ =   True
 __vverbose__=   True
 
@@ -24,7 +25,8 @@ import numpy as np
 import psutil
 
 
-from .__init__ import __supported_color_space__
+from .__init__ import __test__, __strict__, __verbose__, __vverbose__, \
+    __supported_color_space__
 
 # local setting
 _frame_num_err_limit_ = 5
@@ -366,7 +368,8 @@ class ImageSequence(object):
             self.files.append(_file_path)
             _fcnt += 1
             _file_path = self._get_file_path(_fcnt)
-        assert (_fcnt > 0), "Empty video folder {}".format(path)
+        if (__strict__):
+            assert (_fcnt > 0), "Empty video folder {}".format(path)
         self.fcount = _fcnt
 
     def _get_file_path(self, idx):
@@ -391,16 +394,17 @@ class ImageSequence(object):
         if (__verbose__):
             info_str = "ImageSequence: __get_frame__ success, "
             info_str += "shape "+str(array.shape)
+            logging.info(info_str)
             if (__vverbose__):
                 print(info_str)
         return(array)
 
     def __get_frames__(self, indices):
         '''
-        data layout: [frame][height][weight][channel]
+        return data layout: [frame][height][weight][channel]
         '''
-        # only enable santity check on debug mode for higher perfomance
-        if (__debug__):
+        # only enable santity check on debug/strict mode for higher perfomance
+        if (__debug__ or __strict__):
             for idx in indices:
                 assert (idx < self.fcount), "Image index {} overflow"\
                     .format(idx)
@@ -414,11 +418,21 @@ class ImageSequence(object):
         if (__verbose__):
             info_str = "ImageSequence: __get_frames__ success, "
             info_str += "shape "+str(array.shape)
+            logging.info(info_str)
             if (__vverbose__):
                 print(info_str)
         return(array)
 
-
+    def __get_all_frames__(self):
+        array = frames2ndarray(self.files, self.color_in, self.color_out)
+        # output status
+        if (__verbose__):
+            info_str = "ImageSequence: __get_all_frames__ success, "
+            info_str += "shape "+str(array.shape)
+            logging.info(info_str)
+            if (__vverbose__):
+                print(info_str)
+        return(array)
 
 class ClippedImageSequence(ImageSequence):
     '''
@@ -436,6 +450,10 @@ class ClippedImageSequence(ImageSequence):
 
     @staticmethod
     def __clip__(files, fcount, clip_len):
+        '''
+        __clip__ is made an independent function in case you may need to use
+        it in other places
+        '''
         assert (clip_len > fcount), \
             "Clip length exceeds the length of original video"
         # random jitter in time dimension, and re-sample frames
@@ -461,8 +479,12 @@ class SegmentedImageSequence(ImageSequence):
 
     @staticmethod
     def __segment__(files, fcount, seg_num):
+        '''
+        __segment__ is made an independent function in case you may need to use
+        it in other places       
+        '''
         assert (seg_num > 0), "Segment number must > 0"
-        assert (self.fcount > seg_num), \
+        assert (fcount > seg_num), \
             "Segment number exceeds the length of original video"
         # ((a + b - 1) // b) == ceil(a/b)
         _interval = (fcount + seg_num - 1) // seg_num
@@ -475,6 +497,7 @@ class SegmentedImageSequence(ImageSequence):
         _idx =  _interval * (seg_num - 1) + np.random.randint(_residual)
         _snipts.append(files[_idx])
         return(_snipts)
+
 
 if __name__ == "__main__":
     

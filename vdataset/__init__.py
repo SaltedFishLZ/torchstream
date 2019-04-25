@@ -1,6 +1,32 @@
 
+
+
 __authors__ = ["Zheng Liang @ Peking University"]
-__author__ = __authors__
+__author__  = __authors__
+
+
+# ----------------------------------------------------------------- #
+#           Runtime Settings for Python Scripts                     #
+# ----------------------------------------------------------------- #
+# NOTE: __debug__ parameter cannot be overwritten in normal Python 
+# scrips, so we don't modify it here. You should specify it via -O
+# parameter when you run Python intepreter.
+# * in __test__ mode, all scripts will perform self-test
+# * in __profile__ mode, all scripts will counting execution time and 
+#   report time break down
+# * in __strict__ mode, all scripts will have more strict santity check 
+#   to make sure you use it as the intended way
+# * in __verbose__ mode, all scripts will use Python logging module to 
+#   log some critical information. while you may specify whether the 
+#   logging module needs to dump the log info or not.
+# * in __vverbose__ (very verbose) mode, all scripts will print detailed
+#   information (including but not limited to __verbose__ information)
+#   in stdout.
+__test__        =   True
+__profile__     =   True
+__strict__      =   True
+__verbose__     =   True
+__vverbose__    =   True
 
 
 # ----------------------------------------------------------------- #

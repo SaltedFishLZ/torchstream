@@ -21,18 +21,19 @@ from . import video, metadata
 
 class VideoDataset(torchdata.Dataset):
     '''
-    NOTE: This shall be an abstract base class.
+    NOTE: TODO: Currently, This shall be an abstract base class.
     It should never be used in deployment !!!
     '''
     def __init__(self, root, dataset, part = None, split="1",
-        modalities = {'RGB': ['jpg']}
-        ):
+        modalities = {'RGB': ['jpg']}):
         # TODO: support for raw videos!
         # currently we only support read processed images
+        # TODO: support multiple input data modalities
 
         # santity check
         assert os.path.exists(root), "Dataset path not exists"
         assert dataset in __supported_datasets__, "Unsupported Dataset"
+        assert (1==len(modalities)), "Only support 1 data modality now"
         for _mod in modalities:
             assert _mod in __supported_modalities__, 'Unsupported Modality'
             print(__supported_modality_files__[_mod])
@@ -54,8 +55,8 @@ class VideoDataset(torchdata.Dataset):
         self.metadata_collector = metadata.VideoCollector(
             root = self.root, style = self.dataset_style,
             label_map = self.label_map,
-            # currently only support 1 modality and sliced pictures
-            mod = "RGB", ext = "", part=self.part
+            # currently only support RGB modality and sliced pictures
+            mod = "RGB", ext = self.modalities["RGB"][0], part=self.part
         )
 
         # filter samples
@@ -75,37 +76,109 @@ class VideoDataset(torchdata.Dataset):
         return(len(self.metadata_collector.samples))
 
     def __getitem__(self, idx):
-        assert True, "VideoDataset is abstract, __getitem__ must be overrided"
+        # if (__strict__):
+        #     assert True, \
+        #         "VideoDataset is abstract, __getitem__ must be overrided"
+        # NOTE
+        # currently, we intended to return a Numpy ndarray while it 
+        # may consume too much memory.
+
+        # get sample metadata
+        _sample_metadata = self.metadata_collector.__get_samples__()[idx]
+        # load data according to metadata
+        # NOTE: TODO: Currently, we only support sliced image sequence as 
+        # input.You cannot load a video file directly, sorry for that.
+        _ext = _sample_metadata.ext
+        assert (_ext == "jpg"), "Currently, only support RGB data in .jpg"
+        _path = _sample_metadata.path
+        _cid = _sample_metadata.cid
+        _seq = video.ImageSequence(_path, ext=_ext)
+        # get all frames
+        _blob = _seq.__get_frames__(list(range(_seq.fcount)))
+        # return (a [T][H][W][C] ndarray, class id)
+        # ndarray may need to be converted to [T][C][H][W] format in PyTorch
+        return(_blob, _cid)
+
 
 
 class ClippedVideoDataset(VideoDataset):
     '''
-    This dataset is for clipped videos
     '''
-    pass
+    def __init__(self, root, dataset, clip_len, part = None, split="1",
+        modalities = {'RGB': ['jpg']}):
+        super(ClippedVideoDataset, self).__init__(\
+            root, dataset, part, split, modalities)
+        self.clip_len = copy.deepcopy(clip_len)
+
+    def __getitem__(self, idx):
+        _sample_metadata = self.metadata_collector.__get_samples__()[idx]
+        _ext = _sample_metadata.ext
+        assert (_ext == "jpg"), "Currently, only support RGB data in .jpg"
+        _path = _sample_metadata.path
+        _cid = _sample_metadata.cid
+        _seq = video.ClippedImageSequence(_path, clip_len=self.clip_len, ext=_ext)
+        _blob = _seq.__get_frames__(list(range(_seq.fcount)))
+        return(_blob, _cid)        
 
 class SegmentedVideoDataset(VideoDataset):
-    '''
-    '''
-    pass
+    def __init__(self, root, dataset, seg_num, part = None, split="1",
+        modalities = {'RGB': ['jpg']}):
+        super(SegmentedVideoDataset, self).__init__(\
+            root, dataset, part, split, modalities)
+        self.seg_num = copy.deepcopy(seg_num)
+
+    def __getitem__(self, idx):
+        _sample_metadata = self.metadata_collector.__get_samples__()[idx]
+        _ext = _sample_metadata.ext
+        assert (_ext == "jpg"), "Currently, only support RGB data in .jpg"
+        _path = _sample_metadata.path
+        _cid = _sample_metadata.cid
+        _seq = video.SegmentedImageSequence(_path, seg_num=self.seg_num, ext=_ext)
+        _blob = _seq.__get_frames__(list(range(_seq.fcount)))
+        return(_blob, _cid)    
 
 
 if __name__ == "__main__":
 
-    DATASET = "HMDB51"
-    dataset_mod = importlib.import_module("vdataset.{}".format(DATASET))
+    if (__test__):
 
-    allset = VideoDataset(
-        dataset_mod.prc_data_path, DATASET, split="1")
-    print(allset.__len__())
+        test_components = {
+            'basic':True,
+            '__len__':False,
+            '__getitem__': False
+        }
+        
+        test_configuration = {
+            'datasets'   : ["HMDB51",]
+        }
 
-    trainset = VideoDataset(
-        dataset_mod.prc_data_path, DATASET, part="train", split="1")
-    print(trainset.__len__())
+        for DATASET in (test_configuration['datasets']):
+            if (test_components['basic']):
 
-    testset = VideoDataset(
-        dataset_mod.prc_data_path, DATASET, part="test", split="1")
-    print(testset.__len__())
+                dataset_mod = importlib.import_module(
+                    "vdataset.{}".format(DATASET))
+                allset = VideoDataset(
+                    dataset_mod.prc_data_path,DATASET,split="1")
+                trainset = VideoDataset(
+                    dataset_mod.prc_data_path,DATASET,part="train",split="1")
+                testset = VideoDataset(
+                    dataset_mod.prc_data_path,DATASET,part="test",split="1")
+            
+                if (test_components['__len__']):
+                    print("All samples number:")
+                    print(allset.__len__())
+                    print("Training Set samples number:")
+                    print(trainset.__len__())
+                    print("Testing Set samples number:")
+                    print(testset.__len__())
+                
+                    if (test_components['__getitem__']):
+                        for _idx in range(allset.__len__()):
+                            allset.__getitem__(_idx)
+                        for _idx in range(trainset.__len__()):
+                            trainset.__getitem__(_idx)
+                        for _idx in range(testset.__len__()):
+                            testset.__getitem__(_idx)                                            
 
 
    
