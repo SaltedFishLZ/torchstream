@@ -157,12 +157,12 @@ if __name__ == "__main__":
 
                 dataset_mod = importlib.import_module(
                     "vdataset.{}".format(DATASET))
-                allset = VideoDataset(
-                    dataset_mod.prc_data_path,DATASET,split="1")
-                trainset = VideoDataset(
-                    dataset_mod.prc_data_path,DATASET,part="train",split="1")
-                testset = VideoDataset(
-                    dataset_mod.prc_data_path,DATASET,part="test",split="1")
+                allset = ClippedVideoDataset(
+                    dataset_mod.prc_data_path,DATASET,clip_len=4,split="1")
+                trainset = ClippedVideoDataset(
+                    dataset_mod.prc_data_path,DATASET,clip_len=4,part="train",split="1")
+                testset = ClippedVideoDataset(
+                    dataset_mod.prc_data_path,DATASET,clip_len=4,part="test",split="1")
             
                 if (test_components['__len__']):
                     print("All samples number:")

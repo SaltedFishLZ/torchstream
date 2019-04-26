@@ -51,7 +51,7 @@ __supported_color_space__ = ["BGR", "RGB", "GRAY"]
 #
 # * 1. UCF101 style:
 #   Your video dataset must have the following file orgnization:
-#   Data Path
+#   Data Root
 #   ├── Class 0
 #   │   ├── Video 0
 #   |   ├── Video 1
@@ -80,11 +80,24 @@ __supported_color_space__ = ["BGR", "RGB", "GRAY"]
 #   different folders ["train", "val", "test"]. Currently, the test set
 #   has no annotations. While training set and validation set each follows
 #   the UCF101 style
-__supported_dataset_styles__ = ['UCF101']
+#
+# * 3. 20BN style
+#   Datasets from 20BN (a company) like Sth-sth and Jester usually have the
+#   following structure:
+#   Data Root
+#   ├── Video 0
+#   ├── Video 1
+#   ├── ...
+#   └── Video N
+#   And there are additional annotation data for each video.
+#   It applies to the following datasets:
+#   * Something-something V1 & V2
+#   * Jester
+__supported_dataset_styles__ = ['UCF101', '20BN']
 
 # key: dataset name, value: structure styles
 __supported_datasets__ = {
     # UCF101 styled datasets
     'UCF101':'UCF101', 'HMDB51':'UCF101', 'Weizmann':'UCF101',
+    'Jester':'20BN', 'Sth-sth-v1':'20BN', 'Sth-sth-v2':'20BN',
     }
-

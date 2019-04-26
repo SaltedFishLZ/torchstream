@@ -8,11 +8,6 @@
 # ndarray is Numpy ndarray
 # video is a video file path
 
-__test__    =   True
-__strict__  =   True
-__verbose__ =   True
-__vverbose__=   True
-
 import os
 import sys
 import copy
@@ -23,7 +18,6 @@ import logging
 import cv2
 import numpy as np 
 import psutil
-
 
 from .__init__ import __test__, __strict__, __verbose__, __vverbose__, \
     __supported_color_space__
@@ -209,10 +203,12 @@ def video2frames(vid_path, tgt_path, color_in="BGR", color_out="BGR"):
         assert ret, "Cannot write image file {}".format(img_path)
         # dump frame successfully
         cnt += 1
-
-    # assert cnt > 0, "Cannot read empty video"
-    if (0 == cnt):
-        logging.warn("Empty video {}".format(vid_path))
+    
+    if __strict__:
+        assert cnt > 0, "Cannot read empty video"
+    else:
+        if (0 == cnt):
+            logging.warn("[video2frames] empty video {}".format(vid_path))
 
     # check frame number
     if (abs(f_n - cnt) > _frame_num_err_limit_):
@@ -301,9 +297,13 @@ def frames2ndarray(frames, color_in="BGR", color_out="RGB"):
     '''
     # get video shape & check santity
     _f = len(frames)
-    # assert _f > 0, "Cannot accept empty video"
-    if (0 == _f):
-        logging.warn("Empty frames {}".format(vid_path))
+    
+    if (__strict__):
+        assert _f > 0, "Cannot accept empty video"
+    else:
+        if (0 == _f):
+            warn_str = "[frames2ndarray] empty list, no frames"
+            logging.warn(warn_str)
     img = frame2ndarray(frames[0], color_in, color_out)
     _h = img.shape[0]
     _w = img.shape[1]
@@ -368,8 +368,15 @@ class ImageSequence(object):
             self.files.append(_file_path)
             _fcnt += 1
             _file_path = self._get_file_path(_fcnt)
+        
         if (__strict__):
             assert (_fcnt > 0), "Empty video folder {}".format(path)
+        else:
+            if (0 == _fcnt):
+                warn_str = "ImageSequence: [__init__] "
+                warn_str += "empty video folder {}".format(path)
+                logging.warn(warn_str)
+
         self.fcount = _fcnt
 
     def _get_file_path(self, idx):

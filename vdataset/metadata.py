@@ -2,10 +2,6 @@
 # Dataset Meta Data Management Module
 #
 #
-__test__    =   True
-__strict__  =   True
-__verbose__ =   True
-__vverbose__=   False
 
 import os
 import sys
@@ -14,7 +10,8 @@ import logging
 import importlib
 
 from . import video
-from .__init__ import __supported_dataset_styles__, __supported_datasets__
+from .__init__ import __supported_dataset_styles__, __supported_datasets__, \
+    __test__, __strict__, __verbose__, __vverbose__
 
 
 class Sample(object):
@@ -69,11 +66,20 @@ class VideoCollector(object):
         self.labels = []
         self.samples = []
         if (True == seek_file):
-            labels, samples = self.collect_samples(self.root, self.style, 
+            samples, labels = self.collect_samples(self.root, self.style, 
                 self.label_map, self.mod, self.ext)
             # NOTE: here we use list.extend !!!
             self.labels.extend(labels)
             self.samples.extend(samples)
+        
+        if (__verbose__):
+            info_str = "VideoCollector initialized: "
+            info_str += "paths: {}; style: {}; modality {}; file \
+                extension {};".format(self.root, self.style, self.mod, 
+                self.ext)
+            logging.info(info_str)
+            if (__vverbose__):
+                print(info_str)
 
     @staticmethod
     def collect_samples(root, style, label_map, mod, ext):
@@ -81,6 +87,7 @@ class VideoCollector(object):
         collect a list of samples = list of samples, while each sample
         = (video, relative path, class id, label)
         here, video may refers to a collection of images
+        return (samples, labels), labels may == []
         '''
         if ("UCF101" == style):
             # get all labels
@@ -106,8 +113,16 @@ class VideoCollector(object):
                     _sample = Sample(_path, _name, ext, 
                                   _label, label_map[_label])
                     samples.append(copy.deepcopy(_sample))
-            # return results
-            return(labels, samples)               
+            # output status
+            if (__verbose__):
+                info_str = "[collect_samples] get {} samples"\
+                    .format(samples)
+                if (__vverbose__):
+                    print(info_str)
+            return(samples, labels)
+
+        elif ("20BN" == style):
+            return(samples, labels)   
         else:
             assert True, "Unsupported Dataset Struture Style"        
 

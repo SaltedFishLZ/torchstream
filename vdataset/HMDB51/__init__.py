@@ -72,5 +72,5 @@ __all__ = [
 ]
 
 if __name__ == "__main__":
-    print("common Data of Weizmann Dataset")
+    print("Common Data of HMDB51 Dataset")
     print(__samples__)
