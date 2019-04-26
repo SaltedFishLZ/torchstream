@@ -144,8 +144,8 @@ if __name__ == "__main__":
 
         test_components = {
             'basic':True,
-            '__len__':False,
-            '__getitem__': False
+            '__len__':True,
+            '__getitem__':True
         }
         
         test_configuration = {
