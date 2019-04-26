@@ -9,38 +9,34 @@ import torch
 
 
 
-class ToTorchFormatTensor(object):
-    """ Converts a PIL.Image (RGB) or numpy.ndarray (H x W x C) in the range [0, 255]
-    to a torch.FloatTensor of shape (C x H x W) in the range [0.0, 1.0] """
-    def __init__(self, div=True):
-        self.div = div
+class ToTensor(object):
+    '''
+    Convert a video sequence ndarray which is stored as [T][H][W][C] to 
+    PyTorch float tensor [T][C][H][W].
+    NOTE: Orginal video pixel value belongs to [0, 255]
+    Here will be converted to [0, 1]
+    '''
+    def __init__(self):
+        pass
 
-    def __call__(self, pic):
-        if isinstance(pic, np.ndarray):
-            # handle numpy array
-            img = torch.from_numpy(pic).permute(2, 0, 1).contiguous()
-        else:
-            # handle PIL Image
-            img = torch.ByteTensor(torch.ByteStorage.from_buffer(pic.tobytes()))
-            img = img.view(pic.size[1], pic.size[0], len(pic.mode))
-            # put it from HWC to CHW format
-            # yikes, this transpose takes 80% of the loading time/CPU
-            img = img.transpose(0, 1).transpose(0, 2).contiguous()
-        return img.float().div(255) if self.div else img.float()
+    def __call__(self, vid):
+        ret = torch.from_numpy(vid).permute(3, 2, 0, 1).contiguous()
+        ret = ret.float().div(255.0)
+        return ret
 
 
-
-
-class GroupRandomCrop(object):
+class VideoRandomCrop(object):
     def __init__(self, size):
-        if isinstance(size, numbers.Number):
+        if isinstance(size, int):
             self.size = (int(size), int(size))
         else:
             self.size = size
 
-    def __call__(self, img_group):
-
-        w, h = img_group[0].size
+    def __call__(self, vid):
+        '''
+        vid: numpy ndarray [T][H][W][C]
+        '''
+        w, h = vid[].size
         th, tw = self.size
 
         out_images = list()
