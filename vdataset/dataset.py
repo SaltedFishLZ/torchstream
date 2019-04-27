@@ -9,12 +9,12 @@ import torch
 import torch.utils.data as torchdata
 
 from .__init__ import __test__, __strict__, __verbose__, __vverbose__, \
-    __supported_datasets__, __supported_styles__, __supported_modalities__, \
+    __supported_datasets__, __supported_dataset_styles__, __supported_modalities__, \
     __supported_modality_files__
     
 from . import video, metadata
 
-
+__verbose__ = False
 
 class VideoDataset(torchdata.Dataset):
     '''
@@ -22,7 +22,7 @@ class VideoDataset(torchdata.Dataset):
     It should never be used in deployment !!!
     '''
     def __init__(self, root, dataset, part = None, split="1",
-        modalities = {'RGB': ['jpg']}):
+        modalities = {'RGB': [""]}):
         # TODO: support for raw videos!
         # currently we only support read processed images
         # TODO: support multiple input data modalities
@@ -33,7 +33,6 @@ class VideoDataset(torchdata.Dataset):
         assert (1==len(modalities)), "Only support 1 data modality now"
         for _mod in modalities:
             assert _mod in __supported_modalities__, 'Unsupported Modality'
-            print(__supported_modality_files__[_mod])
             for _ext in modalities[_mod]:
                 assert _ext in __supported_modality_files__[_mod],\
                     ("Unspported input file type: {} for modality: {}"\
@@ -52,7 +51,7 @@ class VideoDataset(torchdata.Dataset):
         self.mcollect = metadata.VideoCollector(
             root = self.root, dset = self.dset,
             # currently only support RGB modality and sliced pictures
-            mod = "RGB", ext = self.modalities["RGB"][0], part=self.part
+            mod = "RGB", ext = "", part=self.part
         )
 
         # filter samples
@@ -139,16 +138,17 @@ if __name__ == "__main__":
     if (__test__):
 
         test_components = {
-            'basic':True,
-            '__len__':True,
-            '__getitem__':True
+            'basic' : True,
+            '__len__' : True,
+            '__getitem__' : False
         }
         
         test_configuration = {
-            'datasets'   : ["Weizmann",]
+            'datasets'   : ["Weizmann", "HMDB51", "UCF101"]
         }
 
         for DATASET in (test_configuration['datasets']):
+            print("Dataset - [{}]".format(DATASET))
             if (test_components['basic']):
 
                 dset = importlib.import_module(
@@ -159,7 +159,7 @@ if __name__ == "__main__":
                     dset.prc_data_path,DATASET,clip_len=4,part="train",split="1")
                 testset = ClippedVideoDataset(
                     dset.prc_data_path,DATASET,clip_len=4,part="test",split="1")
-            
+
                 if (test_components['__len__']):
                     print("All samples number:")
                     print(allset.__len__())

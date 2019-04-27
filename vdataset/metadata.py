@@ -13,6 +13,8 @@ from . import video
 from .__init__ import __supported_dataset_styles__, __supported_datasets__, \
     __test__, __strict__, __verbose__, __vverbose__
 
+__verbose__ = False
+__vverbose__ = True
 
 class Sample(object):
     '''
@@ -119,8 +121,8 @@ class VideoCollector(object):
 
             # output status
             if (__verbose__):
-                info_str = "[collect_samples] get {} samples"\
-                    .format(samples)
+                info_str = "VideoCollector: [collect_samples] get {} samples"\
+                    .format(len(samples))
                 if (__vverbose__):
                     print(info_str)
             return(samples, labels)
@@ -134,7 +136,13 @@ class VideoCollector(object):
             if (sample_filter(_sample)):
                 filtered_samples.append(_sample)
             else:
-                pass
+                if (__verbose__):
+                    info_str = "VideoCollector:[_filter_samples_], remove\n{}"\
+                        .format(_sample)
+                    logging.info(info_str)
+                    if (__vverbose__):
+                        print(info_str)  
+                
         self.samples = filtered_samples
 
     def _get_samples_(self):
@@ -194,7 +202,7 @@ if __name__ == "__main__":
         )
     
     for _sample in collector._get_samples_():
-        print(_sample) 
+        print(_sample)
 
     check = collector._check_integrity_(dataset_mod)  
     if (check):
