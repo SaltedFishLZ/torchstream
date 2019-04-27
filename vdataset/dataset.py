@@ -51,10 +51,9 @@ class VideoDataset(torchdata.Dataset):
         # collect metadata
         self.dataset_style = __supported_datasets__[self.dataset]
         self.dataset_mod = importlib.import_module("vdataset.{}".format(dataset))
-        self.label_map = self.dataset_mod.label_map
+        self.labels = self.dataset_mod.__labels__
         self.metadata_collector = metadata.VideoCollector(
-            root = self.root, style = self.dataset_style,
-            label_map = self.label_map,
+            root = self.root, dset = self.dataset_mod,
             # currently only support RGB modality and sliced pictures
             mod = "RGB", ext = self.modalities["RGB"][0], part=self.part
         )
@@ -149,7 +148,7 @@ if __name__ == "__main__":
         }
         
         test_configuration = {
-            'datasets'   : ["HMDB51",]
+            'datasets'   : ["Weizmann",]
         }
 
         for DATASET in (test_configuration['datasets']):

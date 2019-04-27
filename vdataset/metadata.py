@@ -58,7 +58,7 @@ class VideoCollector(object):
         assert (dset.__style__ in __supported_dataset_styles__), \
             "Unsupported Dataset Struture Style"
         self.root = copy.deepcopy(root)
-        self.dset = copy.deepcopy(dset)
+        self.dset = dset
         self.mod = copy.deepcopy(mod)
         self.ext = copy.deepcopy(ext)
 
@@ -114,7 +114,7 @@ class VideoCollector(object):
                         _name = copy.deepcopy(_video)
                     _path = os.path.join(root, _label, _video)
                     _sample = Sample(_path, _name, ext, 
-                                  _label, dset.label_map[_label])
+                                  _label, dset.__labels__[_label])
                     samples.append(copy.deepcopy(_sample))
 
             # output status
@@ -143,7 +143,7 @@ class VideoCollector(object):
     def _check_integrity_(self, dset):
         
         # check class number
-        if (sorted(self.labels) != sorted(dset.__classes__)):
+        if (sorted(self.labels) != sorted(dset.__labels__.keys())):
             warn_str = "Integrity check failed, "
             warn_str += "class numbver mismatch"
             logging.warn(warn_str)
@@ -158,7 +158,7 @@ class VideoCollector(object):
         # check sample number for each class
         for _label in self.labels:
             _sample_count = _sample_count_dict[_label]
-            ref_sample_count = dset.__samples__[_label]
+            ref_sample_count = dset.__sample_num_per_class__[_label]
 
             if (type(ref_sample_count) == list):
                 # reference sample number is an interval
@@ -185,12 +185,11 @@ class VideoCollector(object):
 if __name__ == "__main__":
 
     DATASET = "UCF101"
-    dataset_mod = importlib.import_module(".{}".format(DATASET))
+    dataset_mod = importlib.import_module("vdataset.{}".format(DATASET))
 
     collector = VideoCollector(
         dataset_mod.prc_data_path,
-        __supported_datasets__[DATASET],
-        dataset_mod.label_map,
+        dataset_mod,
         ext=""
         )
     
@@ -200,10 +199,3 @@ if __name__ == "__main__":
     check = collector._check_integrity_(dataset_mod)  
     if (check):
         print("passed")
-
-    # debug
-    for _sample in collector._get_samples_():
-        if (_sample.name == "v_LongJump_g19_c03"):
-            from UCF101.split import TrainsetFilter
-            _filter = TrainsetFilter()
-            print(_filter(_sample))
