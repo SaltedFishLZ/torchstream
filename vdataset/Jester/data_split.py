@@ -4,7 +4,7 @@ import pandas
 from .common import trainset_df, valset_df, testset_df
 
 
-class for_train(object):
+class TrainsetFilter(object):
     def __init__(self):
         self.trainset = set()
         for idx, row in trainset_df.iterrows():
@@ -13,7 +13,7 @@ class for_train(object):
     def __call__(self, sample):
         return(sample.file in self.trainset)
 
-class for_val(object):
+class ValsetFilter(object):
     def __init__(self):
         self.valset = set()
         for idx, row in valset_df.iterrows():
@@ -22,7 +22,7 @@ class for_val(object):
     def __call__(self, sample):
         return(sample.file in self.valset)
 
-class for_test(object):
+class TestsetFilter(object):
     def __init__(self):
         self.testset = set()
         for idx, row in testset_df.iterrows():

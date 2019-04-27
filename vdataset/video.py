@@ -2,6 +2,11 @@
 # Video Processing Parts
 # Author: Zheng Liang
 # 
+# NOTE
+# This module only handle data of a certain modality. To fuse
+# different modalities (e.g., RGB + Flow), please do it at the 
+# dataset level
+# 
 # Term / Naming Conversion:
 # ┌─────────────┬───────────────────────────────────────────────┐    
 # │ Frames(s)   |*Description: Separate images(s) from a certain|
@@ -48,8 +53,8 @@ from .__init__ import __test__, __strict__, __verbose__, __vverbose__, \
 # local settings
 _frame_num_err_limit_ = 5
 
-__verbose__ = False
-__vverbose__ = False
+# __verbose__ = False
+# __vverbose__ = False
 
 # ------------------------------------------------------------------------- #
 #               Auxiliary Functions (Not To Be Exported)                    #
@@ -518,8 +523,6 @@ class ClippedImageSequence(ImageSequence):
             ext = 'jpg', color_in="BGR", color_out="RGB"):
         super(ClippedImageSequence, self).__init__(
             path, ext, color_in, color_out)
-        print("DEBUG")
-        print(clip_len)
         self.fids = self.__clip__(self.fids, self.fcount, clip_len)
         self.fcount = copy.deepcopy(clip_len)
 

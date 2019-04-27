@@ -37,7 +37,7 @@ for _split in __supported_splits__:
         'train_set': copy.deepcopy(train_set),
         'test_set': copy.deepcopy(test_set)}
 
-class for_train(object):
+class TrainsetFilter(object):
     def __init__(self, split='1'):
         assert split in __supported_splits__, "Unsupported split"
         self.split = split
@@ -50,7 +50,7 @@ class for_train(object):
         else:
             return False
 
-class for_test(object):
+class TestsetFilter(object):
     def __init__(self, split='1'):
         assert split in __supported_splits__, "Unsupported split"
         self.split = split
@@ -64,11 +64,11 @@ class for_test(object):
             return False
 
 # set the same as test set
-class for_val(object):
+class ValsetFilter(object):
     def __init__(self, split="1"):
-        self.for_test = for_test(split=split)
+        self.TestsetFilter = TestsetFilter(split=split)
     def __call__(self, sample):
-        return(self.for_test(sample))
+        return(self.TestsetFilter(sample))
 
 if __name__ == "__main__":
     print("Split 1:")

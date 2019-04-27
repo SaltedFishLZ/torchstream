@@ -70,7 +70,7 @@ class VideoDataset(torchdata.Dataset):
             else:
                 assert True, "?"
             # filtering data
-            self.metadata_collector.__filter_samples__(sample_filter)
+            self.metadata_collector._filter_samples_(sample_filter)
 
     def __len__(self):
         return(len(self.metadata_collector.samples))
@@ -84,7 +84,7 @@ class VideoDataset(torchdata.Dataset):
         # may consume too much memory.
 
         # get sample metadata
-        _sample_metadata = self.metadata_collector.__get_samples__()[idx]
+        _sample_metadata = self.metadata_collector._get_samples_()[idx]
         # load data according to metadata
         # NOTE: TODO: Currently, we only support sliced image sequence as 
         # input.You cannot load a video file directly, sorry for that.
@@ -111,7 +111,7 @@ class ClippedVideoDataset(VideoDataset):
         self.clip_len = copy.deepcopy(clip_len)
 
     def __getitem__(self, idx):
-        _sample_metadata = self.metadata_collector.__get_samples__()[idx]
+        _sample_metadata = self.metadata_collector._get_samples_()[idx]
         _ext = _sample_metadata.ext
         assert (_ext == "jpg"), "Currently, only support RGB data in .jpg"
         _path = _sample_metadata.path
@@ -128,7 +128,7 @@ class SegmentedVideoDataset(VideoDataset):
         self.seg_num = copy.deepcopy(seg_num)
 
     def __getitem__(self, idx):
-        _sample_metadata = self.metadata_collector.__get_samples__()[idx]
+        _sample_metadata = self.metadata_collector._get_samples_()[idx]
         _ext = _sample_metadata.ext
         assert (_ext == "jpg"), "Currently, only support RGB data in .jpg"
         _path = _sample_metadata.path
