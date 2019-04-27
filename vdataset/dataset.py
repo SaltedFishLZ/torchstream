@@ -93,8 +93,8 @@ class VideoDataset(torchdata.Dataset):
         _path = _sample_metadata.path
         _cid = _sample_metadata.cid
         _seq = video.ImageSequence(_path, ext=_ext)
-        # get all frames
-        _blob = _seq.__get_frames__(list(range(_seq.fcount)))
+        # get all frames as a vaaray
+        _blob = _seq._get_varray_(list())
         # return (a [T][H][W][C] ndarray, class id)
         # ndarray may need to be converted to [T][C][H][W] format in PyTorch
         return(_blob, _cid)
@@ -117,7 +117,7 @@ class ClippedVideoDataset(VideoDataset):
         _path = _sample_metadata.path
         _cid = _sample_metadata.cid
         _seq = video.ClippedImageSequence(_path, clip_len=self.clip_len, ext=_ext)
-        _blob = _seq.__get_frames__(list(range(_seq.fcount)))
+        _blob = _seq._get_varray_()
         return(_blob, _cid)        
 
 class SegmentedVideoDataset(VideoDataset):
@@ -134,7 +134,7 @@ class SegmentedVideoDataset(VideoDataset):
         _path = _sample_metadata.path
         _cid = _sample_metadata.cid
         _seq = video.SegmentedImageSequence(_path, seg_num=self.seg_num, ext=_ext)
-        _blob = _seq.__get_frames__(list(range(_seq.fcount)))
+        _blob = _seq._get_varray_()
         return(_blob, _cid)    
 
 
