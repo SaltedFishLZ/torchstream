@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-__test__    =   True
-__strict__  =   True
-__verbose__ =   True
-__vverbose__=   True
-
 import os
 import sys
 import copy
@@ -13,8 +8,10 @@ import importlib
 import torch
 import torch.utils.data as torchdata
 
-from .__init__ import __supported_datasets__, __supported_dataset_styles__, \
-    __supported_modalities__, __supported_modality_files__
+from .__init__ import __test__, __strict__, __verbose__, __vverbose__, \
+    __supported_datasets__, __supported_styles__, __supported_modalities__, \
+    __supported_modality_files__
+    
 from . import video, metadata
 
 
@@ -49,11 +46,11 @@ class VideoDataset(torchdata.Dataset):
         self.modalities = copy.deepcopy(modalities)
 
         # collect metadata
-        self.dataset_style = __supported_datasets__[self.dataset]
-        self.dataset_mod = importlib.import_module("vdataset.{}".format(dataset))
-        self.labels = self.dataset_mod.__labels__
-        self.metadata_collector = metadata.VideoCollector(
-            root = self.root, dset = self.dataset_mod,
+        self.style = __supported_datasets__[self.dataset]
+        self.dset = importlib.import_module("vdataset.{}".format(dataset))
+        self.labels = self.dset.__labels__
+        self.mcollect = metadata.VideoCollector(
+            root = self.root, dset = self.dset,
             # currently only support RGB modality and sliced pictures
             mod = "RGB", ext = self.modalities["RGB"][0], part=self.part
         )
@@ -61,18 +58,18 @@ class VideoDataset(torchdata.Dataset):
         # filter samples
         if (self.part != None):
             if (self.part == "train"):
-                sample_filter = self.dataset_mod.for_train(split=self.split)
+                sample_filter = self.dset.TrainsetFilter(split=self.split)
             elif (self.part == "val"):
-                sample_filter = self.dataset_mod.for_val(split=self.split)
+                sample_filter = self.dset.ValsetFilter(split=self.split)
             elif (self.part == "test"):
-                sample_filter = self.dataset_mod.for_test(split=self.split)
+                sample_filter = self.dset.TestsetFilter(split=self.split)
             else:
                 assert True, "?"
             # filtering data
-            self.metadata_collector._filter_samples_(sample_filter)
+            self.mcollect._filter_samples_(sample_filter)
 
     def __len__(self):
-        return(len(self.metadata_collector.samples))
+        return(len(self.mcollect.samples))
 
     def __getitem__(self, idx):
         # if (__strict__):
@@ -83,7 +80,7 @@ class VideoDataset(torchdata.Dataset):
         # may consume too much memory.
 
         # get sample metadata
-        _sample_metadata = self.metadata_collector._get_samples_()[idx]
+        _sample_metadata = self.mcollect._get_samples_()[idx]
         # load data according to metadata
         # NOTE: TODO: Currently, we only support sliced image sequence as 
         # input.You cannot load a video file directly, sorry for that.
@@ -110,7 +107,7 @@ class ClippedVideoDataset(VideoDataset):
         self.clip_len = copy.deepcopy(clip_len)
 
     def __getitem__(self, idx):
-        _sample_metadata = self.metadata_collector._get_samples_()[idx]
+        _sample_metadata = self.mcollect._get_samples_()[idx]
         _ext = _sample_metadata.ext
         assert (_ext == "jpg"), "Currently, only support RGB data in .jpg"
         _path = _sample_metadata.path
@@ -127,7 +124,7 @@ class SegmentedVideoDataset(VideoDataset):
         self.seg_num = copy.deepcopy(seg_num)
 
     def __getitem__(self, idx):
-        _sample_metadata = self.metadata_collector._get_samples_()[idx]
+        _sample_metadata = self.mcollect._get_samples_()[idx]
         _ext = _sample_metadata.ext
         assert (_ext == "jpg"), "Currently, only support RGB data in .jpg"
         _path = _sample_metadata.path
@@ -154,14 +151,14 @@ if __name__ == "__main__":
         for DATASET in (test_configuration['datasets']):
             if (test_components['basic']):
 
-                dataset_mod = importlib.import_module(
+                dset = importlib.import_module(
                     "vdataset.{}".format(DATASET))
                 allset = ClippedVideoDataset(
-                    dataset_mod.prc_data_path,DATASET,clip_len=4,split="1")
+                    dset.prc_data_path,DATASET,clip_len=4,split="1")
                 trainset = ClippedVideoDataset(
-                    dataset_mod.prc_data_path,DATASET,clip_len=4,part="train",split="1")
+                    dset.prc_data_path,DATASET,clip_len=4,part="train",split="1")
                 testset = ClippedVideoDataset(
-                    dataset_mod.prc_data_path,DATASET,clip_len=4,part="test",split="1")
+                    dset.prc_data_path,DATASET,clip_len=4,part="test",split="1")
             
                 if (test_components['__len__']):
                     print("All samples number:")

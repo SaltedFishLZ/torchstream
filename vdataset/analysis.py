@@ -7,6 +7,9 @@ import multiprocessing as mp
 
 import numpy as np
 
+from .dataset import VideoDataset
+
+
 def varray_sum_raw(varray):
     (_t, _h, _w) = varray.shape[0:3]
     nums = _t * _h * _w
@@ -17,7 +20,6 @@ def varray_sum_raw(varray):
     print(sums.shape)
 
     return(sums, nums)
-
 
 def varray_sum_rsq(varray, means):
     (_t, _h, _w) = varray.shape[0:2]
@@ -30,8 +32,6 @@ def varray_sum_rsq(varray, means):
     sums = rsquares.sum(axis=(0,1,2))
 
     return(sums, nums)
-
-
 
 
 def test_functions():
