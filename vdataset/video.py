@@ -53,8 +53,8 @@ from .__init__ import __test__, __strict__, __verbose__, __vverbose__, \
 # local settings
 _frame_num_err_limit_ = 5
 
-# __verbose__ = False
-# __vverbose__ = False
+__verbose__ = False
+__vverbose__ = False
 
 # ------------------------------------------------------------------------- #
 #               Auxiliary Functions (Not To Be Exported)                    #
@@ -483,22 +483,23 @@ class ImageSequence(object):
                 print(info_str)
         return(farray)
 
-    def _get_varray_(self, indices=None):
+    def _get_varray_(self, indices=[]):
         '''
         get the varray of all the frames, if indices == None.
         otherwise get certain frames as they are a continuous video
         '''
-        # only enable santity check in strict mode for higher perfomance
-        if (__strict__):
-            if (None == indices):
-                indices = self.fids
-            else:
+        if (0 == len(indices)):
+            _indices = self.fids
+        else:
+            # only enable santity check in strict mode for higher perfomance
+            if (__strict__):
                 for idx in indices:
-                    assert (idx < self.fcount), "Image index {} overflow"\
-                        .format(idx)
+                    assert (idx < self.fcount), "Image index {} overflow".\
+                        format(idx)
+            _indices = copy.deepcopy(indices)          
         # generate file paths
         _fpaths = []
-        for idx in indices:
+        for idx in _indices:
             _fpaths.append(self._get_frame_path_(idx))
         # call frames2ndarray to get array
         varray = frames2ndarray(_fpaths, self.color_in, self.color_out)

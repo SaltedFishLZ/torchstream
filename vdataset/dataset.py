@@ -22,7 +22,11 @@ class VideoDataset(torchdata.Dataset):
     It should never be used in deployment !!!
     '''
     def __init__(self, root, dataset, part = None, split="1",
-        modalities = {'RGB': [""]}):
+        modalities = {'RGB': (True, ["jpg"])}):
+        '''
+        - modalities : Input data format of each modality (used as a dict). \
+Key is modality, value is a tuple (is_seq, list of file extensions).
+        '''
         # TODO: support for raw videos!
         # currently we only support read processed images
         # TODO: support multiple input data modalities
@@ -33,7 +37,7 @@ class VideoDataset(torchdata.Dataset):
         assert (1==len(modalities)), "Only support 1 data modality now"
         for _mod in modalities:
             assert _mod in __supported_modalities__, 'Unsupported Modality'
-            for _ext in modalities[_mod]:
+            for _ext in modalities[_mod][1]:
                 assert _ext in __supported_modality_files__[_mod],\
                     ("Unspported input file type: {} for modality: {}"\
                     .format(_ext, _mod))
@@ -48,10 +52,13 @@ class VideoDataset(torchdata.Dataset):
         self.style = __supported_datasets__[self.dataset]
         self.dset = importlib.import_module("vdataset.{}".format(dataset))
         self.labels = self.dset.__labels__
+        # currently only support RGB modality and sliced pictures
+        modality = "RGB"
+        is_seq = modalities[modality][0]
+        ext = modalities[modality][1][0]
         self.mcollect = metadata.VideoCollector(
             root = self.root, dset = self.dset,
-            # currently only support RGB modality and sliced pictures
-            mod = "RGB", ext = "", part=self.part
+            mod=modality, seq=is_seq, ext=ext, part=self.part
         )
 
         # filter samples
@@ -83,7 +90,7 @@ class VideoDataset(torchdata.Dataset):
         # load data according to metadata
         # NOTE: TODO: Currently, we only support sliced image sequence as 
         # input.You cannot load a video file directly, sorry for that.
-        _ext = _sample_metadata.ext
+        _ext = "jpg"
         assert (_ext == "jpg"), "Currently, only support RGB data in .jpg"
         _path = _sample_metadata.path
         _cid = _sample_metadata.cid
@@ -100,7 +107,7 @@ class ClippedVideoDataset(VideoDataset):
     '''
     '''
     def __init__(self, root, dataset, clip_len, part = None, split="1",
-        modalities = {'RGB': ['jpg']}):
+        modalities = {'RGB': (True, ["jpg"])}):
         super(ClippedVideoDataset, self).__init__(\
             root, dataset, part, split, modalities)
         self.clip_len = copy.deepcopy(clip_len)
@@ -117,7 +124,7 @@ class ClippedVideoDataset(VideoDataset):
 
 class SegmentedVideoDataset(VideoDataset):
     def __init__(self, root, dataset, seg_num, part = None, split="1",
-        modalities = {'RGB': ['jpg']}):
+        modalities = {'RGB': (True, ["jpg"])}):
         super(SegmentedVideoDataset, self).__init__(\
             root, dataset, part, split, modalities)
         self.seg_num = copy.deepcopy(seg_num)
@@ -144,7 +151,7 @@ if __name__ == "__main__":
         }
         
         test_configuration = {
-            'datasets'   : ["Weizmann", "HMDB51", "UCF101"]
+            'datasets'   : ["HMDB51"]
         }
 
         for DATASET in (test_configuration['datasets']):
@@ -169,12 +176,13 @@ if __name__ == "__main__":
                     print(testset.__len__())
                 
                     if (test_components['__getitem__']):
-                        for _idx in range(allset.__len__()):
-                            allset.__getitem__(_idx)
-                        for _idx in range(trainset.__len__()):
-                            trainset.__getitem__(_idx)
-                        for _idx in range(testset.__len__()):
-                            testset.__getitem__(_idx)                                            
+                        print(allset.__getitem__(allset.__len__()-1))
+                        # for _idx in range(allset.__len__()):
+                        #     allset.__getitem__(_idx)
+                        # for _idx in range(trainset.__len__()):
+                        #     trainset.__getitem__(_idx)
+                        # for _idx in range(testset.__len__()):
+                        #     testset.__getitem__(_idx)                                            
 
 
    

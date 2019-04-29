@@ -20,7 +20,7 @@ class Sample(object):
     '''
     An video sample struct containing the meta-data of a video sample
     '''
-    def __init__(self, path, name, ext, lbl="default", cid=-1):
+    def __init__(self, path, name, seq=True, ext="jpg", lbl=None, cid=-1):
         '''
         path: compelete sample path
         name: file name (without any extension and path)
@@ -34,11 +34,15 @@ class Sample(object):
         self.path   =   copy.deepcopy(path)
         self.name   =   copy.deepcopy(name)
         self.ext    =   copy.deepcopy(ext)
+        self.seq    =   copy.deepcopy(seq)
         self.lbl    =   copy.deepcopy(lbl)
         self.cid    =   copy.deepcopy(cid)
 
     def __repr__(self):
-        string = str(self.name) + '\n'
+        string = str(self.name)
+        if (self.seq):
+            string += "(frame sequence)"
+        string += '\n'
         string += "[label] : {}  \t".format(self.lbl)
         string += "[cid] : {} \t".format(self.cid)
         string += "[path] : {}".format(self.path)
@@ -51,7 +55,7 @@ class VideoCollector(object):
     TODO: support multiple data format and multiple input modality
     '''
     def __init__(self, root, dset, 
-                mod = "RGB", ext= "avi", 
+                mod="RGB", seq=True, ext="jpg",
                 seek_file=True, part=None):
         '''
         part = None: all data are collected
@@ -62,14 +66,15 @@ class VideoCollector(object):
         self.root = copy.deepcopy(root)
         self.dset = dset
         self.mod = copy.deepcopy(mod)
+        self.seq = copy.deepcopy(seq)
         self.ext = copy.deepcopy(ext)
 
         self.labels = []
         self.samples = []
         if (True == seek_file):
-            samples, labels = self.collect_samples(self.root, self.dset
-                , self.mod, self.ext)
-            # NOTE: here we use list.extend !!!
+            samples, labels = self.collect_samples(root=self.root,
+                dset=self.dset, mod=self.mod, seq=self.seq, ext=self.ext)
+            # NOTE: here we use list.extend
             self.labels.extend(labels)
             self.samples.extend(samples)
         
@@ -83,7 +88,7 @@ class VideoCollector(object):
                 print(info_str)
 
     @staticmethod
-    def collect_samples(root, dset, mod, ext):
+    def collect_samples(root, dset, mod, seq, ext):
         '''
         Collect a list of samples.
         - root : root path of the dataset
@@ -109,14 +114,15 @@ class VideoCollector(object):
             samples = []
             for _label in labels:
                 for _video in os.listdir(os.path.join(root, _label)):
-                    if (ext not in [None, ""]):
+                    if (False == seq):
                         # split file extension
                         _name = _video[:-(len(ext)+1)]
                     else:
                         _name = copy.deepcopy(_video)
                     _path = os.path.join(root, _label, _video)
-                    _sample = Sample(_path, _name, ext, 
-                                  _label, dset.__labels__[_label])
+                    # create Sample object
+                    _sample = Sample(path=_path, name=_name, seq=seq, ext=ext, 
+                            lbl=_label, cid=(dset.__labels__[_label]))
                     samples.append(copy.deepcopy(_sample))
 
             # output status
