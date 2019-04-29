@@ -7,13 +7,12 @@
 import math
 import copy
 import time
-import random
 import numbers
 
 import numpy as np
 import cv2
-import torch
-import torchvision
+# import torch
+# import torchvision
 
 # -------------------------------- #
 #           Video Crop             #
@@ -40,20 +39,23 @@ class VideoRandomCrop(object):
         - varray : video in a numpy ndarray, data layout is [T][H][W][C]
         - return : a cropped varray with the same data layout
         '''
-        h, w = varray.size
+        h, w = varray.size[1:3]
         th, tw = self.size
+        # short cut
+        if ((h == th) and (w == tw)):
+            return(varray)
         # santity check
         assert (th <= h), "Crop height exceeds frame height"
         assert (tw <= w), "Crop width exceeds frame width"
         # generate offset
-        i = random.randint(0, h - th)
-        j = random.randint(0, w - tw)
+        i = np.random.randint(0, h - th)
+        j = np.random.randint(0, w - tw)
         # crop
         result = varray[:, i : i + th, j : j + tw, :]
         return(result)
 
     def __repr__(self):
-        return self.__class__.__name__ + '(size={0})'.format(self.size)
+        return self.__class__.__name__ + '(size={})'.format(self.size)
 
 class VideoCenterCrop(object):
     '''
@@ -76,8 +78,11 @@ class VideoCenterCrop(object):
         - varray : video in a numpy ndarray, data layout is [T][H][W][C]
         - return : a cropped varray with the same data layout
         '''
-        h, w = varray.size
+        h, w = varray.size[1:3]
         th, tw = self.size
+        # short cut
+        if ((h == th) and (w == tw)):
+            return(varray)
         # santity check
         assert (th <= h), "Crop height exceeds frame height"
         assert (tw <= w), "Crop width exceeds frame width"
@@ -89,7 +94,47 @@ class VideoCenterCrop(object):
         return(result)
 
     def __repr__(self):
-        return self.__class__.__name__ + '(size={0})'.format(self.size)
+        return self.__class__.__name__ + '(size={})'.format(self.size)
+
+
+
+# -------------------------------- #
+#          Video Resize            #
+# -------------------------------- #
+
+class VideoResize(object):
+    '''
+    Resize a video via OpenCV's resize API
+    NOTE: Currently, we only support spatial resize.
+    '''
+    def __init__(self, size, interpolation=cv2.INTER_LINEAR):
+        '''
+        - size 
+        - interpolation
+        '''
+        if isinstance(size, numbers.Number):
+            self.size = (int(size), int(size))
+        else:
+            self.size = size
+        self.interpolation = interpolation
+    
+    def __call__(self, varray):
+        '''
+        - varray : [T][H][W][C]
+        - return : [T][H][w][C]
+        '''
+        t, h, w = varray.shape[0:3]
+        result = np.empty(varray.shape, np.dtype('float32'))
+        for _i in range(t):
+            farray = varray[_i, :, :, :]
+            result[_i, :, :, :] = cv2.resize(farray, dsize=self.size,
+                interpolation=cv2.interpolation)
+        return(result)
+
+    def __repr__(self):
+        return self.__class__.__name__ + '(size={}, intrpl={})'.\
+            format(self.size, self.interpolation)
+
 
 
 
@@ -97,12 +142,77 @@ class VideoCenterCrop(object):
 #           Video Flip             #
 # -------------------------------- #
 # NOTE: 
-# Flip might not apply to some datasets where
+# 1. Flip might not apply to some datasets where
 # motion information is important. 
 # For example, some datasets need you to distinguish
 # "From left to right" from "From right to left". If
 # you use horizontal flip while not change the label,
-# you will get an incorrect sample.
+# you will get an incorrect sample. But if you change
+# the label, you may get very interesting augmentation.
+# 2. For the flow modality, flipping the original video
+# corresponds to get the opposite vector of the original
+# flow, which is "flow = - flow", rather than "flow = 
+# flip(flow)"
+class VideoFlip(object):
+    '''
+    Video level deterministic flip
+    '''
+    def __init__(self, dim="H"):
+        '''
+        Initialization
+        - dim : "H", "W" or "T", which dimension the flip
+        takes place. "H" is height, "W" is width, "T" is time.
+        '''
+        assert (dim in ["H", "W", "T"]), "Unsupported flip dimension"
+        self.dim = copy.deepcopy(dim)
+    
+    def __call__(self, varray):
+        '''
+        Flip a video, must execute
+        - varray : [T][H][W][C]
+        - return : flipped video
+        '''
+        if ("T" == self.dim):
+            return(np.flip(varray, 0))
+        elif ("H" == self.dim):
+            return(np.flip(varray, 1))
+        elif ("W" == self.dim):
+            return(np.flip(varray, 2))
+        else:
+            assert True, "Error in transform"
+
+    def __repr__(self):
+        return self.__class__.__name__ + '(dim={})'.format(self.dim)
+
+
+class VideoRandomFlip(VideoFlip):
+    '''
+    Video level random flip
+    '''
+    def __init__(self, dim="H"):
+        super(VideoRandomFlip, self).__init__(dim=dim)
+    
+    def __call__(self, varray):
+        # TODO: how to notify the caller whether the video is flipped ?
+        '''
+        Flip a video, execute with a probability of 0.5
+        - varray : [T][H][W][C]
+        - return : flipped video
+        '''
+        v = np.random.random()
+        # identical
+        if (v < 0.5):
+            return(varray)
+        # otherwise, flip
+        if ("T" == self.dim):
+            return(np.flip(varray, 0))
+        elif ("H" == self.dim):
+            return(np.flip(varray, 1))
+        elif ("W" == self.dim):
+            return(np.flip(varray, 2))
+        else:
+            assert True, "Error in transform"
+
 
 
 
@@ -112,6 +222,7 @@ class VideoCenterCrop(object):
 
 class VideoNormalize(object):
     '''
+    Normalize all pixels of a video for each channel
     '''
     def __init__(self, means, stds):
         '''
@@ -135,10 +246,9 @@ class VideoNormalize(object):
         result = varray / np.tile(self.stds, (_t, _h, _w, 1))
         return(result)
 
-
-# -------------------------------- #
-#          Video Scale             #
-# -------------------------------- #
+    def __repr__(self):
+        return self.__class__.__name__ + '(means={}, stds={})'.\
+            format(self.means, self.stds)
 
 
 # -------------------------------- #
@@ -150,8 +260,8 @@ class ToTensor(object):
     Convert a video sequence ndarray which is stored as [T][H][W][C] to 
     PyTorch float tensor [T][C][H][W].
     NOTE: Orginal video pixel values are np.uint8, in [0, 255], if you want
-    to scale the value to [0, 1], please use normalization before, or specify
-    the 'scale' argument in __init__ as True.
+    to scale the value to [0, 1], please specify the 'scale' argument in 
+    __init__ with True. If use normalization before, there is no need to scale.
     '''
     def __init__(self, val_scale=False):
         '''
@@ -173,4 +283,21 @@ class ToTensor(object):
 
 
 if __name__ == "__main__":
-    pass
+    crop = VideoRandomCrop(size=(12, 16))
+    print(crop)
+
+    crop = VideoCenterCrop(size=(12))
+    print(crop)
+
+    resize = VideoResize(size=(12))
+    print(resize)
+
+    flip = VideoFlip(dim="T")
+    print(flip)
+
+    flip = VideoRandomFlip(dim="H")
+    print(flip)
+
+    norm = VideoNormalize(means=[123,132,133], stds=[12, 32, 45])
+    print(norm)
+
