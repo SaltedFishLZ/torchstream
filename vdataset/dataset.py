@@ -8,10 +8,7 @@ import importlib
 import torch
 import torch.utils.data as torchdata
 
-from .__init__ import __test__, __strict__, __verbose__, __vverbose__, \
-    __supported_datasets__, __supported_dataset_styles__, __supported_modalities__, \
-    __supported_modality_files__
-    
+from .__init__ import *
 from . import video, metadata
 
 __verbose__ = False

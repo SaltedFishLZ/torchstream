@@ -10,8 +10,7 @@ import logging
 import importlib
 
 from . import video
-from .__init__ import __supported_dataset_styles__, __supported_datasets__, \
-    __test__, __strict__, __verbose__, __vverbose__
+from .__init__ import *
 
 __verbose__ = False
 __vverbose__ = True

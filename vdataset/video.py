@@ -47,12 +47,10 @@ import cv2
 import numpy as np 
 import psutil
 
-from .__init__ import __test__, __strict__, __verbose__, __vverbose__, \
-    __supported_color_space__
+from .__init__ import *
 
-# local settings
+# local settings (only in dev)
 _frame_num_err_limit_ = 5
-
 __verbose__ = False
 __vverbose__ = False
 

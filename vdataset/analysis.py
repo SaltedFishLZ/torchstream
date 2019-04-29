@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import os
 import sys
 import copy
@@ -10,8 +12,9 @@ import multiprocessing as mp
 import numpy as np
 import matplotlib.pyplot as plt
 
-from .__init__ import __verbose__, __vverbose__, __test__, __strict__
+from .__init__ import *
 from .dataset import VideoDataset
+from .timer import Timer
 
 LOG_INTERVAL = 50
 
@@ -328,20 +331,41 @@ def test_functions():
 if __name__ == "__main__":
     # test_functions()
 
-    # DATASET = "Weizmann"
     for DATASET in ["Weizmann", "HMDB51", "UCF101"]:
         print("")
         print("################################")
         print("      Analyzing {} ...".format(DATASET))
         print("################################")
         print("")
+
+        if (__profile__):
+            profile_timer = Timer()
+            profile_timer.start()
+
         dset = importlib.import_module(
             "vdataset.{}".format(DATASET))
         allset = VideoDataset(
                 dset.prc_data_path, DATASET, split="1")
+
+        if (__profile__):
+            profile_timer.pause()
+            prof_str = "PROFILING : Creating Videodatset [{}] and collecting \
+metadata - [{}] s".format(DATASET, profile_timer.report())
+            logging.warn(prof_str)
+
+        if (__profile__):
+            profile_timer = Timer()
+            profile_timer.start()
+
         shapes = get_shapes(allset, 32)
         means = get_means(allset, 32)
         vars = get_vars(allset, means, 32)
+
+        if (__profile__):
+            profile_timer.pause()
+            prof_str = "PROFILING : Analysis Videodatset [{}] - [{}] s"\
+                .format(DATASET, profile_timer.report())
+            logging.warn(prof_str)
 
         # f = open("{}.shapes.pkl".format(DATASET), "rb")
         # shapes = pickle.load(f)
