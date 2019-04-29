@@ -25,8 +25,8 @@ __author__  = __authors__
 __test__        =   True
 __profile__     =   True
 __strict__      =   True
-__verbose__     =   True
-__vverbose__    =   True
+__verbose__     =   False
+__vverbose__    =   False
 
 
 # ----------------------------------------------------------------- #

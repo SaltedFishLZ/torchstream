@@ -16,7 +16,7 @@ from .__init__ import *
 from .dataset import VideoDataset
 from .timer import Timer
 
-LOG_INTERVAL = 50
+LOG_INTERVAL = 200
 
 def varray_sum_raw(varray):
     # get frame shape
@@ -331,6 +331,8 @@ def test_functions():
 if __name__ == "__main__":
     # test_functions()
 
+    PROC_NUM = 16
+
     for DATASET in ["Weizmann", "HMDB51", "UCF101"]:
         print("")
         print("################################")
@@ -357,9 +359,9 @@ metadata - [{}] s".format(DATASET, profile_timer.report())
             profile_timer = Timer()
             profile_timer.start()
 
-        shapes = get_shapes(allset, 32)
-        means = get_means(allset, 32)
-        vars = get_vars(allset, means, 32)
+        shapes = get_shapes(allset, PROC_NUM)
+        means = get_means(allset, PROC_NUM)
+        vars = get_vars(allset, means, PROC_NUM)
 
         if (__profile__):
             profile_timer.pause()
