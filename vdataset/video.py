@@ -688,7 +688,7 @@ if __name__ == "__main__":
         test_components = {
             'functions' : True,
             'classes' : {'_get_farray_':True,
-                '_get_varray_':True
+                '_get_varray_':False
                 }
         }
         test_configuration = {
