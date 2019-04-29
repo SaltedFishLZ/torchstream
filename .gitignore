@@ -1,5 +1,12 @@
+# nfs files
+.nfs*
+
+# pickle files
+*.pkl
+
 # created virtual environment
 venv_video/
+venv*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

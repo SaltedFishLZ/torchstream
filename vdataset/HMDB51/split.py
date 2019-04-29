@@ -1,7 +1,7 @@
 import os
 import copy
 
-from .label_map import label_map
+from .label import __labels__
 
 __supported_splits__ = ["1", "2", "3"]
 
@@ -14,7 +14,7 @@ for _split in __supported_splits__:
     # create helping sets for each split
     train_set = set()
     test_set = set()
-    for _label in list(label_map.keys()):
+    for _label in list(__labels__.keys()):
         _file = "{}_test_split{}.txt".format(_label, _split)
         _file = os.path.join(splits_folder, _file)
         f = open(_file, "r")
@@ -37,7 +37,7 @@ for _split in __supported_splits__:
         'train_set': copy.deepcopy(train_set),
         'test_set': copy.deepcopy(test_set)}
 
-class for_train(object):
+class TrainsetFilter(object):
     def __init__(self, split='1'):
         assert split in __supported_splits__, "Unsupported split"
         self.split = split
@@ -50,7 +50,7 @@ class for_train(object):
         else:
             return False
 
-class for_test(object):
+class TestsetFilter(object):
     def __init__(self, split='1'):
         assert split in __supported_splits__, "Unsupported split"
         self.split = split
@@ -64,22 +64,18 @@ class for_test(object):
             return False
 
 # set the same as test set
-class for_val(object):
+class ValsetFilter(object):
     def __init__(self, split="1"):
-        self.for_test = for_test(split=split)
+        self.TestsetFilter = TestsetFilter(split=split)
     def __call__(self, sample):
-        return(self.for_test(sample))
+        return(self.TestsetFilter(sample))
 
 if __name__ == "__main__":
     print("Split 1:")
-    print("Train - ")
-    print(len(aux_dict['1']['train_set']))
-    print("Test - ")
-    print(len(aux_dict['1']['test_set']))
+    print("Train - {}".format(len(aux_dict['1']['train_set'])))
+    print("Test - {}".format(len(aux_dict['1']['test_set'])))
 
     print("Split 2:")
-    print("Train - ")
-    print(len(aux_dict['2']['train_set']))
-    print("Test - ")
-    print(len(aux_dict['2']['test_set']))
+    print("Train - {}".format(len(aux_dict['2']['train_set'])))
+    print("Test - {}".format(len(aux_dict['2']['test_set'])))
     

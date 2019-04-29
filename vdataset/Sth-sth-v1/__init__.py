@@ -186,6 +186,7 @@ __classes__ = __sample_num_per_class__.keys()
 cids = list(range(len(__classes__)))
 label_map = dict(zip(__classes__, cids))
 
+from .data_labels import data_labels
 
 if __name__ == "__main__":
     print(cids)

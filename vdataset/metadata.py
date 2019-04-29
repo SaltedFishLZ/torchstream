@@ -10,15 +10,16 @@ import logging
 import importlib
 
 from . import video
-from .__init__ import __supported_dataset_styles__, __supported_datasets__, \
-    __test__, __strict__, __verbose__, __vverbose__
+from .__init__ import *
 
+__verbose__ = False
+__vverbose__ = True
 
 class Sample(object):
     '''
     An video sample struct containing the meta-data of a video sample
     '''
-    def __init__(self, path, name, ext, lbl="default", cid=-1):
+    def __init__(self, path, name, seq=True, ext="jpg", lbl=None, cid=-1):
         '''
         path: compelete sample path
         name: file name (without any extension and path)
@@ -32,11 +33,15 @@ class Sample(object):
         self.path   =   copy.deepcopy(path)
         self.name   =   copy.deepcopy(name)
         self.ext    =   copy.deepcopy(ext)
+        self.seq    =   copy.deepcopy(seq)
         self.lbl    =   copy.deepcopy(lbl)
         self.cid    =   copy.deepcopy(cid)
 
     def __repr__(self):
-        string = str(self.name) + '\n'
+        string = str(self.name)
+        if (self.seq):
+            string += "(frame sequence)"
+        string += '\n'
         string += "[label] : {}  \t".format(self.lbl)
         string += "[cid] : {} \t".format(self.cid)
         string += "[path] : {}".format(self.path)
@@ -48,53 +53,57 @@ class VideoCollector(object):
     We only deal with Meta-data in it
     TODO: support multiple data format and multiple input modality
     '''
-    def __init__(self, root, style, label_map, 
-                mod = "RGB", ext= "avi", 
+    def __init__(self, root, dset, 
+                mod="RGB", seq=True, ext="jpg",
                 seek_file=True, part=None):
         '''
         part = None: all data are collected
         '''
         # santity check
-        assert (style in __supported_dataset_styles__), \
+        assert (dset.__style__ in __supported_dataset_styles__), \
             "Unsupported Dataset Struture Style"
         self.root = copy.deepcopy(root)
-        self.style = copy.deepcopy(style)
-        self.label_map = copy.deepcopy(label_map)
+        self.dset = dset
         self.mod = copy.deepcopy(mod)
+        self.seq = copy.deepcopy(seq)
         self.ext = copy.deepcopy(ext)
 
         self.labels = []
         self.samples = []
         if (True == seek_file):
-            samples, labels = self.collect_samples(self.root, self.style, 
-                self.label_map, self.mod, self.ext)
-            # NOTE: here we use list.extend !!!
+            samples, labels = self.collect_samples(root=self.root,
+                dset=self.dset, mod=self.mod, seq=self.seq, ext=self.ext)
+            # NOTE: here we use list.extend
             self.labels.extend(labels)
             self.samples.extend(samples)
         
         if (__verbose__):
             info_str = "VideoCollector initialized: "
             info_str += "paths: {}; style: {}; modality {}; file \
-                extension {};".format(self.root, self.style, self.mod, 
-                self.ext)
+                extension {};".format(self.root, self.dset.__style__, 
+                self.mod, self.ext)
             logging.info(info_str)
             if (__vverbose__):
                 print(info_str)
 
     @staticmethod
-    def collect_samples(root, style, label_map, mod, ext):
+    def collect_samples(root, dset, mod, seq, ext):
         '''
-        collect a list of samples = list of samples, while each sample
-        = (video, relative path, class id, label)
-        here, video may refers to a collection of images
-        return (samples, labels), labels may == []
+        Collect a list of samples.
+        - root : root path of the dataset
+        - dset : dataset as a Python module
+        - mod : data modalities
+        - ext : file extension
         '''
+        style = dset.__style__
+
         if ("UCF101" == style):
             # get all labels
             labels = []
             for _label in os.listdir(root):
                 if (os.path.isdir(os.path.join(root, _label))):
                     labels.append(_label)
+
             # TODO: check whether we need to sort it
             labels = sorted(labels)
              
@@ -104,44 +113,50 @@ class VideoCollector(object):
             samples = []
             for _label in labels:
                 for _video in os.listdir(os.path.join(root, _label)):
-                    if (ext not in [None, ""]):
+                    if (False == seq):
                         # split file extension
                         _name = _video[:-(len(ext)+1)]
                     else:
                         _name = copy.deepcopy(_video)
                     _path = os.path.join(root, _label, _video)
-                    _sample = Sample(_path, _name, ext, 
-                                  _label, label_map[_label])
+                    # create Sample object
+                    _sample = Sample(path=_path, name=_name, seq=seq, ext=ext, 
+                            lbl=_label, cid=(dset.__labels__[_label]))
                     samples.append(copy.deepcopy(_sample))
+
             # output status
             if (__verbose__):
-                info_str = "[collect_samples] get {} samples"\
-                    .format(samples)
+                info_str = "VideoCollector: [collect_samples] get {} samples"\
+                    .format(len(samples))
                 if (__vverbose__):
                     print(info_str)
             return(samples, labels)
-
-        elif ("20BN" == style):
-            return(samples, labels)   
+ 
         else:
             assert True, "Unsupported Dataset Struture Style"        
 
-    def __filter_samples__(self, sample_filter):
+    def _filter_samples_(self, sample_filter):
         filtered_samples = []
         for _sample in self.samples:
             if (sample_filter(_sample)):
                 filtered_samples.append(_sample)
             else:
-                pass
+                if (__verbose__):
+                    info_str = "VideoCollector:[_filter_samples_], remove\n{}"\
+                        .format(_sample)
+                    logging.info(info_str)
+                    if (__vverbose__):
+                        print(info_str)  
+                
         self.samples = filtered_samples
 
-    def __get_samples__(self):
+    def _get_samples_(self):
         return(self.samples)
 
-    def __check_integrity__(self, dataset_mod):
+    def _check_integrity_(self, dset):
         
         # check class number
-        if (sorted(self.labels) != sorted(dataset_mod.__classes__)):
+        if (sorted(self.labels) != sorted(dset.__labels__.keys())):
             warn_str = "Integrity check failed, "
             warn_str += "class numbver mismatch"
             logging.warn(warn_str)
@@ -156,12 +171,15 @@ class VideoCollector(object):
         # check sample number for each class
         for _label in self.labels:
             _sample_count = _sample_count_dict[_label]
-            ref_sample_count = dataset_mod.__samples__[_label]
+            ref_sample_count = dset.__sample_num_per_class__[_label]
+
             if (type(ref_sample_count) == list):
+                # reference sample number is an interval
                 if (not (_sample_count >= ref_sample_count[0])
                     and (_sample_count <= ref_sample_count[1]) ):
                     passed = False
             elif (type(ref_sample_count) == int):
+                # reference sample number is exact
                 if (ref_sample_count != _sample_count):
                     passed = False
             else:
@@ -180,25 +198,17 @@ class VideoCollector(object):
 if __name__ == "__main__":
 
     DATASET = "UCF101"
-    dataset_mod = importlib.import_module(".{}".format(DATASET))
+    dataset_mod = importlib.import_module("vdataset.{}".format(DATASET))
 
     collector = VideoCollector(
         dataset_mod.prc_data_path,
-        __supported_datasets__[DATASET],
-        dataset_mod.label_map,
+        dataset_mod,
         ext=""
         )
     
-    for _sample in collector.__get_samples__():
-        print(_sample) 
+    for _sample in collector._get_samples_():
+        print(_sample)
 
-    check = collector.__check_integrity__(dataset_mod)  
+    check = collector._check_integrity_(dataset_mod)  
     if (check):
         print("passed")
-
-    # debug
-    for _sample in collector.__get_samples__():
-        if (_sample.name == "v_LongJump_g19_c03"):
-            from UCF101.data_split import for_train
-            _filter = for_train()
-            print(_filter(_sample))

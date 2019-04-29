@@ -4,7 +4,7 @@ __supported_splits__ = ["1", "2", "3"]
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
-class for_train(object):
+class TrainsetFilter(object):
 
     def __init__(self, split="1"):
         assert (split in __supported_splits__), "Unsupported split"
@@ -26,7 +26,7 @@ class for_train(object):
         else:
             return False
 
-class for_test(object):
+class TestsetFilter(object):
 
     def __init__(self, split="1"):
         assert (split in __supported_splits__), "Unsupported split"
@@ -49,15 +49,15 @@ class for_test(object):
             return False
 
 # set the same as test set
-class for_val(object):
+class ValsetFilter(object):
     def __init__(self, split="1"):
-        self.for_test = for_test(split=split)
+        self.TestsetFilter = TestsetFilter(split=split)
     def __call__(self, sample):
-        return(self.for_test(sample))
+        return(self.TestsetFilter(sample))
 
 
 if __name__ == "__main__":
     # self-test
-    train_filter = for_train()
+    train_filter = TrainsetFilter()
     print(train_filter.train_set)
 

@@ -1,4 +1,4 @@
-
+# -*- coding: utf-8 -*-
 
 
 __authors__ = ["Zheng Liang @ Peking University"]
@@ -25,8 +25,8 @@ __author__  = __authors__
 __test__        =   True
 __profile__     =   True
 __strict__      =   True
-__verbose__     =   True
-__vverbose__    =   True
+__verbose__     =   False
+__vverbose__    =   False
 
 
 # ----------------------------------------------------------------- #
@@ -101,3 +101,11 @@ __supported_datasets__ = {
     'UCF101':'UCF101', 'HMDB51':'UCF101', 'Weizmann':'UCF101',
     'Jester':'20BN', 'Sth-sth-v1':'20BN', 'Sth-sth-v2':'20BN',
     }
+
+
+__all__ = [ "__authors__", "__author__",
+    "__test__", "__profile__", "__strict__", "__verbose__", "__vverbose__",
+    "__supported_modalities__", "__supported_modality_files__", 
+    "__supported_video_files__", "__supported_color_space__", 
+    "__supported_dataset_styles__", "__supported_datasets__"
+]

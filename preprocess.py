@@ -21,7 +21,8 @@ def preprocess(task_dict):
             os.makedirs(tgt_vid)
         except FileExistsError:
             pass
-    ret = video.video2frames(src_vid, tgt_vid)
+    ret = dict()
+    ret['status'] = video.video2frames(src_vid, tgt_vid)
     return(ret)
 
 def generate_preprocess_tasks(src_path, tgt_path, style, label_map):
@@ -40,15 +41,18 @@ def task_executor(task_queue):
         if (None == task):
             break
         ret = preprocess(task)
-        # retry it
+
+        # retry it for $cnt times
         cnt = 10
-        while ((not ret) and (cnt > 0)):
+        while ((not ret['status']) and (cnt > 0)):
             info_str = "Retry task {}".format(task)
+            logging.warn(info_str)
             logging.info(info_str)
             if (__vverbose__):
                 print(info_str)
             ret = preprocess(task)
             cnt -= 1
+        
         if (not ret):
             print("Task {} failed after 10 trails!!!".format(task))
 
