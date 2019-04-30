@@ -11,8 +11,8 @@ import numbers
 
 import numpy as np
 import cv2
-# import torch
-# import torchvision
+import torch
+import torchvision
 
 from .__init__ import *
 from .video import *
@@ -329,7 +329,7 @@ def test_transforms(test_configuration):
     #     (cv2.waitKey(0) & 0xFF == ord('q'))
     #     cv2.destroyAllWindows()
 
-    # test video normalization
+    # test video resize
     resize = VideoResize(size=(720, 720))
     varray = resize(varray)
     print(varray.shape)
