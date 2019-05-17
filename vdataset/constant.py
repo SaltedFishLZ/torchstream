@@ -1,0 +1,3 @@
+
+IMGSEQ = ""
+IMGEXT = "jpg"
