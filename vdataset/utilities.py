@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import os
 import time
 
 class Timer(object):
@@ -36,6 +37,15 @@ class Timer(object):
     
     def report(self):
         return(self.acc_time)
+
+
+
+def strip_extension(file_name):
+    return(os.path.splitext(file_name)[0])
+
+def strip_path(file_path):
+    return(os.path.basename(file_path))
+
 
 
 if __name__ == "__main__":
