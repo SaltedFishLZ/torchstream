@@ -2,6 +2,7 @@
 .nfs*
 
 # doxygen files
+doxygen/
 html/
 latex/
 *.tag 

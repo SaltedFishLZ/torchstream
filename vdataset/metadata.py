@@ -60,13 +60,14 @@ class Collector(object):
     def __init__(self, root, dset, 
                 mod="RGB", ext="", 
                 eager=True):
-        '''
-        - root : root path of the dataset
-        - dset : meta-dataset as a Python module
-        - mod : data modality (e.g., RGB)
-        - ext : data extension, "" means image sequence
-        - eager : collecting data eagerly in initialization
-        '''
+        """!
+
+        @param root str: root path of the dataset        
+        @param dset Python module: meta dataset
+        @param mod str: data modality
+        @param ext str: file extension, "" means image(jpg) sequence
+        @param eager bool: collecting data eagerly in initialization
+        """
         # santity check
         assert (dset.__style__ in __supported_dataset_styles__), \
             "Unsupported Dataset Struture Style"
@@ -75,14 +76,14 @@ class Collector(object):
         self.mod = copy.deepcopy(mod)
         self.ext = copy.deepcopy(ext)
 
-        self.labels = []
-        self.samples = []
+        self.labels = set()
+        self.samples = set()
         if (True == eager):
             samples, labels = self.collect_samples(root=self.root,
                 dset=self.dset, mod=self.mod, ext=self.ext)
             # use list.extend to update labels and samples
-            self.labels.extend(labels)
-            self.samples.extend(samples)
+            self.labels.update(labels)
+            self.samples.update(samples)
         
         if (__verbose__):
             info_str = "VideoCollector initialized: "
@@ -94,34 +95,66 @@ class Collector(object):
                 print(info_str)
 
     @staticmethod
-    def collect_samples(root, dset, mod, seq, ext):
-        '''
-        Collect a list of samples.  
-        @type root: str  
-        @param root: root path of the dataset
-        dset : dataset as a Python module
-        - mod : data modalities
-        - ext : file extension
-        - return : 
-        '''
-        style = dset.__style__
+    def collect_labels(root, dset, mod, ext):
+        """!
+        Collect all possible labels from a certain part (modality & extension)
+        of a dataset.   
 
+        @param root str: root path of the dataset        
+        @param dset Python module: meta dataset
+        @param mod str: data modality
+        @param ext str: file extension
+        @param return set: a set of all labels appeared in certain part of the
+        dataset.
+        """
+        style = dset.__style__
+        seq = ("" == ext)
 
         if ("UCF101" == style):
-            # get all labels
-            labels = []
+
+            labels = set()
             for _label in os.listdir(root):
                 if (os.path.isdir(os.path.join(root, _label))):
-                    labels.append(_label)
+                    labels.add(_label)
 
             # TODO: check whether we need to sort it
             labels = sorted(labels)
-             
-            # get all videos' file paths and annotations
-            # NOTE: each sample is a tuple = 
-            # (vid_path, relative_addr, class_id, label)
-            samples = []
-            for _label in labels:
+            
+            # output status
+            if (__verbose__):
+                info_str = "VideoCollector: [collect_samples] get {} labels"\
+                    .format(len(labels))
+                if (__vverbose__):
+                    print(info_str)
+            
+            return(labels)
+        
+        else:
+            assert True, NotImplementedError
+            exit(1)
+
+
+    @staticmethod
+    def collect_samples(root, dset, mod, ext):
+        """!
+        Collect a list of samples.    
+
+        @param root str: root path of the dataset        
+        @param dset Python module: meta dataset
+        @param mod str: data modality
+        @param ext str: file extension
+        @param return tuple: (samples, labels); samples is a list of Sample
+        objects, labels is a list of strs;
+        """
+
+        style = dset.__style__
+        seq = ("" == ext)
+
+        # get all samples' meta-data (file path, annotation, seq or not, etc)
+        if ("UCF101" == style):
+            
+            samples = set()
+            for _label in os.listdir(root):
                 for _video in os.listdir(os.path.join(root, _label)):
                     if (False == seq):
                         # split file extension
@@ -129,10 +162,9 @@ class Collector(object):
                     else:
                         _name = copy.deepcopy(_video)
                     _path = os.path.join(root, _label, _video)
-                    # create Sample object
                     _sample = Sample(path=_path, name=_name, seq=seq, ext=ext, 
                             lbl=_label, cid=(dset.__labels__[_label]))
-                    samples.append(copy.deepcopy(_sample))
+                    samples.add(_sample)
 
             # output status
             if (__verbose__):
@@ -140,7 +172,7 @@ class Collector(object):
                     .format(len(samples))
                 if (__vverbose__):
                     print(info_str)
-            return(samples, labels)
+            return(samples)
  
         else:
             print(style)
