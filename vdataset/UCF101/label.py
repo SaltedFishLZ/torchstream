@@ -1,11 +1,13 @@
 import os
 
+dir_path = os.path.dirname(os.path.realpath(__file__))
+
+
 # ------------------------------------------------------------------------ #
 #                   Labels and Corresponding CIDs                          #
 # ------------------------------------------------------------------------ #
 
 __labels__ = dict()
-dir_path = os.path.dirname(os.path.realpath(__file__))
 list_file = os.path.join(dir_path, "classInd.txt")
 f = open(list_file, "r")
 for _line in f:

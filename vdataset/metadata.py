@@ -12,7 +12,7 @@ import importlib
 from . import video
 from .__init__ import *
 
-__verbose__ = False
+__verbose__ = True
 __vverbose__ = True
 
 class Sample(object):
@@ -21,12 +21,13 @@ class Sample(object):
     '''
     def __init__(self, path, name, seq=True, ext="jpg", lbl=None, cid=-1):
         '''
-        path: compelete sample path
+        path: absolute path of the video sample
         name: file name (without any extension and path)
         ext:  file extension (e.g., avi, mp4), '.' excluded, if it == None
               or "", it means the sample is sliced into several images (not
               limited to RGB modality) and the images are stored in the folder
               which is the "path" mentioned above.
+              NOTE: Currently, we only handle images stored in .jpg formats
         lbl:  label of the sample, is a unique string in certain dataset
         cid:  class id of the sample, is the numerical representation of label
         '''
@@ -47,17 +48,24 @@ class Sample(object):
         string += "[path] : {}".format(self.path)
         return(string)
 
-class VideoCollector(object):
+
+class Collector(object):
     '''
-    A helper class which maintains all sample's meta-data of a certain dataset
-    We only deal with Meta-data in it
-    TODO: support multiple data format and multiple input modality
+    A helper class which maintains samples' meta-data of a certain dataset.
+    We only deal with Meta-data in it.
+    NOTE: Following the "do one thing at once" priciple, we only deal with 1 
+    data type of 1 data modality in 1 collector object.
+    TODO: enable file name template
     '''
     def __init__(self, root, dset, 
-                mod="RGB", seq=True, ext="jpg",
-                seek_file=True, part=None):
+                mod="RGB", ext="", 
+                eager=True):
         '''
-        part = None: all data are collected
+        - root : root path of the dataset
+        - dset : meta-dataset as a Python module
+        - mod : data modality (e.g., RGB)
+        - ext : data extension, "" means image sequence
+        - eager : collecting data eagerly in initialization
         '''
         # santity check
         assert (dset.__style__ in __supported_dataset_styles__), \
@@ -65,15 +73,14 @@ class VideoCollector(object):
         self.root = copy.deepcopy(root)
         self.dset = dset
         self.mod = copy.deepcopy(mod)
-        self.seq = copy.deepcopy(seq)
         self.ext = copy.deepcopy(ext)
 
         self.labels = []
         self.samples = []
-        if (True == seek_file):
+        if (True == eager):
             samples, labels = self.collect_samples(root=self.root,
-                dset=self.dset, mod=self.mod, seq=self.seq, ext=self.ext)
-            # NOTE: here we use list.extend
+                dset=self.dset, mod=self.mod, ext=self.ext)
+            # use list.extend to update labels and samples
             self.labels.extend(labels)
             self.samples.extend(samples)
         
@@ -89,13 +96,16 @@ class VideoCollector(object):
     @staticmethod
     def collect_samples(root, dset, mod, seq, ext):
         '''
-        Collect a list of samples.
-        - root : root path of the dataset
-        - dset : dataset as a Python module
+        Collect a list of samples.  
+        @type root: str  
+        @param root: root path of the dataset
+        dset : dataset as a Python module
         - mod : data modalities
         - ext : file extension
+        - return : 
         '''
         style = dset.__style__
+
 
         if ("UCF101" == style):
             # get all labels
@@ -133,6 +143,7 @@ class VideoCollector(object):
             return(samples, labels)
  
         else:
+            print(style)
             assert True, "Unsupported Dataset Struture Style"        
 
     def _filter_samples_(self, sample_filter):
@@ -197,11 +208,11 @@ class VideoCollector(object):
 
 if __name__ == "__main__":
 
-    DATASET = "UCF101"
+    DATASET = "Jester"
     dataset_mod = importlib.import_module("vdataset.{}".format(DATASET))
 
-    collector = VideoCollector(
-        dataset_mod.prc_data_path,
+    collector = Collector(
+        dataset_mod.raw_data_path,
         dataset_mod,
         ext=""
         )

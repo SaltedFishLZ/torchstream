@@ -12,6 +12,9 @@ testset_df = pandas.read_csv(os.path.join(
         DIR_PATH, "something-something-v1-test.csv"), sep=';')
 
 if __name__ == "__main__":
+    print("[Training Set Dataframe]")
     print(trainset_df)
-    for idx, row in trainset_df.iterrows():
-        print(row['video'])
+    print("[Validation Set Dataframe]")
+    print(valset_df)
+    print("[Testing Set Dataframe]")
+    print(testset_df)

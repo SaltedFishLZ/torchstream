@@ -1,12 +1,17 @@
 # nfs files
 .nfs*
 
+# doxygen files
+html/
+latex/
+*.tag 
+
 # pickle files
 *.pkl
 
 # created virtual environment
 venv_video/
-venv*
+venv_*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
