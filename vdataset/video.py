@@ -48,7 +48,11 @@ import numpy as np
 import psutil
 
 from . import constant
-from .constant import *
+from .constant import IMGSEQ, IMGEXT, \
+    __test__, __profile__, __strict__, __verbose__, __vverbose__, \
+    __supported_modalities__, __supported_modality_files__, \
+    __supported_video_files__, __supported_color_space__, \
+    __supported_dataset_styles__, __supported_datasets__
 
 # local settings (only in dev)
 _frame_num_err_limit_ = 5
@@ -170,7 +174,7 @@ def video2ndarray(video, color_in="BGR", color_out="RGB"):
         info_str = "[video2ndarray] video {} estimated shape: {}".format(
             video, varray_shape)
         logging.info(info_str)
-        if (True == __vverbose__):
+        if __vverbose__:
             print(info_str)
 
     # try to allocate memory for the frames
@@ -199,13 +203,13 @@ def video2ndarray(video, color_in="BGR", color_out="RGB"):
     cap.release()
 
     # check frame number
-    if (f_n > cnt):        
-        if ((f_n-cnt) > _frame_num_err_limit_):
+    if f_n > cnt:        
+        if (f_n-cnt) > _frame_num_err_limit_:
             warn_str = "[video2ndarray] CAP_PROP_FRAME_COUNT {} frames, \
                 Read {} frames".format(f_n, cnt)
             logging.warn(warn_str)
         # slice the buffder
-        buf = buf[:cnt,: , :, :]
+        buf = buf[:cnt, : , :, :]
 
     # output status
     if (True == __verbose__):
@@ -216,7 +220,8 @@ def video2ndarray(video, color_in="BGR", color_out="RGB"):
             print(info_str)
     return buf
 
-
+## Video -> Frames
+#  Dump a video file to frame files
 def video2frames(video, dst_path, color_in="BGR", color_out="BGR"):
     '''
     Read 1 video from ${video} and dump to frames in ${dst_path}.
@@ -231,13 +236,13 @@ succeeded.
     # check santity
     # TODO: currenly only support input BGR video
     assert ("BGR" == color_in), "Only supported BGR video"
-    if (os.path.exists(video)):
+    if os.path.exists(video):
         pass
     else:
         warn_str = "[video2frames] src video {} missing".format(video)
         logging.warning(warn_str)
         return (False, 0)
-    if (os.path.exists(dst_path)):
+    if os.path.exists(dst_path):
         pass
     else:
         warn_str = "[video2frames] dst path {} missing".format(dst_path)
@@ -290,20 +295,20 @@ succeeded.
         logging.info(info_str)
         if __vverbose__:
             print(info_str)
-    
+
     cap.release()
     return (True, cnt)
 
 
 def ndarray2frames(varray, dst_path, color_in="RGB", color_out="BGR"):
-    '''
+    """
     Dump 1 video array ${varray} to frames in ${dst_path}
     - varray : input numpy.ndarray format video
     - color_in : input ndarray's color space
     - color_out : output frames' color space    
     - dst_path : output directory for dumped frames.
     TODO: format string for file name
-    '''
+    """
     # check santity
     if (os.path.exists(dst_path)):
         pass
@@ -421,19 +426,29 @@ class ImageSequence(object):
     pointers
     NOTE: Following the "do one thing at once" priciple, we only deal with 1 
     data type of 1 data modality in 1 collector object.
-    TODO: support file name template
     '''
-    def __init__(self, path, 
-                 ext=constant.IMGEXT, color_in="BGR", color_out="RGB"):
-        '''
+    def __init__(self, path,
+                 ext=constant.IMGEXT, color_in="BGR", color_out="RGB", **kwargs):
+        """
         TODO: format string for file name
-        '''
-        self.path       =   copy.deepcopy(path)
-        self.ext        =   copy.deepcopy(ext)
-        self.color_in   =   copy.deepcopy(color_in)
-        self.color_out  =   copy.deepcopy(color_out)
+        """
+        self.path       =   path
+        self.ext        =   ext
+        self.color_in   =   color_in
+        self.color_out  =   color_out
         self.fcount     =   0       # frame counnt
         self.fids       =   []      # frame ids
+
+        if ("img_file_temp" in kwargs):
+            self.temp = kwargs["img_file_temp"]
+        else:
+            self.temp = "{}"
+
+        if ("img_idx_offset" in kwargs):
+            self.offset = kwargs["img_idx_offset"]
+        else:
+            self.offset = 0
+        
 
         # seek all valid frames and add their indices
         _fcnt = 0
@@ -458,9 +473,10 @@ class ImageSequence(object):
         get the path of idx-th frame
         NOTE: currently, we all use the original frame index
         '''
-        _filename = str(idx) + "." + str(self.ext)
-        _file_path = os.path.join(self.path, _filename)
-        return(_file_path)
+        _filename = self.temp.format(idx + self.offset)
+        _filename += "." + self.ext
+        _filepath = os.path.join(self.path, _filename)
+        return(_filepath)
 
     def get_farray(self, idx):
         '''
@@ -495,7 +511,7 @@ class ImageSequence(object):
                 for idx in indices:
                     assert (idx < self.fcount), "Image index {} overflow".\
                         format(idx)
-            _indices = copy.deepcopy(indices)          
+            _indices = copy.deepcopy(indices)
         # generate file paths
         _fpaths = []
         for idx in _indices:
@@ -519,10 +535,11 @@ class ClippedImageSequence(ImageSequence):
     load all frames and select some frames in it. It is not efficient if you
     have preprocessed the video and dump all frames.
     '''
-    def __init__(self, path, clip_len, 
-            ext = 'jpg', color_in="BGR", color_out="RGB"):
+    def __init__(self, path, clip_len,
+            ext="jpg", color_in="BGR", color_out="RGB", **kwargs):
         super(ClippedImageSequence, self).__init__(
-            path, ext, color_in, color_out)
+            path=path, ext=ext,
+            color_in=color_in, color_out=color_out, **kwargs)
         self.fids = self.__clip__(self.fids, self.fcount, clip_len)
         self.fcount = copy.deepcopy(clip_len)
 
@@ -558,9 +575,10 @@ class SegmentedImageSequence(ImageSequence):
     load all frames and select some frames in it. It is not efficient.
     '''
     def __init__(self, path, seg_num,
-            ext = 'jpg', color_in="BGR", color_out="RGB"):
+            ext="jpg", color_in="BGR", color_out="RGB", **kwargs):
         super(SegmentedImageSequence, self).__init__(
-            path, ext, color_in, color_out)    
+            path=path, ext=ext,
+            color_in=color_in, color_out=color_out, **kwargs)
         self.fids = self.__segment__(self.fids, self.fcount, seg_num)
         self.fcount = copy.deepcopy(seg_num)
 
@@ -687,7 +705,7 @@ if __name__ == "__main__":
         test_components = {
             'functions' : True,
             'classes' : {'get_farray':True,
-                'get_varray':False
+                'get_varray':True
                 }
         }
         test_configuration = {

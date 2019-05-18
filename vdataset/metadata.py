@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-## @module metadata
+## @package metadata
 # Dataset Meta-data Management Module
 #
 #
@@ -53,6 +53,19 @@ class Sample(object):
 
     ## Documentation for a method.
     #  @param self The object pointer.
+    def __repr__(self, idents=0):
+        string = idents * "\t" + "Sample Object: \n"
+        string += idents * "\t" + str(self.name)
+        if self.seq:
+            string += "(frame sequence)"
+        string += '\n'
+        string += idents * "\t" + "[label] : {}  \t".format(self.lbl)
+        string += idents * "\t" + "[cid] : {} \t".format(self.cid)
+        string += idents * "\t" + "[path] : {}".format(self.path)
+        return string
+
+    ## Documentation for a method.
+    #  @param self The object pointer.
     def __eq__(self, other):
         if isinstance(other, Sample):
             return(
@@ -83,19 +96,6 @@ class Sample(object):
             self.lbl,
             self.cid
         )))
-
-    ## Documentation for a method.
-    #  @param self The object pointer.
-    def __repr__(self):
-        string = "Sample Object: \n"
-        string += str(self.name)
-        if self.seq:
-            string += "(frame sequence)"
-        string += '\n'
-        string += "[label] : {}  \t".format(self.lbl)
-        string += "[cid] : {} \t".format(self.cid)
-        string += "[path] : {}".format(self.path)
-        return string
 
 
 class SampleSet(object):
@@ -138,10 +138,11 @@ class SampleSet(object):
 
     ## Documentation for a method.
     #  @param self The object pointer.
-    def __repr__(self):
-        string = "SampleSet Object: \n"
+    def __repr__(self, idents=0):
+        string = idents * "\t" + "SampleSet Object: \n"
         for _label in self.counts:
-            string += "[{}]: \t{}\n".format(_label, self.counts[_label])
+            string += idents * "\t" + "[{}]: \t{}\n".\
+                format(_label, self.counts[_label])
         return string
 
     ## Documentation for a method.
@@ -288,13 +289,12 @@ class Collector(object):
 
     ## Documentation for a method.
     #  @param self The object pointer.
-    def __repr__(self):
-        string = "Meta-data Collector"
-        string += "\n"
-        string += "[root path] : {}\n".format(self.root)
-        string += "[specified labels]: {}\n".format(self.lbls)
-        string += "[modality] : {}\t".format(self.mod)
-        string += "[extension] : {}\t".format(self.ext)
+    def __repr__(self, idents=0):
+        string = idents * "\t" + "Meta-data Collector Object\n"
+        string += idents * "\t" + "[root path] : {}\n".format(self.root)
+        string += idents * "\t" + "[specified labels]: {}\n".format(self.lbls)
+        string += idents * "\t" + "[modality] : {}\t".format(self.mod)
+        string += idents * "\t" + "[extension] : {}\t".format(self.ext)
         return string
 
     ## Documentation for a method.

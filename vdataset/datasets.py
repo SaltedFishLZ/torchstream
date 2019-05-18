@@ -14,7 +14,7 @@ from .constant import \
     __supported_modalities__, __supported_modality_files__, \
     __supported_video_files__, __supported_color_space__, \
     __supported_dataset_styles__, __supported_datasets__
-    
+
 from . import video, metadata, constant
 
 __verbose__ = False
@@ -70,6 +70,7 @@ class VideoDataset(torchdata.Dataset):
         self.split = copy.deepcopy(split)
         self.modalities = copy.deepcopy(modalities)
         self.metadatas = dict()
+        self.kwargs = kwargs
 
         for mod in self.modalities:
             # collect metadata
@@ -110,7 +111,7 @@ class VideoDataset(torchdata.Dataset):
         _ext = constant.IMGEXT
         _path = _sample_metadata.path
         _cid = _sample_metadata.cid
-        _seq = video.ImageSequence(_path, ext=_ext)
+        _seq = video.ImageSequence(_path, ext=_ext, **self.kwargs)
         # get all frames as a vaaray
         _blob = _seq.get_varray()
         # return (a [T][H][W][C] ndarray, class id)
@@ -120,7 +121,7 @@ class VideoDataset(torchdata.Dataset):
 
 
 class ClippedVideoDataset(VideoDataset):
-    """!
+    """
 
     """
     def __init__(self, root, name, clip_len,
@@ -129,7 +130,7 @@ class ClippedVideoDataset(VideoDataset):
                  *args, **kwargs
                 ):
         super(ClippedVideoDataset, self).__init__(
-            root, name, split, modalities, args, kwargs
+            root, name, split, modalities, args, **kwargs
             )
         self.clip_len = copy.deepcopy(clip_len)
 
@@ -139,7 +140,7 @@ class ClippedVideoDataset(VideoDataset):
         _path = _sample_metadata.path
         _cid = _sample_metadata.cid
         _seq = video.ClippedImageSequence(
-            _path, clip_len=self.clip_len, ext=_ext)
+            _path, clip_len=self.clip_len, ext=_ext, **self.kwargs)
         _blob = _seq.get_varray()
         return(_blob, _cid)        
 
@@ -154,7 +155,7 @@ class SegmentedVideoDataset(VideoDataset):
                  *args, **kwargs
                 ):    
         super(SegmentedVideoDataset, self).__init__(
-            root, name, split, modalities, args, kwargs
+            root, name, split, modalities, args, **kwargs
             )
         self.seg_num = copy.deepcopy(seg_num)
 
@@ -164,7 +165,7 @@ class SegmentedVideoDataset(VideoDataset):
         _path = _sample_metadata.path
         _cid = _sample_metadata.cid
         _seq = video.SegmentedImageSequence(
-            _path, seg_num=self.seg_num, ext=_ext)
+            _path, seg_num=self.seg_num, ext=_ext, **self.kwargs)
         _blob = _seq.get_varray()
         return(_blob, _cid)    
 
@@ -176,7 +177,7 @@ if __name__ == "__main__":
         test_components = {
             'basic' : True,
             '__len__' : True,
-            '__getitem__' : False
+            '__getitem__' : True
         }
         
         test_configuration = {
@@ -192,23 +193,25 @@ if __name__ == "__main__":
                 allset = ClippedVideoDataset(
                     dset.prc_data_path, DATASET,
                     clip_len=4,
-                    split=constant.ALLSET)
-                trainset = ClippedVideoDataset(
-                    dset.prc_data_path, DATASET,
-                    clip_len=4,
-                    split=constant.TRAINSET)
-                testset = ClippedVideoDataset(
-                    dset.prc_data_path, DATASET,
-                    clip_len=4,
-                    split=constant.TESTSET)
+                    split=constant.ALLSET,
+                    img_file_temp="{0:05d}",
+                    img_idx_offset=1)
+                # trainset = ClippedVideoDataset(
+                #     dset.prc_data_path, DATASET,
+                #     clip_len=4,
+                #     split=constant.TRAINSET)
+                # testset = ClippedVideoDataset(
+                #     dset.prc_data_path, DATASET,
+                #     clip_len=4,
+                #     split=constant.TESTSET)
 
                 if (test_components['__len__']):
                     print("All samples number:")
                     print(allset.__len__())
-                    print("Training Set samples number:")
-                    print(trainset.__len__())
-                    print("Testing Set samples number:")
-                    print(testset.__len__())
+                    # print("Training Set samples number:")
+                    # print(trainset.__len__())
+                    # print("Testing Set samples number:")
+                    # print(testset.__len__())
                 
                     if (test_components['__getitem__']):
                         print(allset.__getitem__(allset.__len__()-1))
