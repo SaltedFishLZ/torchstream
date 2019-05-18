@@ -19,21 +19,28 @@ from . import video, metadata, constant
 
 __verbose__ = False
 
+## dataset class for video recognition
+#  
+#  More details.
 class VideoDataset(torchdata.Dataset):
-    """!
-    VideoDataset class for video recognition
+    """
+    dataset class for video recognition
 
     NOTE: TODO: Currently, This shall be an abstract base class.
     It should never be used in deployment !!!
     """
-
+    ## Init
+    #  @param root str: root path of the dataset
+    #  @param name str: dataset name
+    #  @param split int: training/testing/validation split
+    #  @param modalities dict: input data format of each modality.
+    #  key - modality, value - file extension(s) for certain modality.
     def __init__(self, root, name,
                  split=constant.TRAINSET,
                  modalities={'RGB': constant.IMGSEQ},
                  *args, **kwargs
                 ):
-        """!
-
+        """
         @param root str: root path of the dataset
         @param name str: dataset name
         @param split int: training/testing/validation split
@@ -88,7 +95,7 @@ class VideoDataset(torchdata.Dataset):
         return len(self.metadatas["RGB"])
 
     def __getitem__(self, idx):
-        # if (__strict__):
+        # if __strict__:
         #     assert True, \
         #         "VideoDataset is abstract, __getitem__ must be overrided"
         # NOTE
@@ -138,10 +145,13 @@ class ClippedVideoDataset(VideoDataset):
 
 
 class SegmentedVideoDataset(VideoDataset):
+    """!
+
+    """
     def __init__(self, root, name, seg_num,
                  split=constant.TRAINSET,
                  modalities={'RGB': constant.IMGSEQ},
-                 **kwargs
+                 *args, **kwargs
                 ):    
         super(SegmentedVideoDataset, self).__init__(
             root, name, split, modalities, args, kwargs

@@ -12,11 +12,15 @@ class Timer(object):
     - counting : timer state
     - tick : physical time of the latest starting point
     '''
+    ## Documentation for a method.
+    #  @param self The object pointer.    
     def __init__(self):
         self.acc_time = 0
         self.counting = False
         self.tick = 0
 
+    ## Documentation for a method.
+    #  @param self The object pointer.
     def start(self):
         if (False == self.counting):
             self.counting = True
@@ -24,6 +28,8 @@ class Timer(object):
         else:
             pass
 
+    ## Documentation for a method.
+    #  @param self The object pointer.
     def pause(self):
         if (True == self.counting):
             self.counting = False
@@ -31,11 +37,15 @@ class Timer(object):
             self.acc_time += duration
         else:
             pass
-    
+
+    ## Documentation for a method.
+    #  @param self The object pointer.
     def reset(self):
         self.acc_time = 0
         self.counting = False
-    
+
+    ## Documentation for a method.
+    #  @param self The object pointer.
     def report(self):
         return(self.acc_time)
 
@@ -58,14 +68,13 @@ def creation_date(path_to_file):
     """
     if platform.system() == 'Windows':
         return os.path.getctime(path_to_file)
-    else:
-        stat = os.stat(path_to_file)
-        try:
-            return stat.st_birthtime
-        except AttributeError:
-            # We're probably on Linux. No easy way to get creation dates here,
-            # so we'll settle for when its content was last modified.
-            return stat.st_mtime
+    stat = os.stat(path_to_file)
+    try:
+        return stat.st_birthtime
+    except AttributeError:
+        # We're probably on Linux. No easy way to get creation dates here,
+        # so we'll settle for when its content was last modified.
+        return stat.st_mtime
 
 
 

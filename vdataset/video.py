@@ -44,9 +44,10 @@ import shutil
 import logging
 
 import cv2
-import numpy as np 
+import numpy as np
 import psutil
 
+from . import constant
 from .constant import *
 
 # local settings (only in dev)
@@ -58,6 +59,7 @@ __vverbose__ = False
 #               Auxiliary Functions (Not To Be Exported)                    #
 # ------------------------------------------------------------------------- #
 
+## Documentation for a function.
 def failure_suspection(vid_path, operation="CapRead"):
     # suspections:
     # - memory overflow
@@ -164,7 +166,7 @@ def video2ndarray(video, color_in="BGR", color_out="RGB"):
     else:
         varray_shape = (f_n, f_h, f_w, f_c)
 
-    if (__verbose__):
+    if __verbose__:
         info_str = "[video2ndarray] video {} estimated shape: {}".format(
             video, varray_shape)
         logging.info(info_str)
@@ -186,13 +188,13 @@ def video2ndarray(video, color_in="BGR", color_out="RGB"):
     # Since OpenCV doesn't give accurate frames via CAP_PROP_FRAME_COUNT,
     # we choose the following strategy: how many frames you can decode/read
     # is the frame number.
-    buf[cnt,:,:,:] = convert_farray_color(frame, color_in, color_out)
+    buf[cnt, :, :, :] = convert_farray_color(frame, color_in, color_out)
     cnt += 1
     while ((cnt < f_n) and ret):
         ret, frame = cap.read()
-        if (not ret):
+        if not ret:
             break
-        buf[cnt,:,:,:] = convert_farray_color(frame, color_in, color_out)       
+        buf[cnt, :, :, :] = convert_farray_color(frame, color_in, color_out)
         cnt += 1 
     cap.release()
 
@@ -203,14 +205,14 @@ def video2ndarray(video, color_in="BGR", color_out="RGB"):
                 Read {} frames".format(f_n, cnt)
             logging.warn(warn_str)
         # slice the buffder
-        buf = buf[:cnt,:,:,:]
+        buf = buf[:cnt,: , :, :]
 
     # output status
     if (True == __verbose__):
         info_str = "[video2ndarray] successful: video {}, actual shape {}"\
             .format(video, buf.shape)
         logging.info(info_str)
-        if (__vverbose__):
+        if __vverbose__:
             print(info_str)
     return buf
 
@@ -245,7 +247,7 @@ succeeded.
 
     # open VideoCapture
     cap = cv2.VideoCapture(video)
-    if (not cap.isOpened()):
+    if not cap.isOpened():
         warn_str = "[video2frames] cannot open video {} \
             via cv2.VideoCapture ".format(video)
         logging.warning(warn_str)
@@ -282,11 +284,11 @@ succeeded.
         logging.warn(warn_str)
 
     # output status
-    if (__verbose__):
+    if __verbose__:
         info_str = "[video2frames] successful: dst {}, {} frames".format(
             dst_path, cnt)
         logging.info(info_str)
-        if (__vverbose__):
+        if __vverbose__:
             print(info_str)
     
     cap.release()
@@ -331,7 +333,7 @@ def ndarray2frames(varray, dst_path, color_in="RGB", color_out="BGR"):
         info_str = "[ndarray2frames] successful, dst {}".format(dst_path)
         info_str += ", shape {}".format(varray.shape)
         logging.info(info_str)
-        if (__vverbose__):
+        if __vverbose__:
             print(info_str)        
 
     return(True, cnt)
@@ -351,11 +353,11 @@ def frame2ndarray(frame, color_in="BGR", color_out="RGB"):
     farray = cv2.imread(frame)
     farray = convert_farray_color(farray, color_in, color_out)
     # output status
-    if (__verbose__):
+    if __verbose__:
         info_str = "[frame2ndarray] successful: reads image {},".format(frame)
         info_str += "shape " + str(farray.shape)
         logging.info(info_str)
-        if (__vverbose__):
+        if __vverbose__:
             print(info_str)
     # convert data type
     farray = farray.astype(np.dtype("uint8"))
@@ -373,7 +375,7 @@ def frames2ndarray(frames, color_in="BGR", color_out="RGB"):
     '''
     # get video shape & check santity
     _f = len(frames)
-    if (__strict__):
+    if __strict__:
         assert _f > 0, "Cannot accept empty video"
     else:
         if (0 == _f):
@@ -392,10 +394,10 @@ def frames2ndarray(frames, color_in="BGR", color_out="RGB"):
         buff[cnt, :, :, :] = frame2ndarray(frames[cnt], color_in, color_out)
         cnt += 1
     # output status
-    if (__verbose__):
+    if __verbose__:
         info_str = "[frames2ndarray] successful:{} frames read".format(cnt)
         logging.info(info_str)
-        if (__vverbose__):
+        if __vverbose__:
             print(info_str)
     return(buff)
 
@@ -422,7 +424,7 @@ class ImageSequence(object):
     TODO: support file name template
     '''
     def __init__(self, path, 
-            ext = "jpg", color_in="BGR", color_out="RGB"):
+                 ext=constant.IMGEXT, color_in="BGR", color_out="RGB"):
         '''
         TODO: format string for file name
         '''
@@ -440,7 +442,7 @@ class ImageSequence(object):
             _fcnt += 1         
             _file_path = self.get_frame_path(_fcnt)
         
-        if (__strict__):
+        if __strict__:
             assert (_fcnt > 0), "Empty video folder {}".format(path)
         else:
             if (0 == _fcnt):
@@ -472,11 +474,11 @@ class ImageSequence(object):
         # call frame2ndarray to get image array
         farray = frame2ndarray(_fpath, self.color_in, self.color_out)
         # output status
-        if (__verbose__):
+        if __verbose__:
             info_str = "ImageSequence: get_farray success, "
             info_str += "shape "+str(farray.shape)
             logging.info(info_str)
-            if (__vverbose__):
+            if __vverbose__:
                 print(info_str)
         return(farray)
 
@@ -489,7 +491,7 @@ class ImageSequence(object):
             _indices = self.fids
         else:
             # only enable santity check in strict mode for higher perfomance
-            if (__strict__):
+            if __strict__:
                 for idx in indices:
                     assert (idx < self.fcount), "Image index {} overflow".\
                         format(idx)
@@ -501,11 +503,11 @@ class ImageSequence(object):
         # call frames2ndarray to get array
         varray = frames2ndarray(_fpaths, self.color_in, self.color_out)
         # output status
-        if (__verbose__):
+        if __verbose__:
             info_str = "ImageSequence: get_varray success, "
             info_str += "shape "+str(varray.shape)
             logging.info(info_str)
-            if (__vverbose__):
+            if __vverbose__:
                 print(info_str)
         return(varray)
 
@@ -539,12 +541,12 @@ class ClippedImageSequence(ImageSequence):
         else:
             # random jitter in time dimension, and re-sample frames
             offset = np.random.randint(fcount - clip_len)
-            if (__verbose__):
+            if __verbose__:
                 info_str = "ClippedImageSequence: [__clip__] "
                 info_str += "clip frames [{}, {})".\
                     format(offset, offset + clip_len)
                 logging.info(info_str)
-                if (__vverbose__):
+                if __vverbose__:
                     print(info_str)
             return(fids[offset : offset + clip_len])
 
@@ -592,11 +594,11 @@ class SegmentedImageSequence(ImageSequence):
             _idx = _interval * (seg_num - 1) + np.random.randint(_residual)
             _kfids.append(_idx)            
 
-        if (__verbose__):
+        if __verbose__:
             info_str = "SegmentedImageSequence: [__segment__] "
             info_str += "key frames {}".format(_kfids)
             logging.info(info_str)
-            if (__vverbose__):
+            if __vverbose__:
                 print(info_str)
 
         return(_kfids)

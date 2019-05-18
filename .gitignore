@@ -1,8 +1,10 @@
+# preserve vs code files in dev branches
+!.vscode/
+
 # nfs files
 .nfs*
 
 # doxygen files
-doxygen/
 html/
 latex/
 *.tag 

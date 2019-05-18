@@ -23,23 +23,25 @@ class Sample(object):
     """!
     An video sample struct containing the meta-data of a video sample
     """
+
+    ## Initailization function
+    #  
+    #  @param path str: absolute path of 1 video sample
+    #  @param name str: file name (without any extension and path)
+    #  @param ext str:  file extension (e.g., "avi", "mp4"), '.' excluded.  
+    #      If it == constant.IMGSEQ, it means the sample is sliced into a 
+    #      sequence of images (not limited to RGB modality) and the images 
+    #      are stored in the folder which is the "path" mentioned above.
+    #      NOTE: Currently, we only handle images stored in .jpg formats
+    #  @param lbl str:  
+    #      label of the sample, is a unique string in certain dataset
+    #  @param cid str:  
+    #      class id of the sample, is the numerical representation of label
     def __init__(
         self, path, name, seq=True, mod="RGB", ext=constant.IMGSEQ, 
         lbl=None, cid=-1):
-        """!
+        """
         Initailization function
-
-        @param path str: absolute path of 1 video sample
-        @param name str: file name (without any extension and path)
-        @param ext str:  file extension (e.g., "avi", "mp4"), '.' excluded.  
-            If it == constant.IMGSEQ, it means the sample is sliced into a 
-            sequence of images (not limited to RGB modality) and the images 
-            are stored in the folder which is the "path" mentioned above.
-            NOTE: Currently, we only handle images stored in .jpg formats
-        @param lbl str:  
-            label of the sample, is a unique string in certain dataset
-        @param cid str:  
-            class id of the sample, is the numerical representation of label
         """
         self.path   =   copy.deepcopy(path)
         self.name   =   copy.deepcopy(name)
@@ -49,6 +51,8 @@ class Sample(object):
         self.lbl    =   copy.deepcopy(lbl)
         self.cid    =   copy.deepcopy(cid)
 
+    ## Documentation for a method.
+    #  @param self The object pointer.
     def __eq__(self, other):
         if isinstance(other, Sample):
             return(
@@ -62,9 +66,13 @@ class Sample(object):
             )
         return False
 
+    ## Documentation for a method.
+    #  @param self The object pointer.
     def __ne__(self, other):
         return not self.__eq__(other)
 
+    ## Documentation for a method.
+    #  @param self The object pointer.
     def __hash__(self):
         return(hash((
             self.path,
@@ -76,6 +84,8 @@ class Sample(object):
             self.cid
         )))
 
+    ## Documentation for a method.
+    #  @param self The object pointer.
     def __repr__(self):
         string = "Sample Object: \n"
         string += str(self.name)
@@ -92,14 +102,13 @@ class SampleSet(object):
     """!
     A set of samples with some statistics information
     """
+    ##  
+    # @param samples set: a set of Sample objects.
+    # @param labels set|list: a set/list of label names (str).
+    # If not specified, will count all possible labels from the samples.
+    # @param eager bool: eager execution
     def __init__(self, samples, labels=None, eager=True):
-        """!
-        Pick samples of given labels and get corresponding statistics.
-
-        @param samples set: a set of Sample objects.
-        @param labels set|list: a set/list of label names (str).
-            If not specified, will count all possible labels from the samples.
-        @param eager bool: eager execution
+        """
         """
         self.samples = samples
         self.counts = dict()
@@ -127,29 +136,41 @@ class SampleSet(object):
                         self.counts[_label] += 1
                         self.samples.add(_sample)
 
+    ## Documentation for a method.
+    #  @param self The object pointer.
     def __repr__(self):
         string = "SampleSet Object: \n"
         for _label in self.counts:
             string += "[{}]: \t{}\n".format(_label, self.counts[_label])
         return string
 
+    ## Documentation for a method.
+    #  @param self The object pointer.
     def __eq__(self, other):
         return (
             (self.samples == other.samples)
             and (self.counts == other.counts)
             )
 
+    ## Documentation for a method.
+    #  @param self The object pointer.
     def __ne__(self, other):
         return not self.__eq__(other)
 
+    ## Documentation for a method.
+    #  @param self The object pointer.
     def __hash__(self):
         return(hash((
             self.samples, 
             self.counts)))
 
+    ## Documentation for a method.
+    #  @param self The object pointer.
     def __len__(self):
         return len(self.samples)
 
+    ## Documentation for a method.
+    #  @param self The object pointer.
     def get_samples(self):
         """!
 
@@ -157,25 +178,26 @@ class SampleSet(object):
         samples = list(self.samples)
         return samples
 
+    ## Documentation for a method.
+    #  @param self The object pointer.
     def get_statistics(self):
         """!
         """
         return self.counts
 
-    def filter_samples(self, _f):
-        """!
-        Filter self.samples using a filter _f.
-
-        @param _f callable: a filter to filter samples
+    ## Filter samples using a filter.
+    #  @param filter_ callable: a filter with input being a Sample object
+    def filter_samples(self, filter_):
+        """
         """
         new_samples = set()
         for _sample in self.samples:
-            if (not _f(_sample)):
-                if (__verbose__):
+            if (not filter_(_sample)):
+                if __verbose__:
                     info_str = "SampleSet:[filter_samples], remove\n{}"\
                         .format(_sample)
                     logging.info(info_str)
-                    if (__vverbose__):
+                    if __vverbose__:
                         print(info_str)  
                 # self.samples.remove(_sample)
                 if _sample.lbl is not None:
@@ -184,6 +206,8 @@ class SampleSet(object):
                 new_samples.add(_sample)
         self.samples = new_samples
 
+    ## Documentation for a method.
+    #  @param self The object pointer.
     def update_labels(self, labels):
         """!
         Update labels and corresponding counts. 
@@ -196,6 +220,8 @@ class SampleSet(object):
             if _label not in self.counts:
                 self.counts[_label] = 0
 
+    ## Documentation for a method.
+    #  @param self The object pointer.
     def update_samples(self, samples):
         """!
         Update self.samples (add new samples) and corresponding statistics.
@@ -213,6 +239,8 @@ class SampleSet(object):
                 self.counts[_label] += 1
                 self.samples.add(_sample)  
 
+    ## Documentation for a method.
+    #  @param self The object pointer.
     def refresh_counts(self):
         """!
         Update self.counts to make all statstistics consistent when you change
@@ -228,19 +256,21 @@ class SampleSet(object):
 
 
 class Collector(object):
-    '''
+    """
     A helper functor which deals with samples' meta-data of a certain dataset.
     We only deal with Meta-data in it.
     NOTE: Following the "do one thing at once" priciple, we only deal with 1 
     data type of 1 data modality in 1 collector object.
-    '''
+    """
+    ## Documentation for a method.
+    #  @param self The object pointer.
     def __init__(self, root, dset, lbls=None,
                  mod="RGB", ext=constant.IMGSEQ
                 ):
         """!
         Initailization function
 
-        @param root str: root path of the dataset        
+        @param root str: root path of the dataset
         @param dset module: meta dataset
         @param lbls set|list: a set/list of label names (str).
             If not specified, will count all possible labels from the samples.
@@ -256,6 +286,8 @@ class Collector(object):
         self.mod = copy.deepcopy(mod)
         self.ext = copy.deepcopy(ext)
 
+    ## Documentation for a method.
+    #  @param self The object pointer.
     def __repr__(self):
         string = "Meta-data Collector"
         string += "\n"
@@ -265,6 +297,8 @@ class Collector(object):
         string += "[extension] : {}\t".format(self.ext)
         return string
 
+    ## Documentation for a method.
+    #  @param self The object pointer.
     def collect_samples(self):
         """!
         Collect a list of samples of given labels, given data modality and
@@ -328,10 +362,10 @@ class Collector(object):
             raise Exception("Unsupported Dataset Style: {}".format(style))
 
         # output status
-        if (__verbose__):
+        if __verbose__:
             info_str = "Collector: [collect_samples] get {} samples."\
                 .format(len(samples))
-            if (__vverbose__):
+            if __vverbose__:
                 print(info_str)
 
         ## 2. get statistics
@@ -340,9 +374,13 @@ class Collector(object):
         
         return(ret)
 
+    ## Documentation for a method.
+    #  @param self The object pointer.
     def __call__(self):
         return(self.collect_samples())
 
+    ## Documentation for a method.
+    #  @param self The object pointer.
     def check_integrity(self, lbls=None, sample_set=None):
         """!
         """
