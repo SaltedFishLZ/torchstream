@@ -28,11 +28,11 @@ class DatasetFilter(object):
             self.split_df = testset_df
 
         for idx, row in self.split_df.iterrows():
-            video = row["video"]
+            video = str(row["video"])
             self.split_set.add(video)
 
     def __call__(self, sample):
-        if (sample.file in self.split_set):
+        if (sample.name in self.split_set):
             return True
         else:
             return False

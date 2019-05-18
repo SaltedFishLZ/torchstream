@@ -47,7 +47,7 @@ import cv2
 import numpy as np 
 import psutil
 
-from .__init__ import *
+from .constant import *
 
 # local settings (only in dev)
 _frame_num_err_limit_ = 5
@@ -417,29 +417,28 @@ class ImageSequence(object):
     NOTE: Each frame must be named as %d.<ext> (e.g., 233.jpg). Do not
     use any padding zero in the file name! And this class only stores file
     pointers
-    TODO: support multiple modalities (multiple file extension)
-
-    Stable API: _get_varray_
+    NOTE: Following the "do one thing at once" priciple, we only deal with 1 
+    data type of 1 data modality in 1 collector object.
+    TODO: support file name template
     '''
     def __init__(self, path, 
             ext = "jpg", color_in="BGR", color_out="RGB"):
         '''
         TODO: format string for file name
         '''
-        self.path = copy.deepcopy(path)
-        self.ext = copy.deepcopy(ext)
-        self.color_in = copy.deepcopy(color_in)
-        self.color_out = copy.deepcopy(color_out)
-        
-        self.fcount = 0     # frame counnt
-        self.fids = []      # frame ids
+        self.path       =   copy.deepcopy(path)
+        self.ext        =   copy.deepcopy(ext)
+        self.color_in   =   copy.deepcopy(color_in)
+        self.color_out  =   copy.deepcopy(color_out)
+        self.fcount     =   0       # frame counnt
+        self.fids       =   []      # frame ids
 
         # seek all valid frames and add their indices
         _fcnt = 0
-        _file_path = self._get_frame_path_(_fcnt)
+        _file_path = self.get_frame_path(_fcnt)
         while (os.path.exists(_file_path)):
             _fcnt += 1         
-            _file_path = self._get_frame_path_(_fcnt)
+            _file_path = self.get_frame_path(_fcnt)
         
         if (__strict__):
             assert (_fcnt > 0), "Empty video folder {}".format(path)
@@ -452,7 +451,7 @@ class ImageSequence(object):
         self.fcount = _fcnt
         self.fids = list(range(_fcnt))
 
-    def _get_frame_path_(self, idx):
+    def get_frame_path(self, idx):
         '''
         get the path of idx-th frame
         NOTE: currently, we all use the original frame index
@@ -461,7 +460,7 @@ class ImageSequence(object):
         _file_path = os.path.join(self.path, _filename)
         return(_file_path)
 
-    def _get_farray_(self, idx):
+    def get_farray(self, idx):
         '''
         get the farray of the idx-th frame
         '''
@@ -469,24 +468,24 @@ class ImageSequence(object):
         assert (idx <= self.fids[self.fcount - 1]), \
             "Image index [{}] exceeds max fid[{}]"\
             .format(idx, self.fids[self.fcount - 1])
-        _fpath = self._get_frame_path_(idx)
+        _fpath = self.get_frame_path(idx)
         # call frame2ndarray to get image array
         farray = frame2ndarray(_fpath, self.color_in, self.color_out)
         # output status
         if (__verbose__):
-            info_str = "ImageSequence: _get_farray_ success, "
+            info_str = "ImageSequence: get_farray success, "
             info_str += "shape "+str(farray.shape)
             logging.info(info_str)
             if (__vverbose__):
                 print(info_str)
         return(farray)
 
-    def _get_varray_(self, indices=[]):
+    def get_varray(self, indices=None):
         '''
         get the varray of all the frames, if indices == None.
         otherwise get certain frames as they are a continuous video
         '''
-        if (0 == len(indices)):
+        if (indices is None):
             _indices = self.fids
         else:
             # only enable santity check in strict mode for higher perfomance
@@ -498,12 +497,12 @@ class ImageSequence(object):
         # generate file paths
         _fpaths = []
         for idx in _indices:
-            _fpaths.append(self._get_frame_path_(idx))
+            _fpaths.append(self.get_frame_path(idx))
         # call frames2ndarray to get array
         varray = frames2ndarray(_fpaths, self.color_in, self.color_out)
         # output status
         if (__verbose__):
-            info_str = "ImageSequence: _get_varray_ success, "
+            info_str = "ImageSequence: get_varray success, "
             info_str += "shape "+str(varray.shape)
             logging.info(info_str)
             if (__vverbose__):
@@ -644,22 +643,22 @@ def test_classes(test_components, test_configuration):
             color_out=test_configuration['imgseq_color']
             )
 
-    # _get_farray_ test
-    if (test_components['_get_farray_']):
+    # get_farray test
+    if (test_components['get_farray']):
         _i = 0
-        frame = _seq._get_farray_(_seq.fids[_i])
+        frame = _seq.get_farray(_seq.fids[_i])
         farray_show('{}'.format(_seq.fids[_i]), frame)
 
         _i = _seq.fcount - 1
-        frame = _seq._get_farray_(_seq.fids[_i])
+        frame = _seq.get_farray(_seq.fids[_i])
         farray_show('{}'.format(_seq.fids[_i]), frame)
 
         (cv2.waitKey(0) & 0xFF == ord('q'))
         cv2.destroyAllWindows()
     
-    # _get_varray_ test
-    if (test_components['_get_varray_']):
-        varray = _seq._get_varray_()
+    # get_varray test
+    if (test_components['get_varray']):
+        varray = _seq.get_varray()
         print(varray.shape)
         _f = varray.shape[0]
         for _i in range(_f):
@@ -685,8 +684,8 @@ if __name__ == "__main__":
 
         test_components = {
             'functions' : True,
-            'classes' : {'_get_farray_':True,
-                '_get_varray_':False
+            'classes' : {'get_farray':True,
+                'get_varray':False
                 }
         }
         test_configuration = {

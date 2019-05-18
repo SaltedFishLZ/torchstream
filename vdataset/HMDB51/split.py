@@ -1,7 +1,7 @@
 import os
 import copy
 
-dir_path = os.path.dirname(os.path.realpath(__file__))
+DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 
 from .label import __labels__
 
@@ -11,7 +11,7 @@ from .label import __labels__
 # Different official split options are stored as 
 # '<class name>_<test/train>_split?.txt' in splits_folder
 __supported_split_options__ = ["1", "2", "3"]
-split_options_folder = os.path.join(dir_path, "split_options")
+split_options_folder = os.path.join(DIR_PATH, "split_options")
 
 
 

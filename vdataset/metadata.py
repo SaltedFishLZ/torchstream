@@ -9,12 +9,12 @@ import sys
 import copy
 import logging
 import importlib
+from collections import Counter
 
-from . import video
 from . import constant
 from . import utilities
-from .__init__ import __supported_dataset_styles__
-from .__init__ import *
+from .constant import __test__, __verbose__, __vverbose__, \
+    __supported_dataset_styles__
 
 __verbose__ = True
 __vverbose__ = True
@@ -23,7 +23,8 @@ class Sample(object):
     """!
     An video sample struct containing the meta-data of a video sample
     """
-    def __init__(self, path, name, seq=True, mod="RGB", ext=constant.IMGSEQ, 
+    def __init__(
+        self, path, name, seq=True, mod="RGB", ext=constant.IMGSEQ, 
         lbl=None, cid=-1):
         """!
         Initailization function
@@ -49,8 +50,9 @@ class Sample(object):
         self.cid    =   copy.deepcopy(cid)
 
     def __eq__(self, other):
-        if (isinstance(other, Sample)):
-            return((self.path == other.path)
+        if isinstance(other, Sample):
+            return(
+                (self.path == other.path)
                 and (self.name == other.name)
                 and (self.mod == other.mod)
                 and (self.ext == other.ext)
@@ -58,14 +60,13 @@ class Sample(object):
                 and (self.lbl == other.lbl)
                 and (self.cid == other.cid)
             )
-        else:
-            return False
-    
+        return False
+
     def __ne__(self, other):
         return not self.__eq__(other)
 
     def __hash__(self):
-        return(hash(
+        return(hash((
             self.path,
             self.name,
             self.mod,
@@ -73,27 +74,28 @@ class Sample(object):
             self.seq,
             self.lbl,
             self.cid
-        ))
+        )))
 
     def __repr__(self):
-        string = "Sample Object: " + str(self.name)
-        if (self.seq):
+        string = "Sample Object: \n"
+        string += str(self.name)
+        if self.seq:
             string += "(frame sequence)"
         string += '\n'
         string += "[label] : {}  \t".format(self.lbl)
         string += "[cid] : {} \t".format(self.cid)
         string += "[path] : {}".format(self.path)
-        return(string)
+        return string
 
 
 class SampleSet(object):
     """!
     A set of samples with some statistics information
     """
-    def __init__(self, samples=set(), labels=None, eager=True):
+    def __init__(self, samples, labels=None, eager=True):
         """!
         Pick samples of given labels and get corresponding statistics.
-        
+
         @param samples set: a set of Sample objects.
         @param labels set|list: a set/list of label names (str).
             If not specified, will count all possible labels from the samples.
@@ -102,30 +104,63 @@ class SampleSet(object):
         self.samples = samples
         self.counts = dict()
 
-        if (labels is None):
-            if (eager):
+        if labels is None:
+            if eager:
                 for _sample in samples:
                     _label = _sample.lbl
-                    if (_label in labels):
+                    if _label is None:
+                        continue
+                    if _label in self.counts:
                         self.counts[_label] += 1
                     else:
                         self.counts[_label] = 1
                     self.samples.add(_sample)
         else:
-            self.counts = dict.fromkeys(self.counts.keys(), 0)
-            if (eager):
+            self.counts = dict.fromkeys(labels, 0)
+            if eager:
                 ## Get statistics immediately
                 for _sample in samples:
                     _label = _sample.lbl
-                    if (_label in labels):
+                    if _label is None:
+                        continue
+                    if _label in labels:
                         self.counts[_label] += 1
                         self.samples.add(_sample)
 
+    def __repr__(self):
+        string = "SampleSet Object: \n"
+        for _label in self.counts:
+            string += "[{}]: \t{}\n".format(_label, self.counts[_label])
+        return string
+
+    def __eq__(self, other):
+        return (
+            (self.samples == other.samples)
+            and (self.counts == other.counts)
+            )
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def __hash__(self):
+        return(hash((
+            self.samples, 
+            self.counts)))
+
+    def __len__(self):
+        return len(self.samples)
+
     def get_samples(self):
-        return(self.samples)
-    
+        """!
+
+        """
+        samples = list(self.samples)
+        return samples
+
     def get_statistics(self):
-        return(self.counts)
+        """!
+        """
+        return self.counts
 
     def filter_samples(self, _f):
         """!
@@ -133,6 +168,7 @@ class SampleSet(object):
 
         @param _f callable: a filter to filter samples
         """
+        new_samples = set()
         for _sample in self.samples:
             if (not _f(_sample)):
                 if (__verbose__):
@@ -141,8 +177,12 @@ class SampleSet(object):
                     logging.info(info_str)
                     if (__vverbose__):
                         print(info_str)  
-                self.samples.remove(_sample)
-                self.counts[_sample.lbl] -= 1
+                # self.samples.remove(_sample)
+                if _sample.lbl is not None:
+                    self.counts[_sample.lbl] -= 1
+            else:
+                new_samples.add(_sample)
+        self.samples = new_samples
 
     def update_labels(self, labels):
         """!
@@ -151,7 +191,9 @@ class SampleSet(object):
         @param labels set|list: a set/list of label names (str)
         """
         for _label in labels:
-            if (_label not in self.counts):
+            if _label is None:
+                continue            
+            if _label not in self.counts:
                 self.counts[_label] = 0
 
     def update_samples(self, samples):
@@ -165,6 +207,8 @@ class SampleSet(object):
         labels = self.counts.keys()
         for _sample in samples:
             _label = _sample.lbl
+            if (None == _label):
+                continue
             if (_label in labels):
                 self.counts[_label] += 1
                 self.samples.add(_sample)  
@@ -181,23 +225,6 @@ class SampleSet(object):
                 self.counts[_label] += 1
                 self.samples.add(_sample)
 
-    def __eq__(self, other):
-        return ((self.samples == other.samples)
-            and (self.counts == other.counts))
-
-    def __ne__(self, other):
-        return(not self.__eq__(other))
-
-    def __hash__(self):
-        return(hash(
-            self.samples, 
-            self.counts))
-
-    def __repr__(self):
-        string = "SampleSet Object: \n"
-        for _label in self.counts.keys():
-            string += "[{}]: \t{}\n".format(_label, self.counts[_label])
-        return(string)
 
 
 class Collector(object):
@@ -206,11 +233,10 @@ class Collector(object):
     We only deal with Meta-data in it.
     NOTE: Following the "do one thing at once" priciple, we only deal with 1 
     data type of 1 data modality in 1 collector object.
-    TODO: enable file name template
     '''
     def __init__(self, root, dset, lbls=None,
-                mod="RGB", ext=constant.IMGSEQ, 
-                eager=True):
+                 mod="RGB", ext=constant.IMGSEQ
+                ):
         """!
         Initailization function
 
@@ -220,7 +246,6 @@ class Collector(object):
             If not specified, will count all possible labels from the samples.
         @param mod str: data modality
         @param ext str: file extension, "" means image(jpg) sequence
-        @param eager bool: collecting data eagerly in initialization
         """
         # santity check
         assert (dset.__style__ in __supported_dataset_styles__), \
@@ -238,69 +263,69 @@ class Collector(object):
         string += "[specified labels]: {}\n".format(self.lbls)
         string += "[modality] : {}\t".format(self.mod)
         string += "[extension] : {}\t".format(self.ext)
-        return(string)
+        return string
 
-    # def collect_labels(self):
-    #     """!
-    #     Collect all possible labels from a certain part (modality & extension)
-    #     of a dataset.   
-
-    #     @param return set: a set of all labels appeared in certain part of the
-    #     dataset.
-    #     """
-    #     style = self.dset.__style__
-    #     seq = (constant.IMGSEQ == self.ext)
-
-    #     # @var labels
-    #     labels = set()
-    #     if ("UCF101" == style):
-    #         for _label in os.listdir(self.root):
-    #             if (os.path.isdir(os.path.join(self.root, _label))):
-    #                 labels.add(_label)
-    #     else:
-    #         assert True, NotImplementedError
-    #         exit(1)
-
-    #     # output status
-    #     if (__verbose__):
-    #         info_str = "Collector: [collect_samples] get {} labels"\
-    #             .format(len(labels))
-    #         if (__vverbose__):
-    #             print(info_str)
-        
-    #     return(labels)
-      
     def collect_samples(self):
         """!
         Collect a list of samples of given labels, given data modality and
-        given file extension.    
+        given file extension.
 
-        @param return SampleSet:  
+        @param return SampleSet:
             a set of Sample objects and corresponding statistics.
         """
 
         style = self.dset.__style__
         seq = (constant.IMGSEQ == self.ext)
         samples = set()
-        
+
         ## 1. main loop
         # get all samples' meta-data (file path, annotation, seq or not, etc)
-        if ("UCF101" == style):
+        if "UCF101" == style:
             for _label in os.listdir(self.root):
+                # bypass invalid labels
+                if self.lbls is not None:
+                    if _label not in self.lbls:
+                        continue
                 _cid = (self.dset.__labels__[_label])
                 for _video in os.listdir(os.path.join(self.root, _label)):
-                    if (False == seq):
+                    # bypass invalid files
+                    if self.ext not in _video:
+                        continue
+                    _path = os.path.join(self.root, _label, _video)
+                    if False == seq:
                         _name = utilities.strip_extension(_video)
                     else:
-                        _name = copy.deepcopy(_video)
-                    _path = os.path.join(self.root, _label, _video)
+                        _name = _video
                     _sample = Sample(path=_path, name=_name, seq=seq,
-                            mod=self.mod, ext=self.ext, 
+                            mod=self.mod, ext=self.ext,
                             lbl=_label, cid=_cid)
                     samples.add(_sample)
+        elif "20BN" == style:
+            for _video in os.listdir(self.root):
+                # bypass invalid files
+                if (self.ext not in _video):
+                    continue
+                if not seq:
+                    _name = utilities.strip_extension(_video)
+                else:
+                    _name = _video
+
+                _label = self.dset.__targets__[_video]
+                if self.lbls is not None:
+                    if _label not in self.lbls:
+                        continue
+                if _label is None:
+                    _cid = -1
+                else:
+                    _cid = self.dset.__labels__[_label]
+
+                _path = os.path.join(self.root, _video)
+                _sample = Sample(path=_path, name=_name, seq=seq,
+                        mod=self.mod, ext=self.ext,
+                        lbl=_label, cid=_cid)
+                samples.add(_sample)
         else:
-            print(style)
-            assert True, "Unsupported Dataset Struture Style"        
+            raise Exception("Unsupported Dataset Style: {}".format(style))
 
         # output status
         if (__verbose__):
@@ -318,45 +343,51 @@ class Collector(object):
     def __call__(self):
         return(self.collect_samples())
 
-    # def _check_integrity_(self, dset):
+    def check_integrity(self, lbls=None, sample_set=None):
+        """!
+        """
         
-    #     # check class number
-    #     if (sorted(self.labels) != sorted(dset.__labels__.keys())):
-    #         warn_str = "Integrity check failed, "
-    #         warn_str += "class numbver mismatch"
-    #         logging.warn(warn_str)
-    #         return False
+        if (None == sample_set):
+            sample_set = self.collect_samples()
+
+        passed = True
+        warn_str = "Integrity check failed.\n"
         
-    #     # check sample number
-    #     # count samples for each class
-    #     _sample_count_dict = dict(zip(self.labels, len(self.labels)*[0]))
-    #     for _sample in self.samples:
-    #         _sample_count_dict[_sample.lbl] += 1
-    #     passed = True
-    #     # check sample number for each class
-    #     for _label in self.labels:
-    #         _sample_count = _sample_count_dict[_label]
-    #         ref_sample_count = dset.__sample_num_per_class__[_label]
+        # check labels
+        if (None == lbls):
+            labels_got = set(sample_set.counts.keys())
+            labels_expected = set(self.dset.__labels__.keys())
+            if (labels_got != labels_expected):
+                warn_str += "label mismatch"
+                passed = False
+        
+        # check sample number for each class
+        for _label in sample_set.counts:
+            _sample_count = sample_set.counts[_label]
+            ref_sample_count = self.dset.__sample_num_per_class__[_label]
 
-    #         if (type(ref_sample_count) == list):
-    #             # reference sample number is an interval
-    #             if (not (_sample_count >= ref_sample_count[0])
-    #                 and (_sample_count <= ref_sample_count[1]) ):
-    #                 passed = False
-    #         elif (type(ref_sample_count) == int):
-    #             # reference sample number is exact
-    #             if (ref_sample_count != _sample_count):
-    #                 passed = False
-    #         else:
-    #             assert True, "Incorrect reference sample number"
-    #         if (not passed):
-    #             warn_str = "Integrity check failed, "
-    #             warn_str += "sample numbver mismatch for class [{}]".\
-    #                 format(_label)
-    #             logging.warn(warn_str)
-    #             break
+            if (type(ref_sample_count) == list):
+                # reference sample number is an interval
+                if (not (_sample_count >= ref_sample_count[0])
+                    and (_sample_count <= ref_sample_count[1]) ):
+                    warn_str += "[{}]:\t sample number mismatch, a number in \
+{} expected, [{}] got.\n".format(_label, ref_sample_count, _sample_count)
+                    passed = False
+            elif (type(ref_sample_count) == int):
+                # reference sample number is an exact number
+                if (ref_sample_count != _sample_count):
+                    warn_str += "[{}]:\t sample number mismatch, [{}] expected\
+, [{}] got.\n".format(_label, ref_sample_count, _sample_count)
+                    passed = False
+            else:
+                raise Exception("Incorrect reference sample number type")
 
-    #     return True
+
+        if (not passed):
+            logging.warn(warn_str)
+            return(False)
+
+        return True
 
 
 
@@ -365,14 +396,21 @@ if __name__ == "__main__":
     DATASET = "Jester"
     dataset_mod = importlib.import_module("vdataset.{}".format(DATASET))
 
+    lbls=dataset_mod.__labels__
+
     collector = Collector(
         dataset_mod.raw_data_path,
         dataset_mod,
+        # lbls={'Sliding Two Fingers Up',},
         ext=constant.IMGSEQ
         )
     
     sample_set = collector()
-    for _sample in sample_set.samples:
-        print(_sample)
-
+    # for _sample in sample_set.samples:
+    #     if ".avi" not in _sample.path:
+    #         print(_sample)
+    print(len(sample_set.samples))
+    print(sample_set.counts)
+    # print(collector.check_integrity())
+    print(sample_set.get_samples()[1])
 

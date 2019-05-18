@@ -1,6 +1,10 @@
+import pickle
+import os
+FILE_PATH = os.path.realpath(__file__)
+DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 
 from .common import trainset_df, valset_df, testset_df
-
+from ..utilities import modification_date, creation_date
 
 # ------------------------------------------------------------------------ #
 #                   Labels and Corresponding CIDs                          #
@@ -39,39 +43,39 @@ __classes__ = [
 # generating label-cid mapping
 # map "Doing other things" cid 0
 cids = list(range(len(__classes__)))
-cids = cids[1:-1] + [0]
+cids = cids[1:len(cids)] + [0]
 __labels__ = dict(zip(__classes__, cids))
 
 
 
 __sample_num_per_class__ = {
-    "Doing other things"                :12416  ,
-    "Drumming Fingers"                  :5444   ,
-    "No gesture"                        :5344   ,
-    "Pulling Hand In"                   :5379   ,
-    "Pulling Two Fingers In"            :5315   ,
-    "Pushing Hand Away"                 :5434   ,
-    "Pushing Two Fingers Away"          :5358   ,
-    "Rolling Hand Backward"             :5031   ,
-    "Rolling Hand Forward"              :5165   ,
-    "Shaking Hand"                      :5314   ,
-    "Sliding Two Fingers Down"          :5410   ,
-    "Sliding Two Fingers Left"          :5345   ,
-    "Sliding Two Fingers Right"         :5244   ,
-    "Sliding Two Fingers Up"            :5262   ,
-    "Stop Sign"                         :5413   ,
-    "Swiping Down"                      :5303   ,
-    "Swiping Left"                      :5160   ,
-    "Swiping Right"                     :5066   ,
-    "Swiping Up"                        :5240   ,
-    "Thumb Down"                        :5460   ,
-    "Thumb Up"                          :5457   ,
-    "Turning Hand Clockwise"            :3980   ,
-    "Turning Hand Counterclockwise"     :4181   ,
-    "Zooming In With Full Hand"         :5307   ,
-    "Zooming In With Two Fingers"       :5355   ,
-    "Zooming Out With Full Hand"        :5330   ,
-    "Zooming Out With Two Fingers"      :5379   ,
+    "Doing other things"                : [1000, 12416]  ,
+    "Drumming Fingers"                  : [1000, 5444 ]  ,
+    "No gesture"                        : [1000, 5344 ]  ,
+    "Pulling Hand In"                   : [1000, 5379 ]  ,
+    "Pulling Two Fingers In"            : [1000, 5315 ]  ,
+    "Pushing Hand Away"                 : [1000, 5434 ]  ,
+    "Pushing Two Fingers Away"          : [1000, 5358 ]  ,
+    "Rolling Hand Backward"             : [1000, 5031 ]  ,
+    "Rolling Hand Forward"              : [1000, 5165 ]  ,
+    "Shaking Hand"                      : [1000, 5314 ]  ,
+    "Sliding Two Fingers Down"          : [1000, 5410 ]  ,
+    "Sliding Two Fingers Left"          : [1000, 5345 ]  ,
+    "Sliding Two Fingers Right"         : [1000, 5244 ]  ,
+    "Sliding Two Fingers Up"            : [1000, 5262 ]  ,
+    "Stop Sign"                         : [1000, 5413 ]  ,
+    "Swiping Down"                      : [1000, 5303 ]  ,
+    "Swiping Left"                      : [1000, 5160 ]  ,
+    "Swiping Right"                     : [1000, 5066 ]  ,
+    "Swiping Up"                        : [1000, 5240 ]  ,
+    "Thumb Down"                        : [1000, 5460 ]  ,
+    "Thumb Up"                          : [1000, 5457 ]  ,
+    "Turning Hand Clockwise"            : [1000, 3980 ]  ,
+    "Turning Hand Counterclockwise"     : [1000, 4181 ]  ,
+    "Zooming In With Full Hand"         : [1000, 5307 ]  ,
+    "Zooming In With Two Fingers"       : [1000, 5355 ]  ,
+    "Zooming Out With Full Hand"        : [1000, 5330 ]  ,
+    "Zooming Out With Two Fingers"      : [1000, 5379 ]  ,
 }
 
 
@@ -83,15 +87,32 @@ __sample_num_per_class__ = {
 # NOTE:
 # __annotations__ is a Python key word
 # So, we use __targets__
+# Currently, this dataset only provides annotation for training & validation
+# We use None to mark unlabelled samples
 __targets__ = dict()
 
-# Currently, this dataset only provides annotation for training & validation
-for df in [trainset_df, valset_df]:
-    for idx, row in df.iterrows():
-        video = row["video"]
-        label = row["label"]
-        __targets__[video] = label
-
+annot_file = os.path.join(DIR_PATH, "jester-v1.annot")
+if (os.path.exists(annot_file)
+    and (creation_date(FILE_PATH) < creation_date(annot_file))
+    and (modification_date(FILE_PATH) < modification_date(annot_file))):
+    print("Find valid annotation cache")
+    f = open(annot_file, "rb")
+    __targets__ = pickle.load(f)
+    f.close()
+else:
+    for df in (trainset_df, valset_df):
+        for idx, row in df.iterrows():
+            video = str(row["video"])
+            label = str(row["label"])
+            __targets__[video] = label
+    for df in (testset_df, ):
+        for idx, row in df.iterrows():
+            video = str(row["video"])
+            __targets__[video] = None    
+    # TODO: consistency issue    
+    f = open(annot_file, "wb")
+    pickle.dump(__targets__, f)
+    f.close()
 
 
 
