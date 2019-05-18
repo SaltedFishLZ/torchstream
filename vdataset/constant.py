@@ -8,6 +8,9 @@ TESTSET = 3
 IMGSEQ = ""
 IMGEXT = "jpg"
 
+LABEL_UNKOWN= None
+CID_UNKOWN = -1
+
 # ----------------------------------------------------------------- #
 #           Runtime Settings for Python Scripts                     #
 # ----------------------------------------------------------------- #

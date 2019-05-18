@@ -8,7 +8,7 @@
 # dataset level
 # 
 # Term / Naming Conversion:
-# ┌─────────────┬───────────────────────────────────────────────┐    
+# ┌─────────────┬───────────────────────────────────────────────┐
 # │ Frames(s)   |*Description: Separate images(s) from a certain|
 # |             | video. Varibale called 'frame(s)' is usually  |
 # |             | used as file path.                            |

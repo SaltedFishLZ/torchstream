@@ -1,11 +1,14 @@
-import pickle
+"""
+"""
 import os
-FILE_PATH = os.path.realpath(__file__)
-DIR_PATH = os.path.dirname(os.path.realpath(__file__))
+import pickle
 
+from .. import constant
 from .common import trainset_df, valset_df, testset_df
 from ..utilities import modification_date, creation_date
 
+FILE_PATH = os.path.realpath(__file__)
+DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 
 # ------------------------------------------------------------------------ #
 #                   Labels and Corresponding CIDs                          #
@@ -226,7 +229,7 @@ else:
     for df in (testset_df, ):
         for idx, row in df.iterrows():
             video = str(row["video"])
-            __targets__[video] = None    
+            __targets__[video] = constant.LABEL_UNKOWN  
     # TODO: consistency issue    
     f = open(annot_file, "wb")
     pickle.dump(__targets__, f)
