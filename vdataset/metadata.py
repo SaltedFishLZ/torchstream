@@ -124,6 +124,20 @@ class Sample(object):
             )
         )
 
+    ## Doc
+    #  
+    def to_video(self, ext):
+        self.ext = ext
+        self.path = utilities.strip_extension(self.path) + "." + ext
+
+    ## Doc
+    #  @param ext: net file extension
+    def to_images(self, ext):
+        self.seq = True
+        self.ext = ext
+        self.path = utilities.strip_extension(self.path)
+
+
 
 ## SampleSet: A class containing a set of samples with some statistics
 #  
@@ -284,6 +298,8 @@ class SampleSet(object):
     ## Documentation for a method.
     #  @param self The object pointer.
     def migrate_root(self, new_root):
+        """
+        """
         _new_samples = set()
         for _sample in self.samples:
             _new_samples.add(_sample.root_migrated(new_root))
@@ -292,6 +308,8 @@ class SampleSet(object):
     ## Documentation for a method.
     #  @param self The object pointer.
     def root_migrated(self, new_root):
+        """
+        """
         new_sample_set = copy.deepcopy(self)
         new_sample_set.migrate_root(new_root)
         return new_sample_set

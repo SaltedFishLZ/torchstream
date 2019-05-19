@@ -43,7 +43,7 @@ __supported_modality_files__ = {
     'RGB': [IMGSEQ, "jpg", "avi", "mp4"]
     }
 __supported_video_files__ = {
-    'RGB' : ['avi', 'mp4']
+    "RGB" : ["avi", "mp4"]
 }
 # here, "GRAY" means single-channel data
 # some optical-flow based methods may store flow files in jpg
