@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import os
-import sys
-import copy
 import time
 import pickle
 import logging

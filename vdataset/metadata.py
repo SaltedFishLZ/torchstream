@@ -90,6 +90,18 @@ class Sample(object):
     def __ne__(self, other):
         return not self.__eq__(other)
 
+    def __lt__(self, other):
+        try:
+            name_0 = int(self.name)
+        except ValueError:
+            name_0 = self.name
+        try:
+            name_1 = int(other.name)
+        except ValueError:
+            name_1 = other.name
+        return name_0 < name_1
+    
+
     ## Documentation for a method.
     #  @param self The object pointer.
     def __hash__(self):
@@ -327,7 +339,8 @@ class Collector(object):
     ## Documentation for a method.
     #  @param self The object pointer.
     def __init__(self, root, dset, lbls=None,
-                 mod="RGB", ext=constant.IMGSEQ
+                 mod="RGB", ext=constant.IMGSEQ,
+                 sfilter=None
                 ):
         """!
         Initailization function
@@ -342,11 +355,13 @@ class Collector(object):
         # santity check
         assert (dset.__style__ in __supported_dataset_styles__), \
             "Unsupported Dataset Struture Style"
-        self.root = copy.deepcopy(root)
+        self.root = root
         self.dset = dset
-        self.lbls = copy.deepcopy(lbls)
-        self.mod = copy.deepcopy(mod)
-        self.ext = copy.deepcopy(ext)
+        self.lbls = lbls
+        self.mod = mod
+        self.ext = ext
+
+        self.sfilter = sfilter
 
     ## Documentation for a method.
     #  @param self The object pointer.
@@ -394,7 +409,11 @@ class Collector(object):
                     _sample = Sample(root=self.root, path=_path, name=_name,
                                      seq=seq, mod=self.mod, ext=self.ext,
                                      lbl=_label, cid=_cid)
-                    samples.add(_sample)
+                    if self.sfilter is None:
+                        samples.add(_sample)
+                    else:
+                        if self.sfilter(_sample):
+                            samples.add(_sample)
         ## 
         #  
         #  
@@ -408,7 +427,7 @@ class Collector(object):
                 else:
                     _name = _video
 
-                _label = self.dset.__targets__[_video]
+                _label = self.dset.__targets__[_name]
                 if self.lbls is not None:
                     if _label not in self.lbls:
                         continue
@@ -421,7 +440,11 @@ class Collector(object):
                 _sample = Sample(root=self.root, path=_path, name=_name,
                                  seq=seq, mod=self.mod, ext=self.ext,
                                  lbl=_label, cid=_cid)
-                samples.add(_sample)
+                if self.sfilter is None:
+                    samples.add(_sample)
+                else:
+                    if self.sfilter(_sample):
+                        samples.add(_sample)
         ## 
         #  
         else:
@@ -499,16 +522,16 @@ class Collector(object):
 
 if __name__ == "__main__":
 
-    DATASET = "sth_sth_v1"
-    dataset_mod = importlib.import_module("vdataset.{}".format(DATASET))
+    DATASET = "sth_sth_v2"
+    dataset_mod = importlib.import_module("vdataset.metasets.{}".format(DATASET))
 
     lbls=dataset_mod.__labels__
 
     collector = Collector(
-        dataset_mod.raw_data_path,
+        dataset_mod.RAW_DATA_PATH,
         dataset_mod,
         # lbls={'Sliding Two Fingers Up',},
-        ext=constant.IMGSEQ
+        ext="webm"
         )
     
     sample_set = collector()

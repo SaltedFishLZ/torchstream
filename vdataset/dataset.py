@@ -6,6 +6,7 @@ import logging
 import cProfile
 import importlib
 
+import tqdm
 import torch
 import torch.utils.data as torchdata
 
@@ -71,23 +72,29 @@ class VideoDataset(torchdata.Dataset):
         self.metadatas = dict()
         self.kwargs = kwargs
 
+        # filter to select metadata
+        if self.split != constant.ALLSET:
+            if self.split == constant.TRAINSET:
+                sample_filter = self.dsetmod.TrainsetFilter()
+            elif self.split == constant.VALSET:
+                sample_filter = self.dsetmod.ValsetFilter()
+            elif self.split == constant.TESTSET:
+                sample_filter = self.dsetmod.TestsetFilter()
+            else:
+                raise NotImplementedError
+        else:
+            sample_filter = None
+
         for mod in self.modalities:
             # collect metadata
             ext = modalities[mod]
+            
             collector = metadata.Collector(self.root, self.dsetmod,
-                                           mod=mod, ext=ext)
+                                           mod=mod, ext=ext,
+                                           sfilter=sample_filter
+                                           )
             sample_set = collector.collect_samples()
-            # filter metadata
-            if self.split != constant.ALLSET:
-                if self.split == constant.TRAINSET:
-                    sample_filter = self.dsetmod.TrainsetFilter()
-                elif self.split == constant.VALSET:
-                    sample_filter = self.dsetmod.ValsetFilter()
-                elif self.split == constant.TESTSET:
-                    sample_filter = self.dsetmod.TestsetFilter()
-                else:
-                    raise NotImplementedError
-                sample_set.filter_samples(sample_filter)
+            
             # append results
             self.metadatas[mod] = sample_set.get_samples()
 
@@ -138,7 +145,7 @@ class ClippedVideoDataset(VideoDataset):
         super(ClippedVideoDataset, self).__init__(
             root, name, split, modalities, args, **kwargs
             )
-        self.clip_len = copy.deepcopy(clip_len)
+        self.clip_len = clip_len
 
     def __getitem__(self, idx):
         """
@@ -169,7 +176,7 @@ class SegmentedVideoDataset(VideoDataset):
         super(SegmentedVideoDataset, self).__init__(
             root, name, split, modalities, args, **kwargs
             )
-        self.seg_num = copy.deepcopy(seg_num)
+        self.seg_num = seg_num
 
     def __getitem__(self, idx):
         _sample_metadata = (self.metadatas["RGB"])[idx]
@@ -182,57 +189,69 @@ class SegmentedVideoDataset(VideoDataset):
         return(_blob, _cid)    
 
 
+def test():
+
+    test_components = {
+        'basic' : True,
+        '__len__' : True,
+        '__getitem__' : True
+    }
+    
+    test_configuration = {
+        'datasets'   : ["weizmann", ]
+    }
+
+    for DATASET in (test_configuration['datasets']):
+        print("Dataset - [{}]".format(DATASET))
+        if (test_components['basic']):
+
+            dset = importlib.import_module(
+                "vdataset.metasets.{}".format(DATASET))
+            allset = VideoDataset(
+                dset.RAW_DATA_PATH, DATASET,
+                modalities={'RGB': "avi"},
+                split=constant.ALLSET,
+                img_file_temp="{0:05d}",
+                img_idx_offset=1)
+            trainset = VideoDataset(
+                dset.RAW_DATA_PATH, DATASET,
+                clip_len=4,
+                modalities={'RGB': "avi"},
+                split=constant.TRAINSET)
+            testset = VideoDataset(
+                dset.RAW_DATA_PATH, DATASET,
+                clip_len=4,
+                modalities={'RGB': "avi"},
+                split=constant.TESTSET)
+
+            if (test_components['__len__']):
+                print("All samples number:")
+                print(allset.__len__())
+                print("Training Set samples number:")
+                print(trainset.__len__())
+                print("Testing Set samples number:")
+                print(testset.__len__())
+            
+                # if (test_components['__getitem__']):
+                #     # print(allset.__getitem__(allset.__len__()-1))
+                #     for _idx in tqdm.tqdm(range(allset.__len__())):
+                #         allset.__getitem__(_idx)
+                #     for _idx in tqdm.tqdm(range(trainset.__len__())):
+                #         trainset.__getitem__(_idx)
+                #     for _idx in tqdm.tqdm(range(testset.__len__())):
+                #         testset.__getitem__(_idx)                                            
+
+                if (test_components['__getitem__']):
+                    train_loader = torch.utils.data.DataLoader(
+                            trainset, batch_size=1, shuffle=True, 
+                            num_workers=1, pin_memory=True,
+                            drop_last=True)  # prevent something not % n_GPU
+                    for _i, (inputs, targets) in enumerate(train_loader):
+                        print(_i, inputs)
+
+
+
 if __name__ == "__main__":
 
     if __test__:
-
-        test_components = {
-            'basic' : True,
-            '__len__' : True,
-            '__getitem__' : True
-        }
-        
-        test_configuration = {
-            'datasets'   : ["jester_v1"]
-        }
-
-        for DATASET in (test_configuration['datasets']):
-            print("Dataset - [{}]".format(DATASET))
-            if (test_components['basic']):
-
-                dset = importlib.import_module(
-                    "vdataset.metasets.{}".format(DATASET))
-                allset = VideoDataset(
-                    dset.raw_data_path, DATASET,
-                    modalities={'RGB': constant.IMGSEQ},
-                    split=constant.ALLSET,
-                    img_file_temp="{0:05d}",
-                    img_idx_offset=1)
-                # trainset = ClippedVideoDataset(
-                #     dset.prc_data_path, DATASET,
-                #     clip_len=4,
-                #     split=constant.TRAINSET)
-                # testset = ClippedVideoDataset(
-                #     dset.prc_data_path, DATASET,
-                #     clip_len=4,
-                #     split=constant.TESTSET)
-
-                if (test_components['__len__']):
-                    print("All samples number:")
-                    print(allset.__len__())
-                    # print("Training Set samples number:")
-                    # print(trainset.__len__())
-                    # print("Testing Set samples number:")
-                    # print(testset.__len__())
-                
-                    if (test_components['__getitem__']):
-                        print(allset.__getitem__(allset.__len__()-1))
-                        # for _idx in range(allset.__len__()):
-                        #     allset.__getitem__(_idx)
-                        # for _idx in range(trainset.__len__()):
-                        #     trainset.__getitem__(_idx)
-                        # for _idx in range(testset.__len__()):
-                        #     testset.__getitem__(_idx)                                            
-
-
-   
+        test()

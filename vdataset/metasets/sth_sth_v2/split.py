@@ -1,11 +1,11 @@
+"""
+"""
 import os
 import time
 import pickle
 
-import pandas
-
 from ...utilities import touch_date
-from .csv_parse import TRAINSET_DF, VALSET_DF, TESTSET_DF
+from .json_parse import TRAINSET_JLIST, VALSET_JLIST, TESTSET_JLIST
 
 FILE_PATH = os.path.realpath(__file__)
 DIR_PATH = os.path.dirname(os.path.realpath(__file__))
@@ -26,14 +26,14 @@ class DatasetFilter(object):
         self.split = split
         self.split_set = set()
         if "train" == self.split:
-            self.split_df = TRAINSET_DF
+            self.split_jlist = TRAINSET_JLIST
         elif "val" == self.split:
-            self.split_df = VALSET_DF
+            self.split_jlist = VALSET_JLIST
         else:
-            self.split_df = TESTSET_DF
+            self.split_jlist = TESTSET_JLIST
 
         set_file = os.path.join(DIR_PATH, \
-            "something-something-v1.{}.set".format(split))
+            "something-something-v2.{}.set".format(split))
         ## find valid cache
         if (os.path.exists(set_file)
                 and (touch_date(FILE_PATH) < touch_date(set_file))):
@@ -43,8 +43,8 @@ class DatasetFilter(object):
             fin.close()
         ## re-generate set file and dump it
         else:
-            for idx, row in self.split_df.iterrows():
-                video = row["video"]
+            for _jdict in self.split_jlist:
+                video = _jdict["id"]
                 self.split_set.add(video)
             # TODO: consistency issue    
             fout = open(set_file, "wb")
@@ -95,3 +95,7 @@ def test():
 
     ed_time = time.time()
     print("Total Time", ed_time - st_time)
+
+
+if __name__ == "__main__":
+    test()

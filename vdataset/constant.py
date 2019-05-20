@@ -108,5 +108,5 @@ __supported_datasets__ = {
     # UCF101 styled datasets
     'ucf101':'UCF101', 'hmdb51':'UCF101', 'weizmann':'UCF101',
     # 20BN styled datasets 
-    'jester_v1':'20BN', 'sth_sth_v1':'20BN', 'sth_sth_v2':'20BN',
+    'jester_v1':'20BN', 'sth_sth_v1':'20BN', 
 }

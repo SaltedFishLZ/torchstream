@@ -55,7 +55,7 @@ from .constant import IMGSEQ, IMGEXT, \
     __supported_dataset_styles__, __supported_datasets__
 
 # local settings (only in dev)
-_frame_num_err_limit_ = 5
+_frame_num_err_limit_ = 10
 __verbose__ = False
 __vverbose__ = False
 
@@ -511,7 +511,7 @@ class ImageSequence(object):
                 for idx in indices:
                     assert (idx < self.fcount), "Image index {} overflow".\
                         format(idx)
-            _indices = copy.deepcopy(indices)
+            _indices = indices
         # generate file paths
         _fpaths = []
         for idx in _indices:
@@ -541,7 +541,7 @@ class ClippedImageSequence(ImageSequence):
             path=path, ext=ext,
             color_in=color_in, color_out=color_out, **kwargs)
         self.fids = self.__clip__(self.fids, self.fcount, clip_len)
-        self.fcount = copy.deepcopy(clip_len)
+        self.fcount = clip_len
 
     @staticmethod
     def __clip__(fids, fcount, clip_len):
@@ -580,7 +580,7 @@ class SegmentedImageSequence(ImageSequence):
             path=path, ext=ext,
             color_in=color_in, color_out=color_out, **kwargs)
         self.fids = self.__segment__(self.fids, self.fcount, seg_num)
-        self.fcount = copy.deepcopy(seg_num)
+        self.fcount = seg_num
 
 
     @staticmethod

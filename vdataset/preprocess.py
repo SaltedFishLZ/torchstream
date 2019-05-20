@@ -51,11 +51,10 @@ def vid2vid(src_sample, dst_sample, **kwargs):
     os.makedirs(dst_dir, exist_ok=True)
 
     command = " ".join(["ffmpeg", "-i", src_vid, dst_vid, "-y"])
-    
+
     while fails <= retries:
         _subp = subprocess.run(command, shell=True, check=False,
-                               stdout=DEVNULL, stderr=DEVNULL,
-                               **kwargs
+                               stdout=DEVNULL, stderr=DEVNULL
                               )
         if _subp.returncode == 0:
             success = True
@@ -120,11 +119,11 @@ if __name__ == "__main__":
                                      )
     DST_VID_SAMPLE = metadata.Sample(root=DIR_PATH,
                                      path=os.path.join(DIR_PATH, "test.avi"),
-                                     name="test",seq=False, ext="mp4")
-    print(vid2vid(SRC_VID_SAMPLE, DST_VID_SAMPLE))
+                                     name="test",seq=False, ext="avi")
+    print(vid2vid(SRC_VID_SAMPLE, DST_VID_SAMPLE, retries=10))
 
     DST_SEQ_SAMPLE = metadata.Sample(root=DIR_PATH,
-                                     path=os.path.join(DIR_PATH, "test"),
+                                     path=os.path.join(DIR_PATH, "test_imgs"),
                                      name="test",seq=True, ext="jpg")
     print(vid2seq(DST_VID_SAMPLE, DST_SEQ_SAMPLE))
 

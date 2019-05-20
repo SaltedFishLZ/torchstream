@@ -2,8 +2,6 @@ import os
 import time
 import pickle
 
-import pandas
-
 from ...utilities import touch_date
 from .csv_parse import TRAINSET_DF, VALSET_DF, TESTSET_DF
 
@@ -51,7 +49,7 @@ class DatasetFilter(object):
             fout.close()
 
     def __call__(self, sample):
-        if sample.file in self.split_set:
+        if sample.name in self.split_set:
             return True
         return False
 

@@ -6,5 +6,7 @@ HOME = os.path.expanduser("~")
 # Default setting
 # NOTE
 # If you have your seetings, please change it
-raw_data_path = os.path.join(HOME, "Datasets", "Weizmann", "Weizmann-raw")
-prc_data_path = os.path.join(HOME, "Datasets", "Weizmann", "Weizmann-prc")
+AVI_DATA_PATH = os.path.join(HOME, "Datasets", "Weizmann", "Weizmann-avi")
+JPG_DATA_PATH = os.path.join(HOME, "Datasets", "Weizmann", "Weizmann-jpg")
+RAW_DATA_PATH = os.path.join(HOME, "Datasets", "Weizmann", "Weizmann-raw")
+PRC_DATA_PATH = os.path.join(HOME, "Datasets", "Weizmann", "Weizmann-prc")
