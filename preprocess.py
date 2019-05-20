@@ -15,10 +15,10 @@ from vdataset import mapreduce
 
 def main(name):
     mset = importlib.import_module("vdataset.metasets.{}".format(name))
-    collector = metadata.Collector(mset.RAW_DATA_PATH, mset,
-                                   ext="webm")
+    collector = metadata.Collector(mset.path.AVI_DATA_PATH, mset,
+                                   ext="avi")
     src_sample_set = collector.collect_samples()
-    dst_sample_set = src_sample_set.root_migrated(mset.PRC_DATA_PATH)
+    dst_sample_set = src_sample_set.root_migrated(mset.path.JPG_DATA_PATH)
     
     src_sample_list = src_sample_set.get_samples()
     src_sample_list.sort()
@@ -30,7 +30,11 @@ def main(name):
     print("Santity Check")
     _pairs = list(zip(src_sample_list, dst_sample_list))
     for _i in _pairs:
-        _i[1].to_video(ext="avi")
+        ## 
+        #  
+        #  
+        _i[1].to_images(ext="jpg")
+        
         if _i[0].name != _i[1].name:
             print("{} - {}".format(_i[0].name, _i[1].name))
             exit(1)
@@ -41,10 +45,15 @@ def main(name):
         tasks.append({"src_sample" : _i[0], "dst_sample" : _i[1]})
 
     manager = mapreduce.Manager(name="slicing-{}".format(name),
-                                mapper=preprocess.vid2vid,
+                                ## 
+                                # 
+                                mapper=preprocess.vid2seq,
                                 retries=10
                                 )
-    manager.hire(worker_num=10)
+    ## 
+    #  
+    manager.hire(worker_num=50)
+
     result = manager.launch(tasks=tasks)
     
     for _i, _status in enumerate(result):

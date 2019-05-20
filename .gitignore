@@ -16,6 +16,10 @@ latex/
 venv_video/
 venv_*
 
+# printed stdout and stderr
+*.stderr
+*.stdout
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

@@ -55,7 +55,7 @@ from .constant import IMGSEQ, IMGEXT, \
     __supported_dataset_styles__, __supported_datasets__
 
 # local settings (only in dev)
-_frame_num_err_limit_ = 5
+_frame_num_err_limit_ = 10
 __verbose__ = False
 __vverbose__ = False
 
