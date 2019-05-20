@@ -1,5 +1,6 @@
-# preserve vs code files in dev branches
-!.vscode/
+# ignore vs code files in main dev branches
+.vscode/
+*/.vscode/
 
 # nfs files
 .nfs*
