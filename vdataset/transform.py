@@ -122,7 +122,7 @@ class VideoResize(object):
         if isinstance(size, numbers.Number):
             self.size = (int(size), int(size))
         else:
-            self.size = copy.deepcopy(size)
+            self.size = size
         self.interpolation = interpolation
     
     def __call__(self, varray):

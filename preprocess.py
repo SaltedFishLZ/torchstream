@@ -1,87 +1,56 @@
-__test__    =   True
-__strict__  =   True
-__verbose__ =   True
-__vverbose__=   True
-
+"""
+"""
 import os
 import sys
 import copy
 import logging
+import operator
 import importlib
-import multiprocessing as mp
 
-from vdataset import video, __supported_datasets__
-from vdataset.metadata import VideoCollector
+from vdataset import constant
+from vdataset import metasets
+from vdataset import metadata
+from vdataset import preprocess
+from vdataset import mapreduce
 
-def preprocess(task_dict):
-    src_vid = task_dict['src_vid']
-    tgt_vid = task_dict['tgt_vid']
-    if (not os.path.exists(tgt_vid)):
-        try:
-            os.makedirs(tgt_vid)
-        except FileExistsError:
-            pass
-    ret = dict()
-    ret['status'] = video.video2frames(src_vid, tgt_vid)
-    return(ret)
+def main(name):
+    mset = importlib.import_module("vdataset.metasets.{}".format(name))
+    collector = metadata.Collector(mset.RAW_DATA_PATH, mset,
+                                   ext="avi")
+    src_sample_set = collector.collect_samples()
+    dst_sample_set = src_sample_set.root_migrated(mset.PRC_DATA_PATH)
+    
+    src_sample_list = src_sample_set.get_samples()
+    src_sample_list.sort()
 
-def generate_preprocess_tasks(src_path, tgt_path, style, label_map):
-    parser = VideoCollector(src_path, style, label_map, seek_file=True)
-    samples = parser.__get_samples__()
-    tasks = []  
-    for _sample in samples:
-        src_vid = _sample.path
-        tgt_vid = os.path.join(tgt_path, _sample.lbl, _sample.name)
-        tasks.append({'src_vid': src_vid, 'tgt_vid':tgt_vid})
-    return(tasks)
+    dst_sample_list = dst_sample_set.get_samples()
+    dst_sample_list.sort()
 
-def task_executor(task_queue):
-    while True:
-        task = task_queue.get()
-        if (None == task):
-            break
-        ret = preprocess(task)
 
-        # retry it for $cnt times
-        cnt = 10
-        while ((not ret['status']) and (cnt > 0)):
-            info_str = "Retry task {}".format(task)
-            logging.warn(info_str)
-            logging.info(info_str)
-            if (__vverbose__):
-                print(info_str)
-            ret = preprocess(task)
-            cnt -= 1
-        
-        if (not ret):
-            print("Task {} failed after 10 trails!!!".format(task))
+    print("Santity Check")
+    _pairs = list(zip(src_sample_list, dst_sample_list))
+    for _i in _pairs:
+        _i[1].to_images(ext="jpg")
+        if (_i[0].name != _i[1].name):
+            print("{} - {}".format(_i[0].name, _i[1].name))
+            exit(1)
 
+    print("Main Jobs")
+    tasks = []
+    for _i in _pairs:
+        tasks.append({"src_sample" : _i[0], "dst_sample" : _i[1]})
+
+    manager = mapreduce.Manager(name="slicing-{}".format(name),
+                                mapper=preprocess.vid2seq,
+                                retries=10
+                                )
+    manager.hire(worker_num=10)
+    result = manager.launch(tasks=tasks)
+    
+    for _i, _status in enumerate(result):
+        if not _status:
+            print("Task-[{}] Failed".format(_i))
+            print(tasks[_i])
 
 if __name__ == "__main__":
-
-    dir_path = os.path.dirname(os.path.realpath(__file__))
-
-    DATASET = "Weizmann"
-    dataset_mod = importlib.import_module("vdataset.{}".format(DATASET))
-    raw_dataset = dataset_mod.raw_data_path
-    prc_dataset = dataset_mod.prc_data_path
-
-    tasks = generate_preprocess_tasks(
-        raw_dataset, prc_dataset, __supported_datasets__[DATASET], dataset_mod.label_map)
-    process_num = min(mp.cpu_count()*6, len(tasks)+1)
-
-    task_queue = mp.Queue()
-    # Init process
-    process_list = []
-    for _i in range(process_num):
-        p = mp.Process(target=task_executor, args=(task_queue,))
-        p.start()
-        process_list.append(p)
-
-    for _task in tasks:
-        task_queue.put(_task)
-    for i in range(process_num):
-        task_queue.put(None)
-
-    for p in process_list:
-        p.join()
+    main("hmdb51")

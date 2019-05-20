@@ -119,12 +119,15 @@ class Manager(object):
 
     ##  Launch a major task which contains many sub-tasks
     #   
-    #   
+    #   @param tasks iteratable: 
     def launch(self, tasks):
         """
         """
         num_workers = len(self.workers)
         assert num_workers > 0, "You cannot work with 0 workers!"
+
+        num_tasks = len(tasks)
+        assert num_tasks > 0, "You cannot launch null!"
 
         ## Limit Queue Size
         #  By limiting the size of task queue, we can make enquing & dequing

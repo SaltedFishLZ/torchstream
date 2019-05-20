@@ -51,7 +51,7 @@ class DatasetFilter(object):
             fout.close()
 
     def __call__(self, sample):
-        if sample.file in self.split_set:
+        if sample.name in self.split_set:
             return True
         return False
 

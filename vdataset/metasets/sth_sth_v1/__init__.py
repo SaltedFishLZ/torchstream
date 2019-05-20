@@ -4,7 +4,7 @@
 __dataset__ = "Sth-sth-v1"
 __style__ = "20BN"
 
-from .path import raw_data_path, prc_data_path
+from .path import RAW_DATA_PATH, PRC_DATA_PATH
 from .label import __labels__, __sample_num_per_class__, __targets__
 from .split import TrainsetFilter, ValsetFilter, TestsetFilter
 
