@@ -198,7 +198,7 @@ def test():
     }
     
     test_configuration = {
-        'datasets'   : ["weizmann", "ucf101"]
+        'datasets'   : ["weizmann", ]
     }
 
     for DATASET in (test_configuration['datasets']):
@@ -232,17 +232,22 @@ def test():
                 print("Testing Set samples number:")
                 print(testset.__len__())
             
+                # if (test_components['__getitem__']):
+                #     # print(allset.__getitem__(allset.__len__()-1))
+                #     for _idx in tqdm.tqdm(range(allset.__len__())):
+                #         allset.__getitem__(_idx)
+                #     for _idx in tqdm.tqdm(range(trainset.__len__())):
+                #         trainset.__getitem__(_idx)
+                #     for _idx in tqdm.tqdm(range(testset.__len__())):
+                #         testset.__getitem__(_idx)                                            
+
                 if (test_components['__getitem__']):
-                    # print(allset.__getitem__(allset.__len__()-1))
-                    for _idx in tqdm.tqdm(range(allset.__len__())):
-                        allset.__getitem__(_idx)
-                    for _idx in tqdm.tqdm(range(trainset.__len__())):
-                        trainset.__getitem__(_idx)
-                    for _idx in tqdm.tqdm(range(testset.__len__())):
-                        testset.__getitem__(_idx)                                            
-
-
-   
+                    train_loader = torch.utils.data.DataLoader(
+                            trainset, batch_size=1, shuffle=True, 
+                            num_workers=1, pin_memory=True,
+                            drop_last=True)  # prevent something not % n_GPU
+                    for _i, (inputs, targets) in enumerate(train_loader):
+                        print(_i, inputs)
 
 
 

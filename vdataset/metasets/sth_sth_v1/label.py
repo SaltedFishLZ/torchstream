@@ -16,7 +16,7 @@ DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 
 
 __sample_num_per_class__ = {
-    "Holding something"                                                                                     :   [10, 986],                                            
+    "Holding something"                                                                                     :   [10, 986] ,                                            
     "Turning something upside down"                                                                         :   [10, 979] ,
     "Turning the camera left while filming something"                                                       :   [10, 924] ,                                                
     "Stacking number of something"                                                                          :   [10, 914] ,                            
@@ -245,5 +245,5 @@ def test():
 
     sample_num = 0
     for _label in __sample_num_per_class__:
-        sample_num += __sample_num_per_class__[_label]
+        sample_num += __sample_num_per_class__[_label][1]
     print(sample_num)

@@ -2,8 +2,6 @@ import os
 import time
 import pickle
 
-import pandas
-
 from ...utilities import touch_date
 from .csv_parse import TRAINSET_DF, VALSET_DF, TESTSET_DF
 

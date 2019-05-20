@@ -427,7 +427,7 @@ class Collector(object):
                 else:
                     _name = _video
 
-                _label = self.dset.__targets__[_video]
+                _label = self.dset.__targets__[_name]
                 if self.lbls is not None:
                     if _label not in self.lbls:
                         continue
@@ -522,16 +522,16 @@ class Collector(object):
 
 if __name__ == "__main__":
 
-    DATASET = "sth_sth_v1"
-    dataset_mod = importlib.import_module("vdataset.{}".format(DATASET))
+    DATASET = "sth_sth_v2"
+    dataset_mod = importlib.import_module("vdataset.metasets.{}".format(DATASET))
 
     lbls=dataset_mod.__labels__
 
     collector = Collector(
-        dataset_mod.raw_data_path,
+        dataset_mod.RAW_DATA_PATH,
         dataset_mod,
         # lbls={'Sliding Two Fingers Up',},
-        ext=constant.IMGSEQ
+        ext="webm"
         )
     
     sample_set = collector()

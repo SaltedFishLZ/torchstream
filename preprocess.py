@@ -16,7 +16,7 @@ from vdataset import mapreduce
 def main(name):
     mset = importlib.import_module("vdataset.metasets.{}".format(name))
     collector = metadata.Collector(mset.RAW_DATA_PATH, mset,
-                                   ext="avi")
+                                   ext="webm")
     src_sample_set = collector.collect_samples()
     dst_sample_set = src_sample_set.root_migrated(mset.PRC_DATA_PATH)
     
@@ -30,8 +30,8 @@ def main(name):
     print("Santity Check")
     _pairs = list(zip(src_sample_list, dst_sample_list))
     for _i in _pairs:
-        _i[1].to_images(ext="jpg")
-        if (_i[0].name != _i[1].name):
+        _i[1].to_video(ext="avi")
+        if _i[0].name != _i[1].name:
             print("{} - {}".format(_i[0].name, _i[1].name))
             exit(1)
 
@@ -41,7 +41,7 @@ def main(name):
         tasks.append({"src_sample" : _i[0], "dst_sample" : _i[1]})
 
     manager = mapreduce.Manager(name="slicing-{}".format(name),
-                                mapper=preprocess.vid2seq,
+                                mapper=preprocess.vid2vid,
                                 retries=10
                                 )
     manager.hire(worker_num=10)
@@ -53,4 +53,4 @@ def main(name):
             print(tasks[_i])
 
 if __name__ == "__main__":
-    main("hmdb51")
+    main("sth_sth_v2")
