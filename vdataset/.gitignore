@@ -1,3 +1,6 @@
+# annotation cache
+*.annot
+
 # zip files
 *.zip
 *.rar

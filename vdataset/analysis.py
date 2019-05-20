@@ -208,7 +208,7 @@ def get_means(vid_dataset, num_proc):
     f = open(pkl_name, "wb")
     pickle.dump(means, f)
     f.close()
-    if (__verbose__):
+    if __verbose__:
         info_str = "Analysis Means Done: [{}]".\
             format(vid_dataset.dataset)
         print(info_str)
@@ -304,7 +304,7 @@ def get_vars(vid_dataset, means, num_proc):
     pickle.dump(vars, f)
     f.close()
     # return results
-    if (__verbose__):
+    if __verbose__:
         info_str = "Analysis Variances Done: [{}]".\
             format(vid_dataset.dataset)
         print(info_str)

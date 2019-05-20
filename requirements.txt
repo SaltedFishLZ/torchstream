@@ -3,3 +3,4 @@ torchvision
 opencv-python
 psutil
 matplotlib
+pandas
