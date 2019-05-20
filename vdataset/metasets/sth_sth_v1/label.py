@@ -3,9 +3,9 @@
 import os
 import pickle
 
-from .. import constant
-from .common import trainset_df, valset_df, testset_df
-from ..utilities import modification_date, creation_date
+from ...constant import LABEL_UNKOWN
+from ...utilities import modification_date, creation_date
+from .csv_parse import TRAINSET_DF, VALSET_DF, TESTSET_DF
 
 FILE_PATH = os.path.realpath(__file__)
 DIR_PATH = os.path.dirname(os.path.realpath(__file__))
@@ -221,24 +221,25 @@ if (os.path.exists(annot_file)
     __targets__ = pickle.load(f)
     f.close()
 else:
-    for df in (trainset_df, valset_df):
+    for df in (TRAINSET_DF, VALSET_DF):
         for idx, row in df.iterrows():
             video = str(row["video"])
             label = str(row["label"])
             __targets__[video] = label
-    for df in (testset_df, ):
+    for df in (TESTSET_DF, ):
         for idx, row in df.iterrows():
             video = str(row["video"])
-            __targets__[video] = constant.LABEL_UNKOWN  
+            __targets__[video] = LABEL_UNKOWN  
     # TODO: consistency issue    
     f = open(annot_file, "wb")
     pickle.dump(__targets__, f)
     f.close()
 
 
-
-
-if __name__ == "__main__":    
+def test():
+    """
+    Self-testing function
+    """
     print(len(__targets__))
     print(cids)
 

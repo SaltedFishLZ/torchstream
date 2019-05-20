@@ -76,6 +76,11 @@ def creation_date(path_to_file):
         # so we'll settle for when its content was last modified.
         return stat.st_mtime
 
+def touch_date(path_to_file):
+    """
+    Conservative touch date: the latest data of create/modification
+    """
+    return max(creation_date(path_to_file), modification_date(path_to_file))
 
 
 if __name__ == "__main__":

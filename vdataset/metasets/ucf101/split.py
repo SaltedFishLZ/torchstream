@@ -1,6 +1,6 @@
 import os
 
-dir_path = os.path.dirname(os.path.realpath(__file__))
+DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 
 # Split Option is a feature of UCF101
 # UCF101 is not so large, so the authors give 3 split options for Train/Test
@@ -24,7 +24,7 @@ class DatasetFilter(object):
         self.split_option = split_option
 
         list_file = self.split + "list0" + split_option + ".txt"
-        list_file = os.path.join(dir_path, list_file) 
+        list_file = os.path.join(DIR_PATH, list_file) 
         
         # main stuff
         self.split_set = set()

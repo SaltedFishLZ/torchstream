@@ -499,7 +499,7 @@ class Collector(object):
 
 if __name__ == "__main__":
 
-    DATASET = "Jester"
+    DATASET = "sth_sth_v1"
     dataset_mod = importlib.import_module("vdataset.{}".format(DATASET))
 
     lbls=dataset_mod.__labels__

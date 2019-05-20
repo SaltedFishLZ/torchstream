@@ -3,9 +3,9 @@
 import os
 import pickle
 
-from .. import constant
-from .common import trainset_df, valset_df, testset_df
-from ..utilities import modification_date, creation_date
+from ...constant import LABEL_UNKOWN
+from ...utilities import touch_date
+from .csv_parse import TRAINSET_DF, VALSET_DF, TESTSET_DF
 
 FILE_PATH = os.path.realpath(__file__)
 DIR_PATH = os.path.dirname(os.path.realpath(__file__))
@@ -46,9 +46,9 @@ __classes__ = [
 
 # generating label-cid mapping
 # map "Doing other things" cid 0
-cids = list(range(len(__classes__)))
-cids = cids[1:len(cids)] + [0]
-__labels__ = dict(zip(__classes__, cids))
+CIDS = list(range(len(__classes__)))
+CIDS = CIDS[1:len(CIDS)] + [0]
+__labels__ = dict(zip(__classes__, CIDS))
 
 
 
@@ -97,29 +97,33 @@ __targets__ = dict()
 
 annot_file = os.path.join(DIR_PATH, "jester-v1.annot")
 if (os.path.exists(annot_file)
-    and (creation_date(FILE_PATH) < creation_date(annot_file))
-    and (modification_date(FILE_PATH) < modification_date(annot_file))):
+    and (touch_date(FILE_PATH) < touch_date(annot_file))
+):
     print("Find valid annotation cache")
     f = open(annot_file, "rb")
     __targets__ = pickle.load(f)
     f.close()
 else:
-    for df in (trainset_df, valset_df):
+    for df in (TRAINSET_DF, VALSET_DF):
         for idx, row in df.iterrows():
             video = str(row["video"])
             label = str(row["label"])
             __targets__[video] = label
-    for df in (testset_df, ):
+    for df in (TESTSET_DF, ):
         for idx, row in df.iterrows():
             video = str(row["video"])
-            __targets__[video] = constant.LABEL_UNKOWN
+            __targets__[video] = LABEL_UNKOWN
     # TODO: consistency issue    
-    f = open(annot_file, "wb")
-    pickle.dump(__targets__, f)
-    f.close()
+    fout = open(annot_file, "wb")
+    pickle.dump(__targets__, fout)
+    fout.close()
 
-
-
-if __name__ == "__main__":    
+## Self Test Function
+#  
+#  Details
+def test():
+    """
+    Self-testing function
+    """
     print(len(__targets__))
-    print(cids)
+    print(CIDS)

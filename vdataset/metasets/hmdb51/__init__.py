@@ -1,7 +1,6 @@
-# Weizmann Dataset
-# http://www.wisdom.weizmann.ac.il/~vision/SpaceTimeActions.html
+# HMDB51 Dataset
 
-__dataset__ = "Weizmann"
+__dataset__ = "HMDB51"
 __style__ = "UCF101"
 
 from .path import raw_data_path, prc_data_path
@@ -14,8 +13,4 @@ __all__ = [
     "__labels__", "__sample_num_per_class__",
     "TrainsetFilter", "ValsetFilter", "TestsetFilter"
 ]
-
-if __name__ == "__main__":
-    print("Common Data of Weizmann Dataset")
-    print(__sample_num_per_class__)
 

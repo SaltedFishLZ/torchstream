@@ -64,7 +64,7 @@ class VideoDataset(torchdata.Dataset):
         self.root = root
         self.name = name
         self.style = __supported_datasets__[self.name]
-        self.dsetmod = importlib.import_module("vdataset.{}".format(self.name))
+        self.dsetmod = importlib.import_module("vdataset.metasets.{}".format(self.name))
         self.labels = self.dsetmod.__labels__
         self.split = split
         self.modalities = modalities
@@ -193,7 +193,7 @@ if __name__ == "__main__":
         }
         
         test_configuration = {
-            'datasets'   : ["Jester"]
+            'datasets'   : ["jester_v1"]
         }
 
         for DATASET in (test_configuration['datasets']):
@@ -201,7 +201,7 @@ if __name__ == "__main__":
             if (test_components['basic']):
 
                 dset = importlib.import_module(
-                    "vdataset.{}".format(DATASET))
+                    "vdataset.metasets.{}".format(DATASET))
                 allset = VideoDataset(
                     dset.raw_data_path, DATASET,
                     modalities={'RGB': constant.IMGSEQ},

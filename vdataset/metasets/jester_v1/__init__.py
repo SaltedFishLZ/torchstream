@@ -14,7 +14,3 @@ __all__ = [
     "__labels__", "__targets__", "__sample_num_per_class__",
     "TrainsetFilter", "ValsetFilter", "TestsetFilter"
 ]
-
-if __name__ == "__main__":
-    print("Common Data of Jester Dataset")
-    print(__sample_num_per_class__)

@@ -1,14 +1,13 @@
 import os
 
-dir_path = os.path.dirname(os.path.realpath(__file__))
-
+DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 
 # ------------------------------------------------------------------------ #
 #                   Labels and Corresponding CIDs                          #
 # ------------------------------------------------------------------------ #
 
 __labels__ = dict()
-list_file = os.path.join(dir_path, "classInd.txt")
+list_file = os.path.join(DIR_PATH, "hmdb_labels.txt")
 f = open(list_file, "r")
 for _line in f:
     text = _line.split('\n')[0]
@@ -21,16 +20,13 @@ f.close()
 #           Sample Number Per Class (Useful for Integrity Check)           #
 # ------------------------------------------------------------------------ #
 #
-# Details from UCF's official website
-# https://www.crcv.ucf.edu/data/UCF101.php
-# "The videos in 101 action categories are grouped into 25 groups, where 
-# each group can consist of 4-7 videos of an action. The videos from the
-# same group may share some common features, such as similar background,
-# similar viewpoint, etc."
-# So, we choose to use [25 * 4, 25 * 7] as the sample num's [min, max] for
-# each class
-__sample_num_per_class__ = dict(zip(__labels__.keys(), 101*[[25*4, 25*7]]))
-
+# From the paper we can know each class has at least 101 samples
+# Page 2 of the paper
+# paper link:
+# http://serre-lab.clps.brown.edu/wp-content/uploads/2012/08/Kuehne_etal_iccv11.pdf
+# So we estimate it as [101, intmax]
+intmax = int(2**31)
+__sample_num_per_class__ = dict(zip(__labels__.keys(), 51*[[101, intmax]]))
 
 
 if __name__ == "__main__":

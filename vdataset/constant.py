@@ -38,12 +38,15 @@ __vverbose__ = False
 #           Input Data Modality & File Name Extension               #
 # ----------------------------------------------------------------- #
 # supported input data modality and corresponding file extensions
-__supported_modalities__ = ['RGB']
+__supported_modalities__ = ["RGB"]
 __supported_modality_files__ = {
-    'RGB': [IMGSEQ, "jpg", "avi", "mp4"]
+    "RGB": [IMGSEQ, "jpg", "avi", "mp4", "webm"]
     }
 __supported_video_files__ = {
-    "RGB" : ["avi", "mp4"]
+    "RGB" : ["avi", "mp4", "webm"]
+}
+__supported_image_files__ = {
+    "RGB" : ["jpg"]
 }
 # here, "GRAY" means single-channel data
 # some optical-flow based methods may store flow files in jpg
@@ -103,6 +106,7 @@ __supported_dataset_styles__ = ['UCF101', '20BN']
 # key: dataset name, value: structure styles
 __supported_datasets__ = {
     # UCF101 styled datasets
-    'UCF101':'UCF101', 'HMDB51':'UCF101', 'Weizmann':'UCF101',
-    'Jester':'20BN', 'Sth-sth-v1':'20BN', 'Sth-sth-v2':'20BN',
+    'ucf101':'UCF101', 'hmdb51':'UCF101', 'weizmann':'UCF101',
+    # 20BN styled datasets 
+    'jester_v1':'20BN', 'sth_sth_v1':'20BN', 'sth_sth_v2':'20BN',
 }
