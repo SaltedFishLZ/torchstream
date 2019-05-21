@@ -2,6 +2,8 @@
 Providing simple helpers to manage batch processing tasks in a map-reduce way
 with multiprocessing queue mechanism 
 """
+__all__ = ["Worker", "Manager"]
+
 import os
 import copy
 import time
@@ -19,25 +21,27 @@ END_FLAG = "[DONE]"
 #                  Configuring Python Logger                       #
 # ---------------------------------------------------------------- #
 
-logging.basicConfig(
-    level=logging.CRITICAL,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
-if __config__.__VERBOSE__:
-    logging.basicConfig(
-        level=logging.ERROR,
-        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-    )
-if __config__.__VERY_VERBOSE__:
-    logging.basicConfig(
-        level=logging.WARNING,
-        format="%(name)s - %(levelname)s - %(message)s"
-    )
 if __config__.__VERY_VERBOSE__:
     logging.basicConfig(
         level=logging.INFO,
         format="%(name)s - %(levelname)s - %(message)s"
     )
+elif __config__.__VERY_VERBOSE__:
+    logging.basicConfig(
+        level=logging.WARNING,
+        format="%(name)s - %(levelname)s - %(message)s"
+    )
+elif __config__.__VERBOSE__:
+    logging.basicConfig(
+        level=logging.ERROR,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    )
+else:
+    logging.basicConfig(
+        level=logging.CRITICAL,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    )
+    
 logger = logging.getLogger(__name__)
 
 
