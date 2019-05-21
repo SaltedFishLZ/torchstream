@@ -15,6 +15,7 @@ from . import constant
 from . import utilities
 from .constant import __test__, __verbose__, __vverbose__, \
     __supported_dataset_styles__
+from .constant import __supported_image_files__, __supported_video_files__
 
 __verbose__ = True
 __vverbose__ = True
@@ -148,6 +149,7 @@ class Sample(object):
         self.seq = True
         self.ext = ext
         self.path = utilities.strip_extension(self.path)
+            
 
 
 
@@ -340,7 +342,8 @@ class Collector(object):
     #  @param self The object pointer.
     def __init__(self, root, dset, lbls=None,
                  mod="RGB", ext=constant.IMGSEQ,
-                 sfilter=None
+                 sfilter=None,
+                 **kwargs
                 ):
         """!
         Initailization function
@@ -350,7 +353,9 @@ class Collector(object):
         @param lbls set|list: a set/list of label names (str).
             If not specified, will count all possible labels from the samples.
         @param mod str: data modality
-        @param ext str: file extension, "" means image(jpg) sequence
+        @param ext str: file extension, if the extension belongs to image 
+        types, we will recognize it as a image sequence, otherwise we will
+        take it as normal videos.
         """
         # santity check
         assert (dset.__style__ in __supported_dataset_styles__), \
@@ -361,14 +366,18 @@ class Collector(object):
         self.mod = mod
         self.ext = ext
 
-        self.sfilter = sfilter
+        if sfilter is not None:
+            self.sfilter = sfilter
+        else:
+            # always True
+            self.sfilter = lambda x: True
 
     ## Documentation for a method.
     #  @param self The object pointer.
     def __repr__(self, idents=0):
         string = idents * "\t" + "Meta-data Collector Object\n"
         string += idents * "\t" + "[root path] : {}\n".format(self.root)
-        string += idents * "\t" + "[specified labels]: {}\n".format(self.lbls)
+        string += idents * "\t" + "[labels]: {}\n".format(self.lbls)
         string += idents * "\t" + "[modality] : {}\t".format(self.mod)
         string += idents * "\t" + "[extension] : {}\t".format(self.ext)
         return string
@@ -390,44 +399,44 @@ class Collector(object):
 
         ## 1. main loop
         #  get all samples' meta-data (file path, annotation, seq or not, etc)
+        #  Reference:
+        #  https://github.com/SaltedFishLZ/Video-Recognition-Playground/vdataset/constant.py
         if "UCF101" == style:
+            ## traverse all categories/classes/labels
             for _label in os.listdir(self.root):
-                # bypass invalid labels
+                ## bypass invalid labels if there is a set of specified labels
                 if self.lbls is not None:
                     if _label not in self.lbls:
                         continue
                 _cid = (self.dset.__labels__[_label])
+                ## travese all videos files/image sequences
                 for _video in os.listdir(os.path.join(self.root, _label)):
-                    # bypass invalid files
-                    if self.ext not in _video:
+                    ## bypass invalid video files
+                    if (not seq) and (self.ext not in _video):
                         continue
                     _path = os.path.join(self.root, _label, _video)
-                    if not seq:
-                        _name = utilities.strip_extension(_video)
-                    else:
-                        _name = _video
+                    ## strip file extension if it is a video file
+                    _name = _video if seq else utilities.strip_extension(_video)
+                    ## generate Sample object
                     _sample = Sample(root=self.root, path=_path, name=_name,
                                      seq=seq, mod=self.mod, ext=self.ext,
                                      lbl=_label, cid=_cid)
-                    if self.sfilter is None:
+                    ## filter sample
+                    if self.sfilter(_sample):
                         samples.add(_sample)
-                    else:
-                        if self.sfilter(_sample):
-                            samples.add(_sample)
-        ## 
-        #  
-        #  
+        ## "20BN" Dataset Structure Style
+        #  Reference:
+        #  https://github.com/SaltedFishLZ/Video-Recognition-Playground/vdataset/constant.py
         elif "20BN" == style:
+            ## traverse all video files/image sequences
             for _video in os.listdir(self.root):
-                # bypass invalid files
-                if self.ext not in _video:
+                ## bypass invalid video files
+                if (not seq) and (self.ext not in _video):
                     continue
-                if not seq:
-                    _name = utilities.strip_extension(_video)
-                else:
-                    _name = _video
-
+                ## strip file extension if it is a video file
+                _name = _video if seq else utilities.strip_extension(_video)
                 _label = self.dset.__targets__[_name]
+                ## bypass invalid labels if there is a set of specified labels
                 if self.lbls is not None:
                     if _label not in self.lbls:
                         continue
@@ -440,11 +449,9 @@ class Collector(object):
                 _sample = Sample(root=self.root, path=_path, name=_name,
                                  seq=seq, mod=self.mod, ext=self.ext,
                                  lbl=_label, cid=_cid)
-                if self.sfilter is None:
+                ## filter sample
+                if self.sfilter(_sample):
                     samples.add(_sample)
-                else:
-                    if self.sfilter(_sample):
-                        samples.add(_sample)
         ## 
         #  
         else:

@@ -5,7 +5,7 @@ TRAINSET = 1
 VALSET = 2
 TESTSET = 3
 
-IMGSEQ = ""
+IMGSEQ = "jpg"
 IMGEXT = "jpg"
 
 LABEL_UNKOWN= None
