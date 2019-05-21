@@ -1,0 +1,5 @@
+# annotation cache
+*.annot
+
+# set cache
+*.set

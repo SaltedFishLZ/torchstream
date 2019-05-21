@@ -1,0 +1,9 @@
+# Images
+*.bmp
+*.jpg
+
+# Videos
+*.mp4
+*.avi
+*.mkv
+*.webm
