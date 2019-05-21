@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import os
-import sys
-import copy
 import time
 import pickle
 import logging
@@ -12,38 +10,72 @@ import multiprocessing as mp
 import numpy as np
 import matplotlib.pyplot as plt
 
-from .__init__ import *
-from .dataset import VideoDataset
-from .timer import Timer
+from .video import ImageSequence
+from .constant import __strict__, __verbose__, __vverbose__
+from .metadata import Sample, SampleSet
 
-LOG_INTERVAL = 200
+# ---------------------------------------------------------------- #
+#                       Pixel Level Statistics                     #
+# ---------------------------------------------------------------- #
 
+## Get the sum of all pixels in a varray for each channel
+#  
+#  @param varray np.ndarray: input blob
+#  @param return tuple: (sum array, pixel number array), we use array for 
+#  multi-channels.
 def varray_sum_raw(varray):
-    # get frame shape
+    """
+    Get the sum of all pixels in a varray for each channel
+    """
+    ## get frame shape, leave the channel dimension alone
     (_t, _h, _w) = varray.shape[0:3]
     nums = _t * _h * _w
-    # Numpy sum over multiple axes
-    # https://docs.scipy.org/doc/numpy/reference/generated/numpy.sum.html
-    sums = varray.sum(axis=(0,1,2))
+    ## Numpy sum over multiple axes
+    #  
+    #  refenrec: https://docs.scipy.org/doc/numpy/reference/generated/numpy.sum.html
+    sums = varray.sum(axis=(0, 1, 2))
     return(sums, nums)
 
-def varray_sum_rsq(varray, means):
+
+
+
+## Get the RSS(residual sum of squares) of all pixels in a varray of 
+#  each channel.
+#  
+#  @param varray np.ndarray: input blob
+#  @param means np.ndarray: means of the varray, if not specified, this function will
+#  call varray_sum_raw to calculate it.
+#  @param return return tuple: (rss array, pixel numbers), we use array for 
+#  multi-channels.
+#  Reference:
+#  https://en.wikipedia.org/wiki/Residual_sum_of_squares
+def varray_sum_rss(varray, means=None):
+    """
+    """
+    if means is None:
+        sums, nums = varray_sum_raw(varray)
+        means = sums / nums
+
     (_t, _h, _w) = varray.shape[0:3]
     nums = _t * _h * _w
     residuals = varray - np.tile(means, (_t, _h, _w, 1))
-    rsquares = np.square(residuals)
-    # Numpy sum over multiple axes
-    # https://docs.scipy.org/doc/numpy/reference/generated/numpy.sum.html
-    sums = rsquares.sum(axis=(0,1,2))
+    residual_squares = np.square(residuals)
+
+    ## Numpy sum over multiple axes
+    #  
+    #  https://docs.scipy.org/doc/numpy/reference/generated/numpy.sum.html
+    sums = residual_squares.sum(axis=(0, 1, 2))
+
     return(sums, nums)
 
 
+
 # ---------------------------------------------------------------- #
-#               Collect Samples' Shape Information                 #
+#                       Frame Level Statistics                     #
 # ---------------------------------------------------------------- #
                                                                     
 # worker function
-def get_shape(worker_id, vid_dataset, task_queue, result_queue):
+def varray_shape(worker_id, vid_dataset, task_queue, result_queue):
     '''
     - worker_id : unique worker indentifier for each worker function
     - vid_dataset : a VideoDataset object to be analyzed
@@ -208,7 +240,7 @@ def get_means(vid_dataset, num_proc):
     f = open(pkl_name, "wb")
     pickle.dump(means, f)
     f.close()
-    if (__verbose__):
+    if __verbose__:
         info_str = "Analysis Means Done: [{}]".\
             format(vid_dataset.dataset)
         print(info_str)
@@ -223,7 +255,7 @@ def get_means(vid_dataset, num_proc):
 #              Collect Samples' Pixel Variance Value               #
 # ---------------------------------------------------------------- #
                                                                     
-def get_sum_rsq(worker_id, vid_dataset, means, task_queue, result_queue):
+def get_sum_rss(worker_id, vid_dataset, means, task_queue, result_queue):
     '''
     - worker_id : unique worker indentifier for each worker function
     - vid_dataset : a VideoDataset object to be analyzed
@@ -241,12 +273,12 @@ def get_sum_rsq(worker_id, vid_dataset, means, task_queue, result_queue):
             break
         # main job
         varray, cid = vid_dataset.__getitem__(task)
-        sums, nums = varray_sum_rsq(varray, means) # add residuals' square
+        sums, nums = varray_sum_rss(varray, means) # add residuals' square
         process_sums += sums
         process_nums += nums       
         # output status
         if (task % LOG_INTERVAL == 0):
-            info_str = "WORKER-{} : [get_sum_rsq] progress [{}/{}]".\
+            info_str = "WORKER-{} : [get_sum_rss] progress [{}/{}]".\
                 format(worker_id_str, task, vid_dataset.__len__())
             print(info_str)
     # local tasks done
@@ -267,7 +299,7 @@ def get_vars(vid_dataset, means, num_proc):
     # init process
     process_list = []
     for _i in range(num_proc):
-        p = mp.Process(target=get_sum_rsq, \
+        p = mp.Process(target=get_sum_rss, \
             args=(int(_i), vid_dataset, means, task_queue, result_queue,))
         p.start()
         process_list.append(p)
@@ -304,7 +336,7 @@ def get_vars(vid_dataset, means, num_proc):
     pickle.dump(vars, f)
     f.close()
     # return results
-    if (__verbose__):
+    if __verbose__:
         info_str = "Analysis Variances Done: [{}]".\
             format(vid_dataset.dataset)
         print(info_str)

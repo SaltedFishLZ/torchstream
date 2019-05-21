@@ -11,8 +11,15 @@ import numbers
 
 import numpy as np
 import cv2
-# import torch
-# import torchvision
+import torch
+import torchvision
+
+from .__init__ import *
+from .video import *
+
+
+__test__ = True
+
 
 # -------------------------------- #
 #           Video Crop             #
@@ -39,7 +46,7 @@ class VideoRandomCrop(object):
         - varray : video in a numpy ndarray, data layout is [T][H][W][C]
         - return : a cropped varray with the same data layout
         '''
-        h, w = varray.size[1:3]
+        h, w = varray.shape[1:3]
         th, tw = self.size
         # short cut
         if ((h == th) and (w == tw)):
@@ -78,7 +85,7 @@ class VideoCenterCrop(object):
         - varray : video in a numpy ndarray, data layout is [T][H][W][C]
         - return : a cropped varray with the same data layout
         '''
-        h, w = varray.size[1:3]
+        h, w = varray.shape[1:3]
         th, tw = self.size
         # short cut
         if ((h == th) and (w == tw)):
@@ -123,12 +130,14 @@ class VideoResize(object):
         - varray : [T][H][W][C]
         - return : [T][H][w][C]
         '''
-        t, h, w = varray.shape[0:3]
-        result = np.empty(varray.shape, np.dtype('float32'))
+        t, h, w, c = varray.shape
+        result_shape = (t, self.size[0], self.size[1], c)
+        result = np.empty(result_shape, np.dtype('float32'))
         for _i in range(t):
             farray = varray[_i, :, :, :]
-            result[_i, :, :, :] = cv2.resize(farray, dsize=self.size,
-                interpolation=cv2.interpolation)
+            result[_i, :, :, :] = cv2.resize(farray, 
+                dsize=(self.size[1], self.size[0]),
+                interpolation=self.interpolation)
         return(result)
 
     def __repr__(self):
@@ -282,22 +291,67 @@ class ToTensor(object):
         return ret
 
 
+
+
+
+# -------------------------------- #
+#     Self Testing Utillities      #
+# -------------------------------- #
+
+def test_transforms(test_configuration):
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    vid_path = os.path.join(dir_path, "test.avi")
+    # read video to varray
+    varray = video2ndarray(vid_path,
+            color_in=test_configuration['video_color'],
+            color_out=test_configuration['varray_color'])
+    # # test video crop
+    # crop = VideoRandomCrop(size=(128,171))
+    # varray = crop(varray)
+    # print(varray.shape)
+    # _f = varray.shape[0]
+    # for _i in range(_f):
+    #     winname = "{}".format(_i)
+    #     farray_show(winname, varray[_i,:,:,:])
+    #     cv2.moveWindow(winname, 40,30) 
+    #     (cv2.waitKey(0) & 0xFF == ord('q'))
+    #     cv2.destroyAllWindows()
+
+    # # test video flip
+    # flip = VideoRandomFlip(dim="W")
+    # varray = flip(varray)
+    # print(varray.shape)
+    # _f = varray.shape[0]
+    # for _i in range(_f):
+    #     winname = "{}".format(_i)
+    #     farray_show(winname, varray[_i,:,:,:])
+    #     cv2.moveWindow(winname, 40,30) 
+    #     (cv2.waitKey(0) & 0xFF == ord('q'))
+    #     cv2.destroyAllWindows()
+
+    # test video resize
+    resize = VideoResize(size=(720, 720))
+    varray = resize(varray)
+    print(varray.shape)
+    _f = varray.shape[0]
+    for _i in range(_f):
+        winname = "{}".format(_i)
+        farray_show(winname, varray[_i,:,:,:])
+        cv2.moveWindow(winname, 40,30) 
+        (cv2.waitKey(0) & 0xFF == ord('q'))
+        cv2.destroyAllWindows()
+
+
 if __name__ == "__main__":
-    crop = VideoRandomCrop(size=(12, 16))
-    print(crop)
 
-    crop = VideoCenterCrop(size=(12))
-    print(crop)
 
-    resize = VideoResize(size=(12))
-    print(resize)
+    if (__test__):
 
-    flip = VideoFlip(dim="T")
-    print(flip)
+        test_configuration = {
+            'video_color'   : "BGR",
+            'varray_color'  : "RGB",
+            'frames_color'  : "BGR",
+            'imgseq_color'  : "RGB"
+        }
 
-    flip = VideoRandomFlip(dim="H")
-    print(flip)
-
-    norm = VideoNormalize(means=[123,132,133], stds=[12, 32, 45])
-    print(norm)
-
+        test_transforms(test_configuration)

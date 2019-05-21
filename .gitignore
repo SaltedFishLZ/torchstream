@@ -1,12 +1,25 @@
+# ignore vs code files in main dev branches
+.vscode/
+*/.vscode/
+
 # nfs files
 .nfs*
+
+# doxygen files
+html/
+latex/
+*.tag 
 
 # pickle files
 *.pkl
 
 # created virtual environment
 venv_video/
-venv*
+venv_*
+
+# printed stdout and stderr
+*.stderr
+*.stdout
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
