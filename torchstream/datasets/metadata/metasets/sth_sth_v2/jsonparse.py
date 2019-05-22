@@ -1,7 +1,11 @@
+"""JSON File Parsing Module
+"""
 import os
 import json
 
-DIR_PATH = os.path.dirname(os.path.realpath(__file__))
+FILE_PATH = os.path.realpath(__file__)
+DIR_PATH = os.path.dirname(FILE_PATH)
+
 
 fname = os.path.join(DIR_PATH, "something-something-v2-train.json")
 TRAINSET_JLIST = []
@@ -20,8 +24,6 @@ with open(fname, "r") as fin:
 
 
 ## Self Test Function
-#  
-#  Details
 def test():
     """
     Self-test function

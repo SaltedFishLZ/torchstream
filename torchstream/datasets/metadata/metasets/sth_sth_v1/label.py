@@ -1,21 +1,43 @@
+"""Annotation data
 """
-"""
+__all__ = [
+    "__LABELS__", "__SAMPLES_PER_LABEL__",
+    "__ANNOTATIONS__"
+]
+
 import os
 import pickle
+import logging
 
-from ...constant import LABEL_UNKOWN
-from ...utilities import modification_date, creation_date
-from .csv_parse import TRAINSET_DF, VALSET_DF, TESTSET_DF
+from . import __config__
+from .csvparse import TRAINSET_DF, VALSET_DF, TESTSET_DF
+from ...__const__ import UNKOWN_LABEL, UNKOWN_CID
+from ....utils.filesys import touch_date
 
 FILE_PATH = os.path.realpath(__file__)
 DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 
+# ---------------------------------------------------------------- #
+#                  Configuring Python Logger                       #
+# ---------------------------------------------------------------- #
+
+LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+logging.basicConfig(format=LOG_FORMAT)
+logger = logging.getLogger(__name__)
+if __config__.__VERY_VERY_VERBOSE__:
+    logger.setLevel(logging.INFO)
+elif __config__.__VERY_VERBOSE__:
+    logger.setLevel(logging.WARNING)
+elif __config__.__VERBOSE__:
+    logger.setLevel(logging.ERROR)
+else:
+    logger.setLevel(logging.CRITICAL)
+
 # ------------------------------------------------------------------------ #
-#                   Labels and Corresponding CIDs                          #
+#                   Labels and Corresponding CIDS                          #
 # ------------------------------------------------------------------------ #
 
-
-__sample_num_per_class__ = {
+__SAMPLES_PER_LABEL__ = {
     "Holding something"                                                                                     :   [10, 986] ,                                            
     "Turning something upside down"                                                                         :   [10, 979] ,
     "Turning the camera left while filming something"                                                       :   [10, 924] ,                                                
@@ -192,12 +214,15 @@ __sample_num_per_class__ = {
     "Poking a hole into some substance"                                                                     :   [10, 77 ] ,       
 }
 
-__classes__ = __sample_num_per_class__.keys()
+__LABELS__ = sorted(list(__SAMPLES_PER_LABEL__.keys()))
 
 # generating label-cid mapping
-cids = list(range(len(__classes__)))
-__labels__ = dict(zip(__classes__, cids))
+CIDS = list(range(len(__LABELS__)))
+__LABELS__ = dict(zip(__LABELS__, CIDS))
 
+# add UNKNOWN LABEL
+__LABELS__[UNKOWN_LABEL] = UNKOWN_CID
+__SAMPLES_PER_LABEL__[UNKOWN_LABEL] = [0, 999999]
 
 
 
@@ -205,45 +230,45 @@ __labels__ = dict(zip(__classes__, cids))
 #                 Collect Annotations for Each Sample                      #
 # ------------------------------------------------------------------------ #
 
-# NOTE:
-# __annotations__ is a Python key word
-# So, we use __targets__
+# NOTE: __annotations__ is a Python key word
 # Currently, this dataset only provides annotation for training & validation
 # We use None to mark unlabelled samples
-__targets__ = dict()
+__ANNOTATIONS__ = dict()
 
-annot_file = os.path.join(DIR_PATH, "something-something-v1.annot")
-if (os.path.exists(annot_file)
-    and (creation_date(FILE_PATH) < creation_date(annot_file))
-    and (modification_date(FILE_PATH) < modification_date(annot_file))):
-    print("Find valid annotation cache")
-    f = open(annot_file, "rb")
-    __targets__ = pickle.load(f)
-    f.close()
+ANNOT_FILE = os.path.join(DIR_PATH, "something-something-v1.annot")
+if (os.path.exists(ANNOT_FILE)
+        and (touch_date(FILE_PATH) < touch_date(ANNOT_FILE))
+   ):
+    logger.info("Find valid annotation cache")
+    fin = open(ANNOT_FILE, "rb")
+    __ANNOTATIONS__ = pickle.load(fin)
+    fin.close()
 else:
+    logger.info("Building annotation data...")
+    ## training/validation set has labels
     for df in (TRAINSET_DF, VALSET_DF):
         for idx, row in df.iterrows():
             video = str(row["video"])
             label = str(row["label"])
-            __targets__[video] = label
+            __ANNOTATIONS__[video] = label
+    ## testing set doesn't have labels
     for df in (TESTSET_DF, ):
         for idx, row in df.iterrows():
             video = str(row["video"])
-            __targets__[video] = LABEL_UNKOWN  
-    # TODO: consistency issue    
-    f = open(annot_file, "wb")
-    pickle.dump(__targets__, f)
-    f.close()
+            __ANNOTATIONS__[video] = UNKOWN_LABEL
+    ## TODO: write failure check
+    fout = open(ANNOT_FILE, "wb")
+    pickle.dump(__ANNOTATIONS__, fout)
+    fout.close()
 
 
+## Self Test Function
 def test():
     """
     Self-testing function
     """
-    print(len(__targets__))
-    print(cids)
+    print(len(__ANNOTATIONS__))
+    print(__LABELS__)
 
-    sample_num = 0
-    for _label in __sample_num_per_class__:
-        sample_num += __sample_num_per_class__[_label][1]
-    print(sample_num)
+if __name__ == "__main__":
+    test()
