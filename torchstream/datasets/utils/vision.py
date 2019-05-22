@@ -53,6 +53,9 @@ __SUPPORTED_VIDEO_INPUTS__ = ["avi", "mp4"]
 __SUPPORTED_VIDEO_OUTPUTS__ = ["avi", "mp4"]
 __SUPPORTED_FRAME_INPUTS__ = ["jpg"]
 __SUPPORTED_FRAME_OUTPUTS__ = ["jpg"]
+# here, "GRAY" means single-channel data
+# some optical-flow based methods may store flow files in jpg
+__SUPPORTED_COLORS__ = ["BGR", "RGB", "GRAY"]
 
 
 # ---------------------------------------------------------------- #

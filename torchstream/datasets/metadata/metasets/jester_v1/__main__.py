@@ -1,8 +1,7 @@
+"""Print Package Information
 """
-"""
+from .label import __SAMPLES_PER_LABEL__
 
-from .__init__ import __sample_num_per_class__
-
-
-print("Common Data of Jester Dataset")
-print(__sample_num_per_class__)
+if __name__ == "__main__":
+    print("Common Data of Jester V1 Dataset")
+    print(__SAMPLES_PER_LABEL__)

@@ -1,21 +1,26 @@
+"""
+Metadata support information
+"""
+__all__ = [
+    "__SUPPORTED_MODALITIES__",
+    "__SUPPORTED_VIDEOS__", "__SUPPORTED_IMAGES__",
+]
+
 
 # ----------------------------------------------------------------- #
 #           Input Data Modality & File Name Extension               #
 # ----------------------------------------------------------------- #
 # supported input data modality and corresponding file extensions
-__supported_modalities__ = ["RGB"]
-__supported_modality_files__ = {
-    "RGB": ["jpg", "avi", "mp4", "webm"]
-    }
-__supported_video_files__ = {
+__SUPPORTED_VIDEOS__ = {
     "RGB" : ["avi", "mp4", "webm"]
 }
-__supported_image_files__ = {
+__SUPPORTED_IMAGES__ = {
     "RGB" : ["jpg"]
 }
-# here, "GRAY" means single-channel data
-# some optical-flow based methods may store flow files in jpg
-__supported_color_space__ = ["BGR", "RGB", "GRAY"]
+__SUPPORTED_MODALITIES__ = {
+    "RGB" : __SUPPORTED_VIDEOS__["RGB"] + __SUPPORTED_IMAGES__["RGB"]
+}
+
 
 # ----------------------------------------------------------------- #
 #           Dataset Structure Style and Supporting                  #

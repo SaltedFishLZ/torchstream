@@ -1,5 +1,13 @@
+"""
+Dataset Path
+"""
+__all__ = [
+    "AVI_DATA_PATH", "JPG_DATA_PATH",
+    "RAW_DATA_PATH", "PRC_DATA_PATH"
+]
+
+
 import os
-import sys
 
 HOME = os.path.expanduser("~")
 

@@ -2,17 +2,17 @@
 Weizmann Dataset
 http://www.wisdom.weizmann.ac.il/~vision/SpaceTimeActions.html
 """
-
+__dataset__ = "Weizmann"    # dataset name
+__layout__ = "UCF101"       # dataset file layout
 __all__ = [
     "__dataset__", "__layout__",
     "__LABELS__", "__SAMPLES_PER_LABEL__",
     "TrainsetFilter", "ValsetFilter", "TestsetFilter"
 ]
 from . import path
-__all__ += .path.__all__
-
-__dataset__ = "Weizmann"    # dataset name
-__layout__ = "UCF101"       # dataset file layout
+__all__ += path.__all__
+from .split import TrainsetFilter, ValsetFilter, TestsetFilter
+from .path import *
 
 # ------------------------------------------------------------------------ #
 #             Labels, Corresponding CIDs & Sample Counts                   #
@@ -43,6 +43,3 @@ __SAMPLES_PER_LABEL__ = {
     "wave1" :   9,
     "wave2" :   9,
 }
-
-
-from .path import *
