@@ -74,7 +74,7 @@ def collect_samples_ucf101(root, lbls, mod, ext,
                 logger.warning(warn_str)
                 continue
             ## bypass invalid image sequences
-            if seq and (not os.path.isdir(_video)):
+            if seq and (not os.path.isdir(os.path.join(_label_path, _video))):
                 warn_str = "Insane dataset: sequence folder {} in path {}".\
                     format(_video, _label)
                 logger.warning(warn_str)

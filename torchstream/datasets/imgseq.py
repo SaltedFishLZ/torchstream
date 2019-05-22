@@ -162,9 +162,131 @@ class ImageSequence(object):
         # return
         return varray
 
+    def __array__(self):
+        """Numpy interface
+        """
+        return self.get_varray()
+
+class ClippedImageSequence(ImageSequence):
+    """ImageSeqence for clipped video
+    Although you can use data transform to clip an entire video, it has to
+    load all frames and select some frames in it. It is not efficient if you
+    have preprocessed the video and dump all frames.
+    """
+    def __init__(self, sample_like=None, clip_len=1, volatile=True, **kwargs):
+        """
+        """
+        assert clip_len > 0, "clip_len must > 0"
+        super(ClippedImageSequence, self).__init__(sample_like, **kwargs)
+        self.clip_len = clip_len
+        self.volatile = volatile
+        self.clip_idxs = None
+
+    @staticmethod
+    def __clip__(fcount, clip_len, **kwargs):
+        """
+        __clip__ is made an independent function in case you may need to use
+        it in other places
+        Return:
+            a list of indices
+        """
+        assert fcount >= clip_len, \
+            "Clip length [{}] exceeds video length [{}]"\
+                .format(clip_len, fcount)
+        # short path
+        if fcount == clip_len:
+            return list(range(clip_len))
+        # random jitter in time dimension, and re-sample frames
+        offset = np.random.randint(fcount - clip_len)
+        info_str = "[__clip__] clip frames [{}, {})".\
+            format(offset, offset + clip_len)
+        logger.info(info_str)
+        # get results
+        return list(range(offset, offset + clip_len))
+
+    def get_varray(self):
+        """
+        """
+        if self.volatile:
+            self.clip_idxs = self.__clip__(self.fcount, self.clip_len)
+        else:
+            if self.clip_idxs is None:
+                self.clip_idxs = self.__clip__(self.fcount, self.clip_len)
+        return ImageSequence.get_varray(self, indices=self.clip_idxs)
 
 
-def test():
+class SegmentedImageSequence(ImageSequence):
+    """ImageSeqence for segmented video
+    This class is used to manage segmented video.
+    Although you can use data transform to get a segmented video, it has to
+    load all frames and select some frames in it. It is not efficient.
+    """
+    def __init__(self, sample_like=None, seg_num=1, volatile=True, **kwargs):
+        """
+        """
+        assert seg_num > 0, "seg_num must > 0"
+        super(SegmentedImageSequence, self).__init__(sample_like, **kwargs)
+        self.seg_num = seg_num
+        self.volatile = volatile
+        self.snip_idxs = None
+
+    @staticmethod
+    def __segment__(fcount, seg_num):
+        """
+        __segment__ is made an independent function in case you may need to 
+        re-use it in other places
+        Return:
+            a list of indices
+        """
+        assert fcount >= seg_num, \
+            "Segment number [{}] exceeds video length [{}]".\
+                format(seg_num, fcount)
+
+        # interval (length of each segment) = ceil(fcount/seg_num)
+        # ((a + b - 1) // b) == ceil(a/b)
+        _interval = (fcount + seg_num - 1) // seg_num
+        _residual = fcount - _interval * (seg_num - 1)
+        _snip_idxs = []         # key frame ids
+
+        # short path
+        if _residual == 0:
+            for _i in range(seg_num):
+                _idx = _i * _interval + np.random.randint(_interval)
+                _snip_idxs.append(_idx)
+        else:
+            for _i in range(seg_num - 1):
+                _idx = _i * _interval + np.random.randint(_interval)
+                _snip_idxs.append(_idx)
+            _idx = _interval * (seg_num - 1) + np.random.randint(_residual)
+            _snip_idxs.append(_idx)
+
+        # logging
+        logger.info("[__segment__] frames {}".format(_snip_idxs))
+
+        return _snip_idxs
+
+    def get_varray(self):
+        """
+        """
+        if self.volatile:
+            self.snip_idxs = self.__segment__(self.fcount, self.seg_num)
+        else:
+            if self.snip_idxs is None:
+                self.snip_idxs = self.__segment__(self.fcount, self.seg_num)
+        return ImageSequence.get_varray(self, indices=self.snip_idxs)
+
+
+
+
+
+
+
+
+
+
+
+
+def TestImageSequence():
     test_video = os.path.join(DIR_PATH, "test.avi")
     test_frames = os.path.join(DIR_PATH, "test_frames")
     from .utils.vision import video2frames, farray_show
@@ -175,16 +297,100 @@ def test():
                              )
 
     varray = imgseq_0.get_varray()
-    farray = varray[0, :, :, :]
-    print(farray.shape)
-    print(imgseq_0.get_farray(0).shape)
-    farray_show(caption="test", farray=farray)
+    print(varray.shape)
+    # print(imgseq_0.get_farray(0).shape)
+    # farray_show(caption="test", farray=farray)
 
-    print(varray)
+    # import cv2
+    # (cv2.waitKey(0) & 0xFF == ord("q"))
+    # cv2.destroyAllWindows()
 
-    import cv2
-    (cv2.waitKey(0) & 0xFF == ord('q'))
-    cv2.destroyAllWindows()
+    import importlib
+
+    dataset = "weizmann"
+    metaset = importlib.import_module(
+        "datasets.metadata.metasets.{}".format(dataset))
+
+    kwargs = {
+        "root" : metaset.JPG_DATA_PATH,
+        "layout" : metaset.__layout__,
+        "lbls" : metaset.__LABELS__,
+        "mod" : "RGB",
+        "ext" : "jpg",
+    }
+    
+    from .metadata.collect import collect_samples
+    samples = collect_samples(**kwargs)
+
+    for _sample in samples:
+        _imgseq = ImageSequence(_sample)
+        print(np.all(np.array(_imgseq) == _imgseq.get_varray()))
+
+def TestClippedImageSequence():
+    """
+    """
+    test_video = os.path.join(DIR_PATH, "test.avi")
+    test_frames = os.path.join(DIR_PATH, "test_frames")
+    from .utils.vision import video2frames, farray_show
+    video2frames(test_video, test_frames)    
+
+    CLIP_LEN = 16
+
+    imgseq_0 = ClippedImageSequence(path=test_frames, clip_len=CLIP_LEN,
+                             ext="jpg", cin="BGR", cout="RGB"
+                             )
+    print(np.array(imgseq_0).shape)
+
+    print("[Volatile]", imgseq_0.volatile)
+    offsets = []
+    MAX_OFFSET = imgseq_0.fcount - CLIP_LEN
+    import tqdm
+    for _i in tqdm.tqdm(range(10 * MAX_OFFSET)):
+        imgseq_0.get_varray()
+        offsets.append(imgseq_0.clip_idxs[0])
+    hist = np.histogram(offsets, bins=list(range(MAX_OFFSET+1)))
+    print(hist[0])
+    
+    print("-"*80)
+    imgseq_0.volatile = False
+    print("[Volatile]", imgseq_0.volatile)    
+    for _i in range(20):
+        imgseq_0.get_varray()
+        print(imgseq_0.clip_idxs)
+
+def TestSegmentedImageSequence():
+    """
+    """
+    test_video = os.path.join(DIR_PATH, "test.avi")
+    test_frames = os.path.join(DIR_PATH, "test_frames")
+    from .utils.vision import video2frames, farray_show
+    video2frames(test_video, test_frames)    
+
+    SEG_NUM = 16
+
+    imgseq_0 = SegmentedImageSequence(path=test_frames, seg_num=SEG_NUM,
+                             ext="jpg", cin="BGR", cout="RGB"
+                             )
+    print(np.array(imgseq_0).shape)
+
+    print("[Volatile]", imgseq_0.volatile)
+    _snip_idxs = []
+    import tqdm
+    for _i in range(10):
+        imgseq_0.get_varray()
+        print(imgseq_0.snip_idxs)
+    # hist = np.histogram(offsets, bins=list(range(MAX_OFFSET+1)))
+    # print(hist[0])
+    
+    print("-"*80)
+    imgseq_0.volatile = False
+    print("[Volatile]", imgseq_0.volatile)    
+    for _i in range(10):
+        imgseq_0.get_varray()
+        print(imgseq_0.snip_idxs)
+
+
+
 
 if __name__ == "__main__":
-    test()
+    TestSegmentedImageSequence()
