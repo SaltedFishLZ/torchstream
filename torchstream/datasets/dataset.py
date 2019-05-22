@@ -1,23 +1,19 @@
-# -*- coding: utf-8 -*-
+"""
+"""
 import os
 import sys
 import copy
 import logging
-import cProfile
 import importlib
 
 import tqdm
-import torch
+import numpy as np
 import torch.utils.data as torchdata
 
-
-from .constant import \
-    __test__, __profile__, __strict__, __verbose__, __vverbose__, \
-    __supported_modalities__, __supported_modality_files__, \
-    __supported_video_files__, __supported_color_space__, \
-    __supported_dataset_styles__, __supported_datasets__
-
-from . import video, metadata, constant
+from . import __config__
+from .metadata import sample, collect
+from .imgseq import ImageSequence, ClippedImageSequence, SegmentedImageSequence
+from .vidarr import VideoArray
 
 # ---------------------------------------------------------------- #
 #                  Configuring Python Logger                       #
@@ -36,172 +32,71 @@ else:
     logger.setLevel(logging.CRITICAL)
 
 
+
+# ------------------------------------------------------------------------- #
+#                   Main Classes (To Be Used outside)                       #
+# ------------------------------------------------------------------------- #
+
 ## dataset class for video recognition
-#  
 #  More details.
 class VideoDataset(torchdata.Dataset):
+    """dataset class for video recognition
     """
-    dataset class for video recognition
 
-    NOTE: TODO: Currently, This shall be an abstract base class.
-    It should never be used in deployment !!!
-    """
-    ## Init
-    #  @param root str: root path of the dataset
-    #  @param name str: dataset name
-    #  @param split int: training/testing/validation split
-    #  @param modalities dict: input data format of each modality.
-    #  key - modality, value - file extension(s) for certain modality.
-    def __init__(self, root, name,
-                 split=constant.TRAINSET,
-                 modalities={'RGB': constant.IMGSEQ},
-                 *args, **kwargs
+    def __init__(self, root, layout, lbls, 
+                 mod, ext,
+                 sample_filter=None, 
+                 **kwargs
                 ):
         """
-        @param root str: root path of the dataset
-        @param name str: dataset name
-        @param split int: training/testing/validation split
-        @param modalities dict: input data format of each modality.
-        key - modality, value - file extension(s) for certain modality.
+        Args:
+            configs: a list of dict 
+            {
+                "root": <root path>,
+                "mod": <modality>,
+                "ext": <file extension>
+            }
         """
-        # TODO: support multiple input data modalities
-
-        # santity check
-        assert os.path.exists(root), "Dataset path not exists"
-        assert name in __supported_datasets__, "Unsupported Dataset"
-        assert (1==len(modalities)), "Only support 1 data modality now"
-        for _mod in modalities:
-            assert _mod in __supported_modalities__, 'Unsupported Modality'
-            _ext = modalities[_mod]
-            assert _ext in __supported_modality_files__[_mod],\
-                ("Unspported input file type: {} for modality: {}".\
-                    format(_ext, _mod))
-
-        self.root = root
-        self.name = name
-        self.style = __supported_datasets__[self.name]
-        self.dsetmod = importlib.import_module("vdataset.metasets.{}".format(self.name))
-        self.labels = self.dsetmod.__labels__
-        self.split = split
-        self.modalities = modalities
-        self.metadatas = dict()
+        self.root = root        
+        self.layout = layout
+        self.lbls = lbls
+        self.mod = mod
+        self.ext = ext
+        self.sample_filter = sample_filter
         self.kwargs = kwargs
 
-        # filter to select metadata
-        if self.split != constant.ALLSET:
-            if self.split == constant.TRAINSET:
-                sample_filter = self.dsetmod.TrainsetFilter()
-            elif self.split == constant.VALSET:
-                sample_filter = self.dsetmod.ValsetFilter()
-            elif self.split == constant.TESTSET:
-                sample_filter = self.dsetmod.TestsetFilter()
-            else:
-                raise NotImplementedError
-        else:
-            sample_filter = None
+        
+        ## collect samples
+        _sampleset = collect.collect_samples(root=root,
+                                layout=self.layout, lbls=self.lbls,
+                                mod=mod, ext=ext, **kwargs
+                               )
+        _samplelist = list(_sampleset)
+        _samplelist.sort()
+        self.samples = _samplelist
 
-        for mod in self.modalities:
-            # collect metadata
-            ext = modalities[mod]
-            
-            collector = metadata.Collector(self.root, self.dsetmod,
-                                           mod=mod, ext=ext,
-                                           sfilter=sample_filter
-                                           )
-            sample_set = collector.collect_samples()
-            
-            # append results
-            self.metadatas[mod] = sample_set.get_samples()
+
 
     def __len__(self):
-        return len(self.metadatas["RGB"])
+        return len(self.samplelists[0])
 
     def __getitem__(self, idx):
         """
         """
-        # TODO: fuse multiple modalities
-        # NOTE:
         # currently, we intended to return a Numpy ndarray although it
         # may consume too much memory.
 
-        for _modality in self.modalities:
-            ## get sample's metadata of a certain modality
-            _sample_metadata = (self.metadatas[_modality])[idx]
-            _ext = self.modalities[_modality]
-            _path = _sample_metadata.path
-            _cid = _sample_metadata.cid
+        _blobs = []
+        for _i in len(self.configs):
+            _blob = np.array(self.iohandlelists[_i][idx])
+            _blobs.append(_blob)
 
-            ## Deal with image sequences
-            #  get all frames as a varray
-            if _ext == constant.IMGSEQ:
-                _ext = constant.IMGEXT
-                _seq = video.ImageSequence(_path, ext=_ext, **self.kwargs)
-                _blob = _seq.get_varray()
-            ## Deal with video files
-            #  get varray directly
-            else:
-                _blob = video.video2ndarray(_path)
+        _sample = self.samplelists[0][idx]
+        _cid = self.lbls[_sample.name]
 
         # return (a [T][H][W][C] ndarray, class id)
         # ndarray may need to be converted to [T][C][H][W] format in PyTorch
-        return(_blob, _cid)
-
-
-
-class ClippedVideoDataset(VideoDataset):
-    """
-
-    """
-    def __init__(self, root, name, clip_len,
-                 split=constant.TRAINSET,
-                 modalities={'RGB': constant.IMGSEQ},
-                 *args, **kwargs
-                ):
-        super(ClippedVideoDataset, self).__init__(
-            root, name, split, modalities, args, **kwargs
-            )
-        self.clip_len = clip_len
-
-    def __getitem__(self, idx):
-        """
-        Only support .jpg image sequence
-        """
-        _sample_metadata = (self.metadatas["RGB"])[idx]
-        _ext = constant.IMGEXT
-        _path = _sample_metadata.path
-        _cid = _sample_metadata.cid
-        _seq = video.ClippedImageSequence(
-            _path, clip_len=self.clip_len, ext=_ext, **self.kwargs)
-        _blob = _seq.get_varray()
-        return(_blob, _cid)        
-
-
-class SegmentedVideoDataset(VideoDataset):
-    """
-
-    """
-    def __init__(self, root, name, seg_num,
-                 split=constant.TRAINSET,
-                 modalities={'RGB': constant.IMGSEQ},
-                 *args, **kwargs
-                ):
-        """
-        Only support jpg image sequence
-        """   
-        super(SegmentedVideoDataset, self).__init__(
-            root, name, split, modalities, args, **kwargs
-            )
-        self.seg_num = seg_num
-
-    def __getitem__(self, idx):
-        _sample_metadata = (self.metadatas["RGB"])[idx]
-        _ext = constant.IMGEXT
-        _path = _sample_metadata.path
-        _cid = _sample_metadata.cid
-        _seq = video.SegmentedImageSequence(
-            _path, seg_num=self.seg_num, ext=_ext, **self.kwargs)
-        _blob = _seq.get_varray()
-        return(_blob, _cid)    
+        return(_blobs, _cid)
 
 
 def test():

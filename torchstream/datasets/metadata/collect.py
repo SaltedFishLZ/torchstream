@@ -168,6 +168,9 @@ def collect_samples(root, layout, lbls, mod, ext,
                     **kwargs):
     """Collect samples according to given conditions
     @param return set:
+    Args
+        lbls: dict with keys = labels, values = cids
+    Return
         a set of Sample objects
     """
     ## sanity check

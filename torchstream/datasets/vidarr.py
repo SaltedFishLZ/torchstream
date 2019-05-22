@@ -16,17 +16,23 @@ class VideoArray(object):
         """
         if isinstance(x, Sample):
             ## parse args
-            _kwargs = dict()
+            self.kwargs = dict()
             if "cin" in kwargs:
-                _kwargs["cin"] = kwargs["cin"]
+                self.kwargs["cin"] = kwargs["cin"]
             if "cout" in kwargs:
-                _kwargs["cout"] = kwargs["cout"]
-            ## get ndarray
+                self.kwargs["cout"] = kwargs["cout"]
+            if "lazy" in kwargs:
+                self.lazy = kwargs["lazy"]
             assert not x.seq, NotImplementedError
-            self._array = video2ndarray(x.path, **_kwargs)
+            self.path = x.path
+            if self.lazy:
+                self._array = None
+            else:
+                self._array = video2ndarray(x.path, **self.kwargs)
         else:
+            self.lazy = False
+            self.path = None
             self._array = np.array(x, **kwargs)
-        assert len(self._array.shape) == 4, "Shape Error"
 
     def __repr__(self, idents=0):
         header = idents * "\t"
@@ -34,16 +40,21 @@ class VideoArray(object):
         string += str(self._array)
         return string
 
+    def get_varray(self):
+        if self.lazy:
+            _arr = video2ndarray(self.path, **self.kwargs)
+        else:
+            _arr = self._array
+        assert len(_arr.shape) == 4, "Shape Error"
+        return _arr
+
     def __array__(self):
         """Array casting
         Make this object array-like, which means it can be casted to
         np.ndarray.
         """
-        return self._array
+        return self.get_varray()
 
-    def get_varray(self):
-        return self._array
-        
 def test():
 
     import importlib
@@ -64,9 +75,9 @@ def test():
     samples = collect_samples(**kwargs)
 
     for _sample in samples:
-        print(type(_sample))
-        vid_arr = VideoArray(_sample)
-        print(np.array(vid_arr))
+        vid_arr = VideoArray(_sample, lazy=False)
+        print(vid_arr)
+    # print(np.array(vid_arr))
     
 if __name__ == "__main__":
     test()
