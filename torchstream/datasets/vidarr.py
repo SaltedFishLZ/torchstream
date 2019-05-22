@@ -11,7 +11,7 @@ class VideoArray(object):
     """
     A wrapper varray, supporting type-casting from Sample.
     """
-    def __init__(self, x, **kwargs):
+    def __init__(self, x, lazy=True, **kwargs):
         """
         """
         if isinstance(x, Sample):
@@ -21,8 +21,11 @@ class VideoArray(object):
                 self.kwargs["cin"] = kwargs["cin"]
             if "cout" in kwargs:
                 self.kwargs["cout"] = kwargs["cout"]
-            if "lazy" in kwargs:
-                self.lazy = kwargs["lazy"]
+            
+            ## for the safety of your memory, we set "lazy" as 
+            #  the default mode
+            self.lazy = lazy
+
             assert not x.seq, NotImplementedError
             self.path = x.path
             if self.lazy:
