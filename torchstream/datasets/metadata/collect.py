@@ -81,13 +81,13 @@ def collect_samples_ucf101(root, lbls, mod, ext,
             ## bypass invalid video files
             if (not seq) and (ext not in _video):
                 warn_str = "Insane dataset: invalid file {} in path {}".\
-                    format(_label, _video)
+                    format(_video, _label)
                 logger.warning(warn_str)
                 continue
             ## bypass invalid image sequences
             if seq and (not os.path.isdir(_video)):
                 warn_str = "Insane dataset: sequence folder {} in path {}".\
-                    format(_label, _video)
+                    format(_video, _label)
                 logger.warning(warn_str)
                 continue
             ## assemble relative path
@@ -121,7 +121,7 @@ def collect_samples_20bn(root, annots, lbls, mod, ext,
     ## santity check
     assert isinstance(root, str), TypeError
     assert os.path.exists(root) and os.path.isdir(root), NotADirectoryError
-    assert isinstance(annots), TypeError
+    assert isinstance(annots, dict), TypeError
     assert isinstance(lbls, dict), TypeError
     assert ext in __SUPPORTED_MODALITIES__[mod], NotImplementedError
 
@@ -139,14 +139,14 @@ def collect_samples_20bn(root, annots, lbls, mod, ext,
     for _video in os.listdir(root):
         ## bypass invalid video files
         if (not seq) and (ext not in _video):
-            warn_str = "Insane dataset: invalid file {} in path {}".\
-                format(_label, _video)
+            warn_str = "Insane dataset: invalid file {}".\
+                format(_video)
             logger.warning(warn_str)
             continue
         ## bypass invalid image sequences
-        if seq and (not os.path.isdir(_video)):
-            warn_str = "Insane dataset: sequence folder {} in path {}".\
-                format(_label, _video)
+        if seq and (not os.path.isdir(os.path.join(root, _video))):
+            warn_str = "Insane dataset: sequence folder {}".\
+                format(_video)
             logger.warning(warn_str)
             continue
         ## strip file extension if it is a video file
@@ -198,24 +198,29 @@ def collect_samples(root, layout, lbls, mod, ext,
 def test():
     import importlib
 
-    dataset = "weizmann"
+    dataset = "jester_v1"
     metaset = importlib.import_module(
         "datasets.metadata.metasets.{}".format(dataset))
 
     kwargs = {
-        "root" : metaset.AVI_DATA_PATH,
+        "root" : metaset.JPG_DATA_PATH,
         "layout" : metaset.__layout__,
+        "annots" : metaset.__ANNOTATIONS__,
         "lbls" : metaset.__LABELS__,
         "mod" : "RGB",
-        "ext" : "avi",
+        "ext" : "jpg",
     }
 
+    import time
+    st_time = time.time()
     samples = collect_samples(**kwargs)
+    ed_time = time.time()
+    print("collecting time", ed_time - st_time)
 
     sample_set = SampleSet(samples)
     x = set(sample_set)
 
-    print(str(sorted(x)) == str(sorted(samples)))
+    print(sorted(x))
     print(sorted(sample_set.get_samples()) == sorted(samples))
 
 if __name__ == "__main__":

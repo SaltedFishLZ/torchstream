@@ -115,16 +115,17 @@ def check_integrity(samples, lbls):
 def test():
     import importlib
 
-    dataset = "weizmann"
+    dataset = "sth_sth_v1"
     metaset = importlib.import_module(
         "datasets.metadata.metasets.{}".format(dataset))
 
     kwargs = {
-        "root" : metaset.AVI_DATA_PATH,
+        "root" : metaset.JPG_DATA_PATH,
         "layout" : metaset.__layout__,
+        "annots" : metaset.__ANNOTATIONS__,
         "lbls" : metaset.__LABELS__,
         "mod" : "RGB",
-        "ext" : "avi",
+        "ext" : "jpg",
     }
 
     from . collect import collect_samples
