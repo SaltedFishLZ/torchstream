@@ -1,15 +1,15 @@
 """Helper functions for collecting metadata from a dataset directory
 """
 __all__ = [
-    "collect_ucf_samples"
+    "collect_samples_ucf101", "collect_samples_20bn",
+    "collect_samples"
 ]
 
 import os
-import copy
 import logging
 
 from . import __config__
-from .sample import Sample
+from .sample import Sample, SampleSet
 from ..utils.filesys import strip_extension
 from .__support__ import __SUPPORTED_MODALITIES__, __SUPPORTED_IMAGES__
 from .__support__ import __SUPPORTED_LAYOUTS__
@@ -46,7 +46,7 @@ logger = logging.getLogger(__name__)
 #            Collect Samples and Get A Set of Samples              #
 # ---------------------------------------------------------------- #
 
-def collect_samples_ucf(root, lbls, mod, ext,
+def collect_samples_ucf101(root, lbls, mod, ext,
                         **kwargs):
     """ Collect samples from a dataset with a 20BN style layout
     """
@@ -183,8 +183,8 @@ def collect_samples(root, layout, lbls, mod, ext,
     """
     ## sanity check
     assert layout in __SUPPORTED_LAYOUTS__, NotImplementedError
-    if layout == "UCF":
-        return collect_samples_ucf(root=root, lbls=lbls, mod=mod, ext=ext,
+    if layout == "UCF101":
+        return collect_samples_ucf101(root=root, lbls=lbls, mod=mod, ext=ext,
                                    **kwargs)
     if layout == "20BN":
         if "annots" not in kwargs:
@@ -203,16 +203,20 @@ def test():
         "datasets.metadata.metasets.{}".format(dataset))
 
     kwargs = {
-        "root" : metaset.JPG_DATA_PATH,
-        "layout" : metaset.layout,
+        "root" : metaset.AVI_DATA_PATH,
+        "layout" : metaset.__layout__,
         "lbls" : metaset.__LABELS__,
         "mod" : "RGB",
-        "ext" : "jpg",
+        "ext" : "avi",
     }
 
+    # print(kwargs)
 
     samples = collect_samples(**kwargs)
-    print(len(samples))
+    print(samples)
+
+    sample_set = SampleSet(samples)
+    print(sample_set.get_statistics())
 
 if __name__ == "__main__":
     test()
