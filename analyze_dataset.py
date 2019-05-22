@@ -18,10 +18,17 @@ def len_hist(name, samples, worker_num=16, **kwargs):
                       **kwargs
                       )
     manager.hire(worker_num=worker_num)
+
+    print("Assembleing Tasks")
     tasks = []
     for _sample in samples:
         tasks.append({"sample": _sample})
+    
+    print("Lanuching Jobs")
     lens = manager.launch(tasks=tasks, enable_tqdm=True)
+    
+    print("Min Len", min(lens))
+    print("Max Len", max(lens))
     
     nphist = np.histogram(lens, bins=10)
     print("Numpy Hist")
@@ -32,6 +39,13 @@ def len_hist(name, samples, worker_num=16, **kwargs):
     plt.show()
 
 
+def get_norm_params(name, samples, worker_num=16, **kwargs):
+    """Normalization Parameters
+    (means, vars)
+    """
+    pass
+
+
 def main(name):
 
     import importlib
@@ -39,12 +53,12 @@ def main(name):
     metaset = importlib.import_module(metaset)
 
     kwargs = {
-        "root" : metaset.AVI_DATA_PATH,
+        "root" : metaset.JPG_DATA_PATH,
         "layout" : metaset.__layout__,
         "lbls" : metaset.__LABELS__,
         "annots" : metaset.__ANNOTATIONS__,
         "mod" : "RGB",
-        "ext" : "avi",
+        "ext" : "jpg",
     }
     
     samples = collect_samples(**kwargs)
@@ -52,4 +66,4 @@ def main(name):
     len_hist(name, samples)
 
 if __name__ == "__main__":
-    main("sth_sth_v2")
+    main("sth_sth_v1")
