@@ -57,6 +57,7 @@ def main(name):
         "layout" : metaset.__layout__,
         "lbls" : metaset.__LABELS__,
         "annots" : metaset.__ANNOTATIONS__,
+        "tmpl" : "{0:5d}",
         "mod" : "RGB",
         "ext" : "jpg",
     }
