@@ -70,12 +70,15 @@ class VideoDataset(torchdata.Dataset):
                                 mod=mod, ext=ext,
                                 **kwargs
                                )
+
+        logger.critical("Turning set to list...")
         _samplelist = list(_sampleset)
+        logger.critical("Sorting list...")
         _samplelist.sort()
         self.samples = _samplelist
 
         self.iohandles = []
-        for _sample in tqdm.tqdm(self.samples):
+        for _sample in self.samples:
             if _sample.seq:
                 self.iohandles.append(ImageSequence(_sample, **self.kwargs))
             else:
@@ -109,7 +112,7 @@ def test():
     }
     
     test_configuration = {
-        "datasets"   : ["hmdb51", ]
+        "datasets"   : ["sth_sth_v1", ]
     }
 
     for dataset in (test_configuration["datasets"]):
@@ -119,11 +122,14 @@ def test():
             metaset = importlib.import_module(
                 "datasets.metadata.metasets.{}".format(dataset))
             
-            allset = VideoDataset(root=metaset.AVI_DATA_PATH,
+            allset = VideoDataset(root=metaset.JPG_DATA_PATH,
                                   layout=metaset.__layout__,
                                   lbls=metaset.__LABELS__,
+                                  annots=metaset.__ANNOTATIONS__,
+                                  tmpl="{0:05d}",
+                                  offset=1,
                                   mod="RGB",
-                                  ext="avi"
+                                  ext="jpg"
                                  )
             
 
@@ -141,7 +147,7 @@ def test():
                     for _i in tqdm.tqdm(range(allset.__len__())):
                         allset.__getitem__(_i)
 
-                
+
 
 
 if __name__ == "__main__":
