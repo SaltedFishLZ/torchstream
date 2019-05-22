@@ -57,7 +57,8 @@ def main(name):
         "layout" : metaset.__layout__,
         "lbls" : metaset.__LABELS__,
         "annots" : metaset.__ANNOTATIONS__,
-        "tmpl" : "{0:5d}",
+        "tmpl" : "{0:05d}",
+        "offset": 1, 
         "mod" : "RGB",
         "ext" : "jpg",
     }
@@ -65,7 +66,7 @@ def main(name):
     print("Collecting Metadatas")
     samples = collect_samples(**kwargs)
 
-    len_hist(name, samples)
+    len_hist(name, samples, **kwargs)
 
 if __name__ == "__main__":
     main("sth_sth_v1")
