@@ -39,11 +39,11 @@ def len_hist(name, samples, worker_num=16, **kwargs):
     plt.show()
 
 
-def get_norm_params(name, samples, worker_num=16, **kwargs):
-    """Normalization Parameters
-    (means, vars)
-    """
-    pass
+# def get_norm_params(name, samples, worker_num=16, **kwargs):
+#     """Normalization Parameters
+#     (means, vars)
+#     """
+#     pass
 
 
 def main(name):
@@ -61,6 +61,7 @@ def main(name):
         "ext" : "jpg",
     }
     
+    print("Collecting Metadatas")
     samples = collect_samples(**kwargs)
 
     len_hist(name, samples)
