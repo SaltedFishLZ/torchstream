@@ -21,29 +21,17 @@ END_FLAG = "[DONE]"
 #                  Configuring Python Logger                       #
 # ---------------------------------------------------------------- #
 
-if __config__.__VERY_VERBOSE__:
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(name)s - %(levelname)s - %(message)s"
-    )
-elif __config__.__VERY_VERBOSE__:
-    logging.basicConfig(
-        level=logging.WARNING,
-        format="%(name)s - %(levelname)s - %(message)s"
-    )
-elif __config__.__VERBOSE__:
-    logging.basicConfig(
-        level=logging.ERROR,
-        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-    )
-else:
-    logging.basicConfig(
-        level=logging.CRITICAL,
-        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-    )
-    
+LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+logging.basicConfig(format=LOG_FORMAT)
 logger = logging.getLogger(__name__)
-
+if __config__.__VERY_VERY_VERBOSE__:
+    logger.setLevel(logging.INFO)
+elif __config__.__VERY_VERBOSE__:
+    logger.setLevel(logging.WARNING)
+elif __config__.__VERBOSE__:
+    logger.setLevel(logging.ERROR)
+else:
+    logger.setLevel(logging.CRITICAL)
 
 
 

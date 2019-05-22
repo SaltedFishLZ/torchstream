@@ -19,7 +19,22 @@ from .constant import \
 
 from . import video, metadata, constant
 
-__verbose__ = False
+# ---------------------------------------------------------------- #
+#                  Configuring Python Logger                       #
+# ---------------------------------------------------------------- #
+
+LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+logging.basicConfig(format=LOG_FORMAT)
+logger = logging.getLogger(__name__)
+if __config__.__VERY_VERY_VERBOSE__:
+    logger.setLevel(logging.INFO)
+elif __config__.__VERY_VERBOSE__:
+    logger.setLevel(logging.WARNING)
+elif __config__.__VERBOSE__:
+    logger.setLevel(logging.ERROR)
+else:
+    logger.setLevel(logging.CRITICAL)
+
 
 ## dataset class for video recognition
 #  
