@@ -57,8 +57,8 @@ def main(name):
         "layout" : metaset.__layout__,
         "lbls" : metaset.__LABELS__,
         "annots" : metaset.__ANNOTATIONS__,
-        "tmpl" : "{0:05d}",
-        "offset": 1, 
+        # "tmpl" : "{0:05d}",
+        # "offset": 1, 
         "mod" : "RGB",
         "ext" : "jpg",
     }
@@ -69,4 +69,4 @@ def main(name):
     len_hist(name, samples, **kwargs)
 
 if __name__ == "__main__":
-    main("sth_sth_v1")
+    main("sth_sth_v2")
