@@ -224,7 +224,7 @@ class Sample(object):
 ## SampleSet: A class containing a set of samples with some statistics
 #  
 #  Details :
-class SampleSet(object):
+class SampleSet(set):
     """A set of samples with some statistics information
     
     Args:
@@ -236,37 +236,31 @@ class SampleSet(object):
     #  @param labels set|list: a set/list of label names (str).
     #  If not specified, will count all possible labels from the samples.
     #  @param eager bool: eager execution
-    def __init__(self, samples, labels=None, eager=True):
+    def __init__(self, samples, labels=None):
         """
         """
         # santity check
         assert isinstance(samples, set), TypeError
 
-        self.samples = samples
+        super(SampleSet, self).__init__(samples)
+        
         self.counts = dict()
-
+        ## no label limitation
         if labels is None:
-            if eager:
-                for _sample in samples:
-                    _label = _sample.lbl
-                    if _label is None:
-                        continue
-                    if _label in self.counts:
-                        self.counts[_label] += 1
-                    else:
-                        self.counts[_label] = 1
-                    self.samples.add(_sample)
+            for _sample in samples:
+                _label = _sample.lbl
+                if _label in self.counts:
+                    self.counts[_label] += 1
+                else:
+                    self.counts[_label] = 1
+        ## has label limitation
         else:
             self.counts = dict.fromkeys(labels, 0)
-            if eager:
-                ## Get statistics immediately
-                for _sample in samples:
-                    _label = _sample.lbl
-                    if _label is None:
-                        continue
-                    if _label in labels:
-                        self.counts[_label] += 1
-                        self.samples.add(_sample)
+            for _sample in samples:
+                _label = _sample.lbl
+                if _label in labels:
+                    self.counts[_label] += 1
+                    super(SampleSet, self).add(_sample)
 
     ## Documentation for a method.
     #  @param self The object pointer.
@@ -277,42 +271,12 @@ class SampleSet(object):
                 format(_label, self.counts[_label])
         return string
 
-    ## Documentation for a method.
-    #  @param self The object pointer.
-    def __eq__(self, other):
-        return (
-            (self.samples == other.samples)
-            and (self.counts == other.counts)
-            )
-
-    ## Documentation for a method.
-    #  @param self The object pointer.
-    def __ne__(self, other):
-        return not self.__eq__(other)
-
-    ## Documentation for a method.
-    #  @param self The object pointer.
-    def __hash__(self):
-        return(hash((
-            self.samples, 
-            self.counts)))
-
-    ## Documentation for a method.
-    #  @param self The object pointer.
-    def __len__(self):
-        return len(self.samples)
-
-    ## Documentation for a method.
-    #  @param self The object pointer.
     def get_samples(self):
         """
         Get the samples set
         """
-        samples = self.samples
-        return samples
+        return set(self)
 
-    ## Documentation for a method.
-    #  @param self The object pointer.
     def get_statistics(self):
         """
         Get the statistics
@@ -330,16 +294,15 @@ class SampleSet(object):
                 or False)
         """
         _samples = set()
-        for _sample in self.samples:
+        for _sample in self:
             if not filter_(_sample):
                 info_str = "SampleSet:[filter_samples], remove\n{}"\
                         .format(_sample)
                 logger.info(info_str)
-                if _sample.lbl != UNKOWN_LABEL:
-                    self.counts[_sample.lbl] -= 1
             else:
                 _samples.add(_sample)
-        self.samples = _samples
+
+        self.__init__(_samples)
 
     ## Documentation for a method.
     #  @param self The object pointer.
@@ -371,7 +334,7 @@ class SampleSet(object):
                 continue
             if _label in labels:
                 self.counts[_label] += 1
-                self.samples.add(_sample)  
+                super(SampleSet, self).add(_sample)  
 
     ## Documentation for a method.
     #  @param self The object pointer.
@@ -381,30 +344,11 @@ class SampleSet(object):
         the data without using member functions
         """
         self.counts = dict.fromkeys(self.counts.keys(), 0)
-        for _sample in self.samples:
+        for _sample in self.get_samples():
             _label = _sample.lbl
             if _label in self.counts:
                 self.counts[_label] += 1
-                self.samples.add(_sample)
-
-    ## Documentation for a method.
-    #  @param self The object pointer.
-    def migrate_root(self, new_root):
-        """
-        """
-        _samples = set()
-        for _sample in self.samples:
-            _samples.add(_sample.root_migrated(new_root))
-        self.samples = _samples
-
-    ## Documentation for a method.
-    #  @param self The object pointer.
-    def root_migrated(self, new_root):
-        """
-        """
-        new_sample_set = copy.deepcopy(self)
-        new_sample_set.migrate_root(new_root)
-        return new_sample_set
+                super(SampleSet, self).add(_sample)
 
 
 
@@ -426,28 +370,6 @@ def test_sample():
     print("Test Equality", a == c)
     print("Test Order", a < c, c < a, d < a, d9 < d1000)
 
-def test_sampleset():
-
-    DATASET = "sth_sth_v2"
-    dataset_mod = importlib.import_module("vdataset.metasets.{}".format(DATASET))
-
-    lbls=dataset_mod.__labels__
-
-    collector = Collector(
-        dataset_mod.RAW_DATA_PATH,
-        dataset_mod,
-        # lbls={'Sliding Two Fingers Up',},
-        ext="webm"
-        )
-    
-    sample_set = collector()
-    # for _sample in sample_set.samples:
-    #     if ".avi" not in _sample.path:
-    #         print(_sample)
-    print(len(sample_set.samples))
-    print(sample_set.counts)
-    # print(collector.check_integrity())
-    print(sample_set.get_samples()[1])
 
 
 

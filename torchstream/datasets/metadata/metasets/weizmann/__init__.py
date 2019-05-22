@@ -32,14 +32,14 @@ __LABELS__ = {
 }
 
 __SAMPLES_PER_LABEL__ = {
-    "bend"  :   9,
-    "jack"  :   9,
-    "jump"  :   9,
-    "pjump" :   9,
-    "run"   :   10,
-    "side"  :   9,
-    "skip"  :   10,
-    "walk"  :   10,
-    "wave1" :   9,
-    "wave2" :   9,
+    "bend"  :   [9  , 9 ] ,
+    "jack"  :   [9  , 9 ] ,
+    "jump"  :   [9  , 9 ] ,
+    "pjump" :   [9  , 9 ] ,
+    "run"   :   [10 , 10] ,
+    "side"  :   [9  , 9 ] ,
+    "skip"  :   [10 , 10] ,
+    "walk"  :   [10 , 10] ,
+    "wave1" :   [9  , 9 ] ,
+    "wave2" :   [9  , 9 ] ,
 }

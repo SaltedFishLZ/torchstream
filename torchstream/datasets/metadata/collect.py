@@ -210,13 +210,13 @@ def test():
         "ext" : "avi",
     }
 
-    # print(kwargs)
-
     samples = collect_samples(**kwargs)
-    print(samples)
 
     sample_set = SampleSet(samples)
-    print(sample_set.get_statistics())
+    x = set(sample_set)
+
+    print(str(sorted(x)) == str(sorted(samples)))
+    print(sorted(sample_set.get_samples()) == sorted(samples))
 
 if __name__ == "__main__":
     test()
