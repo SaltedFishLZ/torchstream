@@ -46,7 +46,6 @@ logger = logging.getLogger(__name__)
 
 ## Class
 #  
-#  ???
 class Sample(object):
     """
     An video sample struct containing the meta-data of a video sample
