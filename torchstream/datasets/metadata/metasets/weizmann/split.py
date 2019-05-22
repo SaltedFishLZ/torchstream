@@ -1,36 +1,21 @@
-"""
-Split filters
-"""
-__all__ = [
-    "TrainsetFilter", "ValsetFilter", "TestsetFilter"
-]
 
-# for Weizmann, we use ALL SAMPLES for
+# for this dataset, we use ALL SAMPLES for 
 # training, validation and testing
 
 class TrainsetFilter(object):
-    """
-    Always True
-    """
-    def __init__(self):
+    def __init__(self, split=None):
         pass
     def __call__(self, sample):
-        return True
+        return(True)
 
 class ValsetFilter(object):
-    """
-    Always True
-    """
-    def __init__(self):
+    def __init__(self, split=None):
         pass
     def __call__(self, sample):
-        return True
+        return(True)
 
 class TestsetFilter(object):
-    """
-    Always True
-    """
-    def __init__(self):
+    def __init__(self, split=None):
         pass
     def __call__(self, sample):
-        return True
+        return(True)

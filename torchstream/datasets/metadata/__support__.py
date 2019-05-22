@@ -1,28 +1,24 @@
-"""Metadata support information
-"""
-__all__ = [
-    "__SUPPORTED_MODALITIES__",
-    "__SUPPORTED_VIDEOS__", "__SUPPORTED_IMAGES__",
-]
-
 
 # ----------------------------------------------------------------- #
 #           Input Data Modality & File Name Extension               #
 # ----------------------------------------------------------------- #
 # supported input data modality and corresponding file extensions
-__SUPPORTED_VIDEOS__ = {
+__supported_modalities__ = ["RGB"]
+__supported_modality_files__ = {
+    "RGB": ["jpg", "avi", "mp4", "webm"]
+    }
+__supported_video_files__ = {
     "RGB" : ["avi", "mp4", "webm"]
 }
-__SUPPORTED_IMAGES__ = {
+__supported_image_files__ = {
     "RGB" : ["jpg"]
 }
-__SUPPORTED_MODALITIES__ = {
-    "RGB" : __SUPPORTED_VIDEOS__["RGB"] + __SUPPORTED_IMAGES__["RGB"]
-}
-
+# here, "GRAY" means single-channel data
+# some optical-flow based methods may store flow files in jpg
+__supported_color_space__ = ["BGR", "RGB", "GRAY"]
 
 # ----------------------------------------------------------------- #
-#              Dataset Layout Style and Supporting                  #
+#           Dataset Structure Style and Supporting                  #
 # ----------------------------------------------------------------- #
 # NOTE: You shall not store other files in the dataset !!! 
 #
@@ -70,12 +66,12 @@ __SUPPORTED_MODALITIES__ = {
 #   It applies to the following datasets:
 #   * Something-something V1 & V2
 #   * Jester
-__SUPPORTED_LAYOUTS__ = ["UCF101", "20BN"]
+__supported_dataset_styles__ = ['UCF101', '20BN']
 
-# key: dataset name, value: layout styles
-__SUPPORTED_DATASETS__ = {
+# key: dataset name, value: structure styles
+__supported_datasets__ = {
     # UCF101 styled datasets
-    "ucf101":"UCF101", "hmdb51":"UCF101", "weizmann":"UCF101",
-    # 20BN styled datasets
-    "jester_v1":"20BN", "sth_sth_v1":"20BN"
+    'ucf101':'UCF101', 'hmdb51':'UCF101', 'weizmann':'UCF101',
+    # 20BN styled datasets 
+    'jester_v1':'20BN', 'sth_sth_v1':'20BN', 
 }

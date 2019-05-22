@@ -1,10 +1,10 @@
-"""CSV File Parsing Module
+"""
+CSV File Parsing Module
 """
 import os
 import pandas
 
-FILE_PATH = os.path.realpath(__file__)
-DIR_PATH = os.path.dirname(FILE_PATH)
+DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 
 TRAINSET_DF = pandas.read_csv(
     os.path.join(DIR_PATH, "something-something-v1-train.csv"), sep=';')
@@ -14,6 +14,8 @@ TESTSET_DF = pandas.read_csv(
     os.path.join(DIR_PATH, "something-something-v1-test.csv"), sep=';')
 
 ## Self Test Function
+#  
+#  Details
 def test():
     """
     Self-test function
@@ -24,7 +26,3 @@ def test():
     print(VALSET_DF)
     print("[Testing Set Dataframe]")
     print(TESTSET_DF)
-
-if __name__ == "__main__":
-    test()
-    

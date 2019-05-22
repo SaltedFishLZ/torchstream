@@ -1,7 +1,9 @@
-"""Print Package Information
 """
-from .label import __SAMPLES_PER_LABEL__
+"""
+from .__init__ import __sample_num_per_class__
+from . import split
 
-if __name__ == "__main__":
-    print("Common Data of Sth-sth V1 Dataset")
-    print(__SAMPLES_PER_LABEL__)
+print("Common Data of Sth-sth-v1 Dataset")
+# print(__sample_num_per_class__)
+
+split.test()

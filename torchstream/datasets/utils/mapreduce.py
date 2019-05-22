@@ -2,38 +2,18 @@
 Providing simple helpers to manage batch processing tasks in a map-reduce way
 with multiprocessing queue mechanism 
 """
-__all__ = ["Worker", "Manager"]
-
 import os
 import copy
 import time
 import pickle
-import logging
 import multiprocessing as mp
 
-from . import __config__
-if __config__.__TQDM__:
+from .__config__ import *
+if __TQDM__:
     import tqdm
 
+
 END_FLAG = "[DONE]"
-
-# ---------------------------------------------------------------- #
-#                  Configuring Python Logger                       #
-# ---------------------------------------------------------------- #
-
-LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-logging.basicConfig(format=LOG_FORMAT)
-logger = logging.getLogger(__name__)
-if __config__.__VERY_VERY_VERBOSE__:
-    logger.setLevel(logging.INFO)
-elif __config__.__VERY_VERBOSE__:
-    logger.setLevel(logging.WARNING)
-elif __config__.__VERBOSE__:
-    logger.setLevel(logging.ERROR)
-else:
-    logger.setLevel(logging.CRITICAL)
-
-
 
 
 class Worker(object):
@@ -142,14 +122,14 @@ class Manager(object):
     ##  Launch a major task which contains many sub-tasks
     #   
     #   @param tasks iteratable: 
-    def launch(self, tasks, enable_tqdm=False):
+    def launch(self, tasks):
         """
         """
         num_workers = len(self.workers)
         assert num_workers > 0, "You cannot work with 0 workers!"
 
         num_tasks = len(tasks)
-        assert num_tasks > 0, "You cannot launch null task!"
+        assert num_tasks > 0, "You cannot launch null!"
 
         ## Limit Queue Size
         #  By limiting the size of task queue, we can make enquing & dequing
@@ -159,16 +139,18 @@ class Manager(object):
 
 
         ## init processes
+        #  
         process_list = []
         for _worker in self.workers:
             p = mp.Process(target=_worker, args=(task_queue,))
             p.start()
             process_list.append(p)
 
-        logger.info("MANAGER : [{}] starting jobs".format(self.name))
+        print("MANAGER : [{}] starting jobs".format(self.name))
 
         ## init tasks
-        if enable_tqdm:
+        #  
+        if __TQDM__:
             _tasks = tqdm.tqdm(tasks)
         else:
             _tasks = tasks
@@ -177,19 +159,19 @@ class Manager(object):
         for i in range(num_workers):
             task_queue.put(END_FLAG)
 
-        info_str = "MANAGER : [{}] waiting for late workers".format(self.name)
-        logger.info(info_str)
-
         ## waiting for workers to join
+        #  
+        #  
         for p in process_list:
             p.join()
 
-        info_str = "MANAGER : [{}] aggregating".format(self.name)
-        logger.info(info_str)
 
         ## aggregate results from workers
+        #
+        #
+        print("MANAGER : [{}] aggregating".format(self.name))
         results = []
-        if enable_tqdm:
+        if __TQDM__:
             _workers = tqdm.tqdm(self.workers)
         else:
             _workers = self.workers
@@ -200,41 +182,3 @@ class Manager(object):
                 results = self.reducer(results)
 
         return results
-
-
-
-def square_sum_test():
-    r"""
-    Calculate \Sigma i^2
-    """
-    N = 1000000
-    REF = (N-1)*N*(2*N-1) // 6
-
-    tasks = []
-    for _i in range(N):
-        tasks.append({"x": _i})
-
-    def mapper(x):
-        return(x**2)
-
-    def reducer(inputs):
-        sum = 0
-        for _x in inputs:
-            sum += _x 
-        return [sum]
-
-    manager = Manager(name="self-test", mapper=mapper, reducer=reducer)
-    manager.hire(worker_num=16)
-    result = manager.launch(tasks=tasks, enable_tqdm=True)
-    
-    if (len(result) == 1) and (REF == result[0]):
-        print("[Square Sum Test] Passed")
-        return True
-    else:
-        print(
-            "[Square Sum Test] Failed, {} expected, {} got".format(REF, result))
-        return False
-
-
-if __name__ == "__main__":
-    square_sum_test()

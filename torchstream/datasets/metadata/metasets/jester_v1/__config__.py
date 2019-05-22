@@ -7,6 +7,7 @@ from ..__config__ import *
 __all__ = [
     "__STRICT__",
     "__VERBOSE__", "__VERY_VERBOSE__", "__VERY_VERY_VERBOSE__",
+    "__TQDM__"
     ]
 
 # overide global configuration
