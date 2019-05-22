@@ -4,10 +4,8 @@
 #
 
 import os
-import sys
 import copy
 import logging
-import importlib
 
 from . import __config__
 from .__const__ import IMGSEQ, UNKOWN_LABEL, UNKOWN_CID
@@ -87,8 +85,7 @@ class Sample(object):
         self.ext = ext
         self.seq = ext in __SUPPORTED_IMAGES__[mod]
 
-        fname = "{}.{}".format(name, ext) if not self.seq else name
-        self.path = os.path.join(root, rpath, fname)
+        self.path = os.path.join(root, rpath)
 
         self.lbl = lbl
         self.cid = cid
@@ -429,7 +426,7 @@ def test_sample():
     print("Test Equality", a == c)
     print("Test Order", a < c, c < a, d < a, d9 < d1000)
 
-def test():
+def test_sampleset():
 
     DATASET = "sth_sth_v2"
     dataset_mod = importlib.import_module("vdataset.metasets.{}".format(DATASET))

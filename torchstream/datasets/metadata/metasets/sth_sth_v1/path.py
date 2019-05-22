@@ -8,9 +8,9 @@ __all__ = [
 
 import os
 
-HOME = os.path.expanduser("~")
+USER_HOME = os.path.expanduser("~")
 
 # Default setting
-JPG_DATA_PATH = os.path.join(HOME, "Datasets", "Sth-sth", "Sth-sth-v1-jpg")
-RAW_DATA_PATH = os.path.join(HOME, "Datasets", "Sth-sth", "Sth-sth-v1-raw")
-PRC_DATA_PATH = os.path.join(HOME, "Datasets", "Sth-sth", "Sth-sth-v1-prc")
+JPG_DATA_PATH = os.path.join(USER_HOME, "Datasets", "Sth-sth", "Sth-sth-v1-jpg")
+RAW_DATA_PATH = os.path.join(USER_HOME, "Datasets", "Sth-sth", "Sth-sth-v1-raw")
+PRC_DATA_PATH = os.path.join(USER_HOME, "Datasets", "Sth-sth", "Sth-sth-v1-prc")

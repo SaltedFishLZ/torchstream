@@ -1,5 +1,4 @@
-"""
-Metadata support information
+"""Metadata support information
 """
 __all__ = [
     "__SUPPORTED_MODALITIES__",
@@ -23,7 +22,7 @@ __SUPPORTED_MODALITIES__ = {
 
 
 # ----------------------------------------------------------------- #
-#           Dataset Structure Style and Supporting                  #
+#              Dataset Layout Style and Supporting                  #
 # ----------------------------------------------------------------- #
 # NOTE: You shall not store other files in the dataset !!! 
 #
@@ -71,12 +70,12 @@ __SUPPORTED_MODALITIES__ = {
 #   It applies to the following datasets:
 #   * Something-something V1 & V2
 #   * Jester
-__supported_dataset_styles__ = ['UCF101', '20BN']
+__SUPPORTED_LAYOUTS__ = ["UCF101", "20BN"]
 
-# key: dataset name, value: structure styles
-__supported_datasets__ = {
+# key: dataset name, value: layout styles
+__SUPPORTED_DATASETS__ = {
     # UCF101 styled datasets
-    'ucf101':'UCF101', 'hmdb51':'UCF101', 'weizmann':'UCF101',
-    # 20BN styled datasets 
-    'jester_v1':'20BN', 'sth_sth_v1':'20BN', 
+    "ucf101":"UCF101", "hmdb51":"UCF101", "weizmann":"UCF101",
+    # 20BN styled datasets
+    "jester_v1":"20BN", "sth_sth_v1":"20BN"
 }
