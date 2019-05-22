@@ -199,6 +199,7 @@ class Sample(object):
             """
             sample.seq = True
             sample.ext = ext
+            sample.rpath = strip_extension(sample.rpath)
             sample.path = strip_extension(sample.path)
             return sample
         
@@ -209,6 +210,7 @@ class Sample(object):
             """
             sample.seq = False
             sample.ext = ext
+            sample.rpath = strip_extension(sample.rpath) + "." + ext
             sample.path = strip_extension(sample.path) + "." + ext
             return sample
 
