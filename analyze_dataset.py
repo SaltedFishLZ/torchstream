@@ -1,6 +1,8 @@
 """
 """
 import numpy as np
+import matplotlib.pyplot as plt
+
 
 from torchstream.datasets import analysis
 from torchstream.datasets.utils.mapreduce import Manager
@@ -20,16 +22,19 @@ def len_hist(name, samples, worker_num=16, **kwargs):
     for _sample in samples:
         tasks.append({"sample": _sample})
     lens = manager.launch(tasks=tasks, enable_tqdm=True)
-    print(lens)
-    # result = np.histogram(lens, bins=1)
-    # print(result)
+    
+    nphist = np.histogram(lens, bins=10)
+    print("Numpy Hist")
+    print("Density", nphist[0])
+    print("Bins", nphist[1])
 
+    plt.hist(lens, density=True, bins=20)
+    plt.show()
 
 
 def main(name):
 
     import importlib
-    name = "weizmann"
     metaset = "torchstream.datasets.metadata.metasets.{}".format(name)
     metaset = importlib.import_module(metaset)
 
@@ -37,6 +42,7 @@ def main(name):
         "root" : metaset.AVI_DATA_PATH,
         "layout" : metaset.__layout__,
         "lbls" : metaset.__LABELS__,
+        "annots" : metaset.__ANNOTATIONS__,
         "mod" : "RGB",
         "ext" : "avi",
     }
