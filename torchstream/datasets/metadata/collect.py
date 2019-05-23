@@ -192,8 +192,8 @@ def collect_samples_20bn_reverse(root, annots, lbls, mod, ext,
     seq = ext in __SUPPORTED_IMAGES__[mod]
     samples = set()
 
-    ## traverse all official samples
-    _videos = os.listdir(root)
+    # ## traverse all official samples
+    # _videos = os.listdir(root)
     for _name in annots:
         ## bypass invalid labels
         _label = annots[_name]
@@ -203,16 +203,19 @@ def collect_samples_20bn_reverse(root, annots, lbls, mod, ext,
         _cid = lbls[_label]
         ## get file path, if doesn't exist, bypass it
         _rpath = _name if seq else (_name + "." + ext)
-        if _rpath not in _videos:
-            if __config__.__STRICT__:
-                raise Exception("Missing video [{}]".format(_rpath))
-            logger.warning("missing video [{}]".format(_rpath))
-            continue
+        
+        # if _rpath not in _videos:
+        #     if __config__.__STRICT__:
+        #         raise Exception("Missing video [{}]".format(_rpath))
+        #     logger.warning("missing video [{}]".format(_rpath))
+        #     continue
+        
         ## get sample
         _sample = Sample(root=root, rpath=_rpath, name=_name,
                          mod=mod, ext=ext,
                          lbl=_label, cid=_cid
                         )
+        print(_sample)
         ## filter sample
         if sample_filter is not None:
             if sample_filter(_sample):
@@ -289,7 +292,7 @@ def collect_samples(root, layout, lbls, mod, ext,
 def test():
     import importlib
 
-    dataset = "jester_v1"
+    dataset = "sth_sth_v1"
     metaset = importlib.import_module(
         "datasets.metadata.metasets.{}".format(dataset))
 
@@ -310,7 +313,7 @@ def test():
     if hasattr(metaset, "JPG_IDX_OFFSET"):
         kwargs["offset"] = metaset.JPG_IDX_OFFSET
     
-    print("Collecting Metadatas")
+    print("Collecting Metadata")
     import time
     st_time = time.time()
     samples = collect_samples(**kwargs)
@@ -320,7 +323,6 @@ def test():
     sample_set = SampleSet(samples)
     x = set(sample_set)
 
-    print(sorted(x))
     print(sorted(sample_set.get_samples()) == sorted(samples))
 
 if __name__ == "__main__":
