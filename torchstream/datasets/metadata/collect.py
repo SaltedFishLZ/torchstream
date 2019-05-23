@@ -52,10 +52,10 @@ def collect_samples_ucf101(root, lbls, mod, ext,
     assert ext in __SUPPORTED_MODALITIES__[mod], NotImplementedError
 
     ## parse kwargs
-    if "sample_filter" in kwargs:
-        sample_filter = kwargs["sample_filter"]
+    if "filter" in kwargs:
+        filter = kwargs["filter"]
     else:
-        sample_filter = None
+        filter = None
 
     ## initializaion
     seq = ext in __SUPPORTED_IMAGES__[mod]
@@ -95,8 +95,62 @@ def collect_samples_ucf101(root, lbls, mod, ext,
                              lbl=_label, cid=_cid
                             )
             ## filter sample
-            if sample_filter is not None:
-                if sample_filter(_sample):
+            if filter is not None:
+                if filter(_sample):
+                    continue
+            ## update sample set
+            samples.add(_sample)
+
+    info_str = "[collect_samples] get {} samples from a UCF style layout"\
+            .format(len(samples))
+    logger.info(info_str)
+
+    return samples
+
+
+def collect_samples_ucf101_reverse(root, annots, lbls, mod, ext,
+                        **kwargs):
+    """ Collect samples from a dataset with a 20BN style layout reversely
+    """
+    ## sanity check
+    assert isinstance(root, str), TypeError
+    assert os.path.exists(root) and os.path.isdir(root), NotADirectoryError
+    assert isinstance(lbls, dict), TypeError
+    assert ext in __SUPPORTED_MODALITIES__[mod], NotImplementedError
+
+    ## parse kwargs
+    if "filter" in kwargs:
+        filter = kwargs["filter"]
+    else:
+        filter = None
+
+    ## initializaion
+    seq = ext in __SUPPORTED_IMAGES__[mod]
+    samples = set()
+
+    ## traverse all categories/classes/labels
+    for _label in lbls:
+        _cid = lbls[_label]
+        ## travese all video files/image sequences
+        for _name in annots:
+            ## assemble paths
+            _video = _name if seq else "{}.{}".format(_name, ext)
+            _rpath = os.path.join(_label, _video)
+            _path = os.path.join(root, _rpath)
+            ## check existence
+            if not os.path.exists(_path):
+                if __config__.__STRICT__:
+                    raise Exception("Missing video [{}]".format(_rpath))
+                logger.warning("missing video [{}]".format(_rpath))
+                continue
+            ## generate Sample object
+            _sample = Sample(root=root, rpath=_rpath, name=_name,
+                             mod=mod, ext=ext,
+                             lbl=_label, cid=_cid
+                            )
+            ## filter sample
+            if filter is not None:
+                if filter(_sample):
                     continue
             ## update sample set
             samples.add(_sample)
@@ -121,10 +175,10 @@ def collect_samples_20bn(root, annots, lbls, mod, ext,
     assert ext in __SUPPORTED_MODALITIES__[mod], NotImplementedError
 
     ## parse kwargs
-    if "sample_filter" in kwargs:
-        sample_filter = kwargs["sample_filter"]
+    if "filter" in kwargs:
+        filter = kwargs["filter"]
     else:
-        sample_filter = None
+        filter = None
 
     ## initializaion
     seq = ext in __SUPPORTED_IMAGES__[mod]
@@ -157,8 +211,8 @@ def collect_samples_20bn(root, annots, lbls, mod, ext,
                          mod=mod, ext=ext,
                          lbl=_label, cid=_cid)
         ## filter sample
-        if sample_filter is not None:
-            if sample_filter(_sample):
+        if filter is not None:
+            if filter(_sample):
                 continue
         ## update sample set
         samples.add(_sample)
@@ -183,17 +237,16 @@ def collect_samples_20bn_reverse(root, annots, lbls, mod, ext,
     assert ext in __SUPPORTED_MODALITIES__[mod], NotImplementedError
 
     ## parse kwargs
-    if "sample_filter" in kwargs:
-        sample_filter = kwargs["sample_filter"]
+    if "filter" in kwargs:
+        filter = kwargs["filter"]
     else:
-        sample_filter = None
+        filter = None
 
     ## initializaion
     seq = ext in __SUPPORTED_IMAGES__[mod]
     samples = set()
 
     ## traverse all official samples
-    _videos = os.listdir(root)
     for _name in annots:
         ## bypass invalid labels
         _label = annots[_name]
@@ -201,10 +254,10 @@ def collect_samples_20bn_reverse(root, annots, lbls, mod, ext,
             continue
         ## get cid
         _cid = lbls[_label]
-        ## get file path, if doesn't exist, bypass it
+        ## check existence
         _rpath = _name if seq else (_name + "." + ext)
-        
-        if _rpath not in _videos:
+        _path = os.path.join(root, _rpath)
+        if not os.path.exists(_path):
             if __config__.__STRICT__:
                 raise Exception("Missing video [{}]".format(_rpath))
             logger.warning("missing video [{}]".format(_rpath))
@@ -216,8 +269,8 @@ def collect_samples_20bn_reverse(root, annots, lbls, mod, ext,
                          lbl=_label, cid=_cid
                         )
         ## filter sample
-        if sample_filter is not None:
-            if sample_filter(_sample):
+        if filter is not None:
+            if filter(_sample):
                 continue
         ## update sample set
         samples.add(_sample)
@@ -243,26 +296,27 @@ def collect_samples(root, layout, lbls, mod, ext,
     assert layout in __SUPPORTED_LAYOUTS__, NotImplementedError
     
     ## assemble cache file information
-    hasher = hashlib.md5()
     hashstr = '_'.join([
                         str(root), str(layout), str(lbls),
                         str(mod), str(ext), str(kwargs)
                        ])
-    hasher.update(hashstr.encode(encoding="utf-8"))
+    hasher = hashlib.md5(hashstr.encode(encoding="utf-8"))
     hashid = hasher.hexdigest()
     cache_file = "{}.samples.pkl".format(hashid)
     cache_file = os.path.join(CACHE_PATH, cache_file)
     
     ## seek valid cache
-    if (os.path.exists(cache_file)
-        and (os.path.isfile(cache_file))
-        and (touch_date(cache_file) > touch_date(FILE_PATH))
-        and (touch_date(cache_file) > touch_date(root))):
-        ## find valid cache
-        warn_str = "[collect_samples] find valid cache {}".format(cache_file)
-        logger.warning(warn_str)
-        with open(cache_file, "rb") as f:
-            return pickle.load(f)
+    if os.path.exists(cache_file) and os.path.isfile(cache_file):
+        logger.debug("cache file exists")
+        if touch_date(cache_file) > touch_date(FILE_PATH):
+            logger.debug("cache newer than code")
+            if touch_date(cache_file) > touch_date(root):                
+                ## find valid cache
+                warn_str = "[collect_samples] find valid cache {}".\
+                    format(cache_file)
+                logger.warning(warn_str)
+                with open(cache_file, "rb") as f:
+                    return pickle.load(f)
 
     ## re-generate samples
     if layout == "UCF101":
