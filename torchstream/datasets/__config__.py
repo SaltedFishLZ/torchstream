@@ -27,7 +27,7 @@ __all__ = [
 __STRICT__ = True
 __VERBOSE__ = True
 __VERY_VERBOSE__ = True
-__VERY_VERY_VERBOSE__ = True
+__VERY_VERY_VERBOSE__ = False
 
 def show_config():
     """
