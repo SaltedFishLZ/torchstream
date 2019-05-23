@@ -3,7 +3,8 @@ Dataset Path
 """
 __all__ = [
     "JPG_DATA_PATH",
-    "RAW_DATA_PATH", "PRC_DATA_PATH"
+    "RAW_DATA_PATH", "PRC_DATA_PATH",
+    "JPG_FILE_TMPL", "JPG_IDX_OFFSET"
 ]
 
 import os
