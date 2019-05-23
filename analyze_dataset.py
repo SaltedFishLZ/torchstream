@@ -1,6 +1,8 @@
 """
 """
+import os
 import sys
+import pickle
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -10,8 +12,11 @@ from torchstream.datasets import analysis
 from torchstream.datasets.utils.mapreduce import Manager
 from torchstream.datasets.metadata.collect import collect_samples
 
+FILE_PATH = os.path.realpath(__file__)
+DIR_PATH = os.path.dirname(__file__)
+ANALY_PATH = os.path.join(DIR_PATH, ".analyzed.d")
 
-def len_hist(name, samples, worker_num=40, **kwargs):
+def len_hist(name, samples, worker_num=80, **kwargs):
     """
     """
     manager = Manager(name="Get Length Hist [{}]".format(name),
@@ -41,11 +46,12 @@ def len_hist(name, samples, worker_num=40, **kwargs):
     plt.show()
 
 
-def norm_params(name, samples, worker_num=40, **kwargs):
+def norm_params(name, samples, worker_num=80, **kwargs):
     """Normalization Parameters
     (means, vars)
     """
-
+    os.makedirs(ANALY_PATH, exist_ok=True)
+    
     print("Calculating [{}] Means...".format(name))
 
     manager = Manager(name="Get Means [{}]".format(name),
@@ -64,6 +70,9 @@ def norm_params(name, samples, worker_num=40, **kwargs):
     means = sums / nums
 
     print("Means", means)
+    dump_file = os.path.join(ANALY_PATH, name + ".means")
+    with open(dump_file, "wb") as f:
+        pickle.dump(means, f)
 
     print("Calculating [{}] RSSes...".format(name))
 
@@ -83,7 +92,9 @@ def norm_params(name, samples, worker_num=40, **kwargs):
     vars = np.sqrt(sums / nums)
 
     print("Vars", vars)
-
+    dump_file = os.path.join(ANALY_PATH, name + ".vars")
+    with open(dump_file, "wb") as f:
+        pickle.dump(vars, f)
 
 
 
