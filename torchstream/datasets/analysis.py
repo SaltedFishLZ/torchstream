@@ -1,10 +1,17 @@
 """Dataset Analysis Toolbox
 """
+import subprocess
+try:
+    from subprocess import DEVNULL # python 3.x
+except ImportError:
+    DEVNULL = open(os.devnull, "wb")
+
 import numpy as np
 
 from .vidarr import VideoArray
 from .imgseq import ImageSequence
 from .metadata.sample import Sample
+from .utils.regex import match_first
 
 # ---------------------------------------------------------------- #
 #                       Pixel Level Statistics                     #
@@ -97,10 +104,22 @@ def sample_len(sample, **kwargs):
     ## short path for image sequence
     if sample.seq:
         img_seq = ImageSequence(sample, **kwargs)
-        return img_seq.fcount
+        sample_len = img_seq.fcount
     ## call varray_len
-    varray = np.array(VideoArray(sample, **kwargs))
-    return varray_len(varray, **kwargs)
+    else:
+        varray = np.array(VideoArray(sample, **kwargs))
+        sample_len = varray_len(varray, **kwargs)
+    ## special limit
+    if "max" in kwargs:
+        max_len = kwargs["max"]
+        if sample_len > max_len:
+            print(sample)
+    if "min" in kwargs:
+        min_len = kwargs["min"]
+        if sample_len < min_len:
+            print(sample)
+    ## return result
+    return sample_len
 
 def sample_hxw(sample, **kwargs):
     """
@@ -115,3 +134,49 @@ def sample_hxw(sample, **kwargs):
     varray = np.array(VideoArray(sample, **kwargs))
     return varray_hxw(varray, **kwargs)
 
+
+
+# ---------------------------------------------------------------- #
+#                       Video Level Statistics                     #
+# ---------------------------------------------------------------- #
+                                                                    
+def sample_fps(sample, **kwargs):
+    """
+    """
+    assert isinstance(sample, Sample), TypeError
+    assert not sample.seq, "Image Sequence has no fps data"
+    
+    command = r'ffmpeg -i {} 2>&1 | sed -n "s/.*, \(.*\) fp.*/\1/p"'
+    command = command.format(sample.path)
+
+    _subp = subprocess.run(command, shell=True, check=False,
+                       stdout=subprocess.PIPE, stderr=DEVNULL
+                      )
+    ## failed, return 0
+    if _subp.returncode != 0:
+        return 0.0
+    ## parse output
+    stdout = (_subp.stdout).decode("utf-8")
+    regex = r"(\d+\.*\d+)"
+    ## to number
+    ret = match_first(regex, stdout)
+    try:
+        ret = float(ret)
+    except ValueError:
+        ret = 0.0
+    return ret
+
+
+
+def test_sample_fps():
+    file_name = "Climbing_roof_in_TCA_climb_f_cm_np1_ba_med_2.avi"
+    sample = Sample(root="~/Datasets/HMDB51/HMDB51-avi/",
+                    rpath="climb/{}".format(file_name),
+                    name=file_name,
+                    ext="avi"
+                   )
+    print(sample_fps(sample))
+
+
+if __name__ == "__main__":
+    test_sample_fps()
