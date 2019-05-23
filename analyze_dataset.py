@@ -1,5 +1,7 @@
 """
 """
+import sys
+
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -44,7 +46,7 @@ def norm_params(name, samples, worker_num=40, **kwargs):
     (means, vars)
     """
 
-    print("Calculating Means...")
+    print("Calculating [{}] Means...".format(name))
 
     manager = Manager(name="Get Means [{}]".format(name),
                       mapper=analysis.sample_sum,
@@ -63,7 +65,7 @@ def norm_params(name, samples, worker_num=40, **kwargs):
 
     print("Means", means)
 
-    print("Calculating RSSes...")
+    print("Calculating [{}] RSSes...".format(name))
 
     manager = Manager(name="Get RSSes [{}]".format(name),
                       mapper=analysis.sample_rss,
@@ -108,4 +110,8 @@ def main(name):
     norm_params(name, samples, **kwargs)
 
 if __name__ == "__main__":
-    main("hmdb51")
+    print(sys.argv)
+    for _i in range(1, len(sys.argv)):
+        main(sys.argv[_i])
+    # main("ucf101")
+    # main("sth_sth_v2")
