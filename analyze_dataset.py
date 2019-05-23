@@ -105,7 +105,6 @@ def main(name):
     if hasattr(metaset, "__ANNOTATIONS__"):
         kwargs["annots"] = metaset.__ANNOTATIONS__
 
-    tmpl = None
     if hasattr(metaset, "JPG_FILE_TMPL"):
         kwargs["tmpl"] = metaset.JPG_FILE_TMPL
     

@@ -170,6 +170,64 @@ def collect_samples_20bn(root, annots, lbls, mod, ext,
     return samples
 
 
+def collect_samples_20bn_reverse(root, annots, lbls, mod, ext,
+                         **kwargs):
+    """ Collect samples from a dataset with a 20BN style layout reversely
+    This function will collect samples according to annotations
+    """
+    ## santity check
+    assert isinstance(root, str), TypeError
+    assert os.path.exists(root) and os.path.isdir(root), NotADirectoryError
+    assert isinstance(annots, dict), TypeError
+    assert isinstance(lbls, dict), TypeError
+    assert ext in __SUPPORTED_MODALITIES__[mod], NotImplementedError
+
+    ## parse kwargs
+    if "sample_filter" in kwargs:
+        sample_filter = kwargs["sample_filter"]
+    else:
+        sample_filter = None
+
+    ## initializaion
+    seq = ext in __SUPPORTED_IMAGES__[mod]
+    samples = set()
+
+    ## traverse all official samples
+    _videos = os.listdir(root)
+    for _name in annots:
+        ## bypass invalid labels
+        _label = annots[_name]
+        if _label not in lbls:
+            continue
+        ## get cid
+        _cid = lbls[_label]
+        ## get file path, if doesn't exist, bypass it
+        _rpath = _name if seq else (_name + "." + ext)
+        if _rpath not in _videos:
+            if __config__.__STRICT__:
+                raise Exception("Missing video [{}]".format(_rpath))
+            logger.warning("missing video [{}]".format(_rpath))
+            continue
+        ## get sample
+        _sample = Sample(root=root, rpath=_rpath, name=_name,
+                         mod=mod, ext=ext,
+                         lbl=_label, cid=_cid
+                        )
+        ## filter sample
+        if sample_filter is not None:
+            if sample_filter(_sample):
+                continue
+        ## update sample set
+        samples.add(_sample)
+
+    info_str = "[collect_samples] get {} samples from a 20BN style layout"\
+            .format(len(samples))
+    logger.info(info_str)
+
+    return samples
+
+
+
 def collect_samples(root, layout, lbls, mod, ext,
                     **kwargs):
     """Collect samples according to given conditions
@@ -199,19 +257,24 @@ def collect_samples(root, layout, lbls, mod, ext,
         and (touch_date(cache_file) > touch_date(FILE_PATH))
         and (touch_date(cache_file) > touch_date(root))):
         ## find valid cache
-        logger.warning("[collect_samples] find valid cache")
+        warn_str = "[collect_samples] find valid cache {}".format(cache_file)
+        logger.warning(warn_str)
         with open(cache_file, "rb") as f:
             return pickle.load(f)
 
     ## re-generate samples
     if layout == "UCF101":
-        samples = collect_samples_ucf101(root=root, lbls=lbls, mod=mod, ext=ext,
-                                   **kwargs)
+        samples = collect_samples_ucf101(root=root, lbls=lbls,
+                                         mod=mod, ext=ext,
+                                         **kwargs
+                                        )
     elif layout == "20BN":
         if "annots" not in kwargs:
             raise Exception("20BN style layout must specify annotations")
-        samples = collect_samples_20bn(root=root, lbls=lbls, mod=mod, ext=ext,
-                                    **kwargs)
+        samples = collect_samples_20bn_reverse(root=root, lbls=lbls,
+                                       mod=mod, ext=ext,
+                                       **kwargs
+                                       )
     else:
         raise NotImplementedError
 
@@ -233,12 +296,21 @@ def test():
     kwargs = {
         "root" : metaset.JPG_DATA_PATH,
         "layout" : metaset.__layout__,
-        "annots" : metaset.__ANNOTATIONS__,
         "lbls" : metaset.__LABELS__,
         "mod" : "RGB",
         "ext" : "jpg",
     }
+    
+    if hasattr(metaset, "__ANNOTATIONS__"):
+        kwargs["annots"] = metaset.__ANNOTATIONS__
 
+    if hasattr(metaset, "JPG_FILE_TMPL"):
+        kwargs["tmpl"] = metaset.JPG_FILE_TMPL
+    
+    if hasattr(metaset, "JPG_IDX_OFFSET"):
+        kwargs["offset"] = metaset.JPG_IDX_OFFSET
+    
+    print("Collecting Metadatas")
     import time
     st_time = time.time()
     samples = collect_samples(**kwargs)
