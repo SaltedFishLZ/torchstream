@@ -9,10 +9,10 @@ from torchstream.datasets.utils.mapreduce import Manager
 from torchstream.datasets.metadata.collect import collect_samples
 
 
-def len_hist(name, samples, worker_num=16, **kwargs):
+def len_hist(name, samples, worker_num=40, **kwargs):
     """
     """
-    manager = Manager(name="Get Lenght Hist [{}]".format(name),
+    manager = Manager(name="Get Length Hist [{}]".format(name),
                       mapper=analysis.sample_len,
                       retries=10,
                       **kwargs
@@ -39,11 +39,50 @@ def len_hist(name, samples, worker_num=16, **kwargs):
     plt.show()
 
 
-# def get_norm_params(name, samples, worker_num=16, **kwargs):
-#     """Normalization Parameters
-#     (means, vars)
-#     """
-#     pass
+def norm_params(name, samples, worker_num=40, **kwargs):
+    """Normalization Parameters
+    (means, vars)
+    """
+
+    print("Calculating Means...")
+
+    manager = Manager(name="Get Means [{}]".format(name),
+                      mapper=analysis.sample_sum,
+                      reducer=lambda results: [np.sum(results, axis=0)],
+                      retries=10,
+                      **kwargs
+                      )
+    manager.hire(worker_num=worker_num)
+    print("Assembling Tasks")
+    tasks = []
+    for _sample in samples:
+        tasks.append({"sample": _sample})
+    print("Lanuching Jobs")
+    sums, nums = manager.launch(tasks=tasks, enable_tqdm=True)[0]
+    means = sums / nums
+
+    print("Means", means)
+
+    print("Calculating RSSes...")
+
+    manager = Manager(name="Get RSSes [{}]".format(name),
+                      mapper=analysis.sample_rss,
+                      reducer=lambda results: [np.sum(results, axis=0)],
+                      retries=10,
+                      **kwargs
+                      )
+    manager.hire(worker_num=worker_num)
+    print("Assembling Tasks")
+    tasks = []
+    for _sample in samples:
+        tasks.append({"sample": _sample, "means": means})
+    print("Lanuching Jobs")
+    rsses, nums = manager.launch(tasks=tasks, enable_tqdm=True)[0]
+    vars = np.sqrt(sums / nums)
+
+    print("Vars", vars)
+
+
 
 
 def main(name):
@@ -56,7 +95,7 @@ def main(name):
         "root" : metaset.JPG_DATA_PATH,
         "layout" : metaset.__layout__,
         "lbls" : metaset.__LABELS__,
-        "annots" : metaset.__ANNOTATIONS__,
+        # "annots" : metaset.__ANNOTATIONS__,
         # "tmpl" : "{0:05d}",
         # "offset": 1, 
         "mod" : "RGB",
@@ -66,7 +105,7 @@ def main(name):
     print("Collecting Metadatas")
     samples = collect_samples(**kwargs)
 
-    len_hist(name, samples, **kwargs)
+    norm_params(name, samples, **kwargs)
 
 if __name__ == "__main__":
-    main("sth_sth_v2")
+    main("hmdb51")
