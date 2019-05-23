@@ -8,10 +8,10 @@ __all__ = [
 import os
 import pickle
 import logging
-import hashlib
 
 from . import __config__
 from .sample import Sample, SampleSet
+from ..utils.cache import hashid, hashstr
 from ..utils.filesys import strip_extension, touch_date
 from .__support__ import __SUPPORTED_MODALITIES__, __SUPPORTED_IMAGES__
 from .__support__ import __SUPPORTED_LAYOUTS__
@@ -296,13 +296,7 @@ def collect_samples(root, layout, lbls, mod, ext,
     assert layout in __SUPPORTED_LAYOUTS__, NotImplementedError
     
     ## assemble cache file information
-    hashstr = '_'.join([
-                        str(root), str(layout), str(lbls),
-                        str(mod), str(ext), str(kwargs)
-                       ])
-    hasher = hashlib.md5(hashstr.encode(encoding="utf-8"))
-    hashid = hasher.hexdigest()
-    cache_file = "{}.samples.pkl".format(hashid)
+    cache_file = "{}.samples.pkl".format(hashstr(**locals()))
     cache_file = os.path.join(CACHE_PATH, cache_file)
     
     ## seek valid cache
