@@ -20,10 +20,8 @@ def slice_videos(name, samples, dst_root, ext="jpg",
         dst_sample = src_sample.root_migrated(dst_root)
         dst_sample = dst_sample.extension_migrated(ext=ext)
         tasks.append({"src_sample":src_sample, "dst_sample":dst_sample})
-    lens = manager.launch(tasks=tasks, enable_tqdm=True)
-    print(lens)
-    # result = np.histogram(lens, bins=1)
-    # print(result)
+    successes = manager.launch(tasks=tasks, enable_tqdm=True)
+    print(successes)
 
 
 def main(name):
