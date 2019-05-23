@@ -14,3 +14,9 @@ USER_HOME = os.path.expanduser("~")
 JPG_DATA_PATH = os.path.join(USER_HOME, "Datasets", "Jester", "Jester-v1-jpg")
 RAW_DATA_PATH = os.path.join(USER_HOME, "Datasets", "Jester", "Jester-v1-raw")
 PRC_DATA_PATH = os.path.join(USER_HOME, "Datasets", "Jester", "Jester-v1-prc")
+
+# jpg file name template of the official datasets
+JPG_FILE_TMPL = "{0:05d}"
+
+# jpg frame index offset
+JPG_IDX_OFFSET = 1

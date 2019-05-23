@@ -93,21 +93,30 @@ def main(name):
     metaset = "torchstream.datasets.metadata.metasets.{}".format(name)
     metaset = importlib.import_module(metaset)
 
+
     kwargs = {
         "root" : metaset.JPG_DATA_PATH,
         "layout" : metaset.__layout__,
         "lbls" : metaset.__LABELS__,
-        # "annots" : metaset.__ANNOTATIONS__,
-        # "tmpl" : "{0:05d}",
-        # "offset": 1, 
         "mod" : "RGB",
         "ext" : "jpg",
     }
     
+    if hasattr(metaset, "__ANNOTATIONS__"):
+        kwargs["annots"] = metaset.__ANNOTATIONS__
+
+    tmpl = None
+    if hasattr(metaset, "JPG_FILE_TMPL"):
+        kwargs["tmpl"] = metaset.JPG_FILE_TMPL
+    
+    if hasattr(metaset, "JPG_IDX_OFFSET"):
+        kwargs["offset"] = metaset.JPG_IDX_OFFSET
+    
     print("Collecting Metadatas")
     samples = collect_samples(**kwargs)
 
-    norm_params(name, samples, **kwargs)
+    len_hist(name, samples, **kwargs)
+    # norm_params(name, samples, **kwargs)
 
 if __name__ == "__main__":
     print(sys.argv)
