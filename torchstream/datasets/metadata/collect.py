@@ -6,13 +6,19 @@ __all__ = [
 ]
 
 import os
+import pickle
 import logging
+import hashlib
 
 from . import __config__
 from .sample import Sample, SampleSet
-from ..utils.filesys import strip_extension
+from ..utils.filesys import strip_extension, touch_date
 from .__support__ import __SUPPORTED_MODALITIES__, __SUPPORTED_IMAGES__
 from .__support__ import __SUPPORTED_LAYOUTS__
+
+FILE_PATH = os.path.realpath(__file__)
+DIR_PATH = os.path.dirname(FILE_PATH)
+CACHE_PATH = os.path.join(DIR_PATH, ".collected.d")
 
 # ---------------------------------------------------------------- #
 #                  Configuring Python Logger                       #
@@ -175,16 +181,46 @@ def collect_samples(root, layout, lbls, mod, ext,
     """
     ## sanity check
     assert layout in __SUPPORTED_LAYOUTS__, NotImplementedError
+    
+    ## assemble cache file information
+    hasher = hashlib.md5()
+    hashstr = '_'.join([
+                        str(root), str(layout), str(lbls),
+                        str(mod), str(ext), str(kwargs)
+                       ])
+    hasher.update(hashstr.encode(encoding="utf-8"))
+    hashid = hasher.hexdigest()
+    cache_file = "{}.samples.pkl".format(hashid)
+    cache_file = os.path.join(CACHE_PATH, cache_file)
+    
+    ## seek valid cache
+    if (os.path.exists(cache_file)
+        and (os.path.isfile(cache_file))
+        and (touch_date(cache_file) > touch_date(FILE_PATH))
+        and (touch_date(cache_file) > touch_date(root))):
+        ## find valid cache
+        logger.warning("[collect_samples] find valid cache")
+        with open(cache_file, "rb") as f:
+            return pickle.load(f)
+
+    ## re-generate samples
     if layout == "UCF101":
-        return collect_samples_ucf101(root=root, lbls=lbls, mod=mod, ext=ext,
+        samples = collect_samples_ucf101(root=root, lbls=lbls, mod=mod, ext=ext,
                                    **kwargs)
-    if layout == "20BN":
+    elif layout == "20BN":
         if "annots" not in kwargs:
             raise Exception("20BN style layout must specify annotations")
-        return collect_samples_20bn(root=root, lbls=lbls, mod=mod, ext=ext,
+        samples = collect_samples_20bn(root=root, lbls=lbls, mod=mod, ext=ext,
                                     **kwargs)
-    raise NotImplementedError
+    else:
+        raise NotImplementedError
 
+    ## dump to cache file
+    os.makedirs(CACHE_PATH, exist_ok=True)
+    with open(cache_file, "wb") as f:
+        pickle.dump(samples, f)
+    
+    return samples
 
 
 def test():

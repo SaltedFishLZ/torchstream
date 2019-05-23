@@ -115,12 +115,10 @@ def main(name):
     print("Collecting Metadatas")
     samples = collect_samples(**kwargs)
 
-    len_hist(name, samples, **kwargs)
-    # norm_params(name, samples, **kwargs)
+    # len_hist(name, samples, **kwargs)
+    norm_params(name, samples, **kwargs)
 
 if __name__ == "__main__":
     print(sys.argv)
     for _i in range(1, len(sys.argv)):
         main(sys.argv[_i])
-    # main("ucf101")
-    # main("sth_sth_v2")
