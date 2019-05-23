@@ -178,14 +178,14 @@ class Manager(object):
             task_queue.put(END_FLAG)
 
         info_str = "MANAGER : [{}] waiting for late workers".format(self.name)
-        logger.info(info_str)
+        logger.warning(info_str)
 
         ## waiting for workers to join
         for p in process_list:
             p.join()
 
         info_str = "MANAGER : [{}] aggregating".format(self.name)
-        logger.info(info_str)
+        logger.warning(info_str)
 
         ## aggregate results from workers
         results = []
