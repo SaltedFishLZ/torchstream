@@ -300,17 +300,18 @@ def collect_samples(root, layout, lbls, mod, ext,
     cache_file = os.path.join(CACHE_PATH, cache_file)
     
     ## seek valid cache
-    if os.path.exists(cache_file) and os.path.isfile(cache_file):
-        logger.debug("cache file exists")
-        if touch_date(cache_file) > touch_date(FILE_PATH):
-            logger.debug("cache newer than code")
-            if touch_date(cache_file) > touch_date(root):                
-                ## find valid cache
-                warn_str = "[collect_samples] find valid cache {}".\
-                    format(cache_file)
-                logger.warning(warn_str)
-                with open(cache_file, "rb") as f:
-                    return pickle.load(f)
+    if (
+        os.path.exists(cache_file)
+        and os.path.isfile(cache_file)
+        and touch_date(cache_file) > touch_date(FILE_PATH)
+        and touch_date(cache_file) > touch_date(root)
+    ):              
+        ## find valid cache
+        warn_str = "[collect_samples] find valid cache {}".\
+            format(cache_file)
+        logger.warning(warn_str)
+        with open(cache_file, "rb") as f:
+            return pickle.load(f)
 
     ## re-generate samples
     if layout == "UCF101":
