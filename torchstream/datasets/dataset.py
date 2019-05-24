@@ -170,7 +170,7 @@ def test(dataset, use_tqdm=True):
             if test_components["torchloader"]:
                 print("Testing torch dataloader")
                 train_loader = torchdata.DataLoader(
-                        testset, batch_size=2, shuffle=True,
+                        testset, batch_size=1, shuffle=True,
                         num_workers=1, pin_memory=True,
                         drop_last=True)  # prevent something not % n_GPU
                 for _i, (inputs, targets) in enumerate(train_loader):
