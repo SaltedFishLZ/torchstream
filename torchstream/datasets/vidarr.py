@@ -4,34 +4,26 @@ __all__ = ["VideoArray"]
 
 import numpy as np
 
-from .utils.vision import video2ndarray
-from .metadata.sample import Sample
+from torchstream.datasets.utils.vision import video2ndarray
+from torchstream.datasets.metadata.sample import Sample
 
 class VideoArray(object):
     """
     A wrapper varray, supporting type-casting from Sample.
     """
-    def __init__(self, x, lazy=True, **kwargs):
+    def __init__(self, x, **kwargs):
+        """PyCharm will get wrong type checking
         """
-        """
+        self.kwargs = kwargs
+        # print(id(x.__class__), id(Sample))
         if isinstance(x, Sample):
-            ## parse args
-            self.kwargs = dict()
-            if "cin" in kwargs:
-                self.kwargs["cin"] = kwargs["cin"]
-            if "cout" in kwargs:
-                self.kwargs["cout"] = kwargs["cout"]
-            
-            ## for the safety of your memory, we set "lazy" as 
-            #  the default mode
-            self.lazy = lazy
-
             assert not x.seq, NotImplementedError
+            ## for the safety of your memory, we set "lazy" as
+            #  the default mode
+            self.lazy = kwargs.get("lazy", True)
             self.path = x.path
-            if self.lazy:
-                self._array = None
-            else:
-                self._array = video2ndarray(x.path, **self.kwargs)
+            self._array = None if self.lazy \
+                else video2ndarray(x.path, **kwargs)
         else:
             self.lazy = False
             self.path = None
@@ -73,7 +65,7 @@ def test():
         "mod" : "RGB",
         "ext" : "avi",
     }
-    
+
     from .metadata.collect import collect_samples
     samples = collect_samples(**kwargs)
 
@@ -81,6 +73,6 @@ def test():
         vid_arr = VideoArray(_sample, lazy=False)
         print(vid_arr)
     # print(np.array(vid_arr))
-    
+
 if __name__ == "__main__":
     test()

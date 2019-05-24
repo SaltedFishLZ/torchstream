@@ -41,6 +41,10 @@ else:
 #  More details.
 class VideoDataset(torchdata.Dataset):
     """dataset class for video recognition
+    Args
+        optional
+        filter: Sample filter
+
     """
 
     def __init__(self, root, layout, lbls, 
@@ -75,12 +79,11 @@ class VideoDataset(torchdata.Dataset):
         self.samples = _samplelist
 
         self.iohandles = []
-        for _sample in tqdm.tqdm(self.samples):
+        for _sample in self.samples:
             if _sample.seq:
-                self.iohandles.append(ImageSequence(_sample, **self.kwargs))
+                self.iohandles.append(ImageSequence(_sample, **kwargs))
             else:
-                self.iohandles.append(VideoArray(_sample, **self.kwargs))
-
+                self.iohandles.append(VideoArray(x=_sample, **kwargs))
 
     def __len__(self):
         return len(self.samples)
@@ -98,52 +101,84 @@ class VideoDataset(torchdata.Dataset):
         # ndarray may need to be converted to [T][C][H][W] format in PyTorch
         return (_blob, _cid)
 
+class ClippedVideoDataset(VideoDataset):
+    pass
 
-def test():
+
+
+
+def test(dataset, use_tqdm=True):
 
     test_components = {
         "basic" : True,
         "__len__" : True,
         "__getitem__" : True,
-        "torchloader" : False
+        "torchloader" : True
     }
     
-    test_configuration = {
-        "datasets"   : ["hmdb51", ]
-    }
+    print("Dataset - [{}]".format(dataset))
+    if (test_components["basic"]):
+        metaset = importlib.import_module(
+            "torchstream.datasets.metadata.metasets.{}".format(dataset))
 
-    for dataset in (test_configuration["datasets"]):
-        print("Dataset - [{}]".format(dataset))
-        if (test_components["basic"]):
+        kwargs = {
+            "root": metaset.JPG_DATA_PATH,
+            "layout": metaset.__layout__,
+            "lbls": metaset.__LABELS__,
+            "mod": "RGB",
+            "ext": "jpg",
+        }
 
-            metaset = importlib.import_module(
-                "datasets.metadata.metasets.{}".format(dataset))
-            
-            allset = VideoDataset(root=metaset.AVI_DATA_PATH,
-                                  layout=metaset.__layout__,
-                                  lbls=metaset.__LABELS__,
-                                  mod="RGB",
-                                  ext="avi"
-                                 )
-            
+        if hasattr(metaset, "AVI_DATA_PATH"):
+            kwargs["root"] = metaset.AVI_DATA_PATH
+            kwargs["ext"] = "avi"
 
-            if (test_components["__len__"]):
-                print("All samples number:")
-                print(allset.__len__())                                        
+        if hasattr(metaset, "__ANNOTATIONS__"):
+            kwargs["annots"] = metaset.__ANNOTATIONS__
 
-                if (test_components["__getitem__"]):
-                    # train_loader = torchdata.DataLoader(
-                    #         allset, batch_size=1, shuffle=True, 
-                    #         num_workers=1, pin_memory=True,
-                    #         drop_last=True)  # prevent something not % n_GPU
-                    # for _i, (inputs, targets) in enumerate(train_loader):
-                    #     print(_i, inputs, targets)
-                    for _i in tqdm.tqdm(range(allset.__len__())):
-                        allset.__getitem__(_i)
+        if hasattr(metaset, "JPG_FILE_TMPL"):
+            kwargs["tmpl"] = metaset.JPG_FILE_TMPL
 
+        if hasattr(metaset, "JPG_IDX_OFFSET"):
+            kwargs["offset"] = metaset.JPG_IDX_OFFSET
+
+        # allset = VideoDataset(root=metaset.AVI_DATA_PATH,
+        #                       layout=metaset.__layout__,
+        #                       lbls=metaset.__LABELS__,
+        #                       mod="RGB",
+        #                       ext="avi"
+        #                      )
+        testset = VideoDataset(
+                              filter=metaset.TestsetFilter(),
+                              **kwargs
+                             )
+
+        if test_components["__len__"]:
+            # print("All samples number:")
+            # print(allset.__len__())
+            print("Testing samples number:")
+            print(testset.__len__())
+
+            if test_components["__getitem__"]:
+
+                irange = range(testset.__len__())
+                if use_tqdm:
+                    irange = tqdm.tqdm(irange)
+                for _i in irange:
+                    testset.__getitem__(_i)
+
+            if test_components["torchloader"]:
+                print("Testing torch dataloader")
+                train_loader = torchdata.DataLoader(
+                        testset, batch_size=2, shuffle=True,
+                        num_workers=1, pin_memory=True,
+                        drop_last=True)  # prevent something not % n_GPU
+                for _i, (inputs, targets) in enumerate(train_loader):
+                    print(_i, inputs, targets)
                 
 
 
 if __name__ == "__main__":
-
-    test()
+    print(sys.argv)
+    for _i in range(1, len(sys.argv)):
+        test(sys.argv[_i])

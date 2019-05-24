@@ -10,7 +10,7 @@ import pickle
 import logging
 
 from . import __config__
-from .sample import Sample, SampleSet
+from torchstream.datasets.metadata.sample import Sample, SampleSet
 from ..utils.cache import hashid, hashstr
 from ..utils.filesys import strip_extension, touch_date
 from .__support__ import __SUPPORTED_MODALITIES__, __SUPPORTED_IMAGES__
@@ -96,7 +96,7 @@ def collect_samples_ucf101(root, lbls, mod, ext,
                             )
             ## filter sample
             if filter is not None:
-                if filter(_sample):
+                if not filter(_sample):
                     continue
             ## update sample set
             samples.add(_sample)
@@ -150,7 +150,7 @@ def collect_samples_ucf101_reverse(root, annots, lbls, mod, ext,
                             )
             ## filter sample
             if filter is not None:
-                if filter(_sample):
+                if not filter(_sample):
                     continue
             ## update sample set
             samples.add(_sample)
@@ -212,7 +212,7 @@ def collect_samples_20bn(root, annots, lbls, mod, ext,
                          lbl=_label, cid=_cid)
         ## filter sample
         if filter is not None:
-            if filter(_sample):
+            if not filter(_sample):
                 continue
         ## update sample set
         samples.add(_sample)
@@ -270,7 +270,7 @@ def collect_samples_20bn_reverse(root, annots, lbls, mod, ext,
                         )
         ## filter sample
         if filter is not None:
-            if filter(_sample):
+            if not filter(_sample):
                 continue
         ## update sample set
         samples.add(_sample)
