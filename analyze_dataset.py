@@ -150,13 +150,17 @@ def main(name):
 
 
     kwargs = {
-        "root" : metaset.AVI_DATA_PATH,
+        "root" : metaset.JPG_DATA_PATH,
         "layout" : metaset.__layout__,
         "lbls" : metaset.__LABELS__,
         "mod" : "RGB",
-        "ext" : "avi",
+        "ext" : "jpg",
     }
     
+    if hasattr(metaset, "AVI_DATA_PATH"):
+        kwargs["root"] = metaset.AVI_DATA_PATH    
+        kwargs["ext"] = "avi"
+
     if hasattr(metaset, "__ANNOTATIONS__"):
         kwargs["annots"] = metaset.__ANNOTATIONS__
 
@@ -169,8 +173,8 @@ def main(name):
     print("Collecting Metadatas")
     samples = collect_samples(**kwargs)
 
-    fps_hist(name, samples, **kwargs)
-    # norm_params(name, samples, **kwargs)
+    # fps_hist(name, samples, **kwargs)
+    norm_params(name, samples, **kwargs)
 
 if __name__ == "__main__":
     print(sys.argv)
