@@ -4,7 +4,7 @@ Dataset Path
 __all__ = [
     "WEBM_DATA_PATH", "AVI_DATA_PATH",
     "JPG_DATA_PATH",
-    "RAW_DATA_PATH", "PRC_DATA_PATH"
+    "RAW_DATA_PATH", "PRC_DATA_PATH",
 ]
 
 import os

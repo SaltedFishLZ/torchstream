@@ -6,13 +6,19 @@ __all__ = [
 ]
 
 import os
+import pickle
 import logging
 
 from . import __config__
-from .sample import Sample, SampleSet
-from ..utils.filesys import strip_extension
+from torchstream.datasets.metadata.sample import Sample, SampleSet
+from ..utils.cache import hashid, hashstr
+from ..utils.filesys import strip_extension, touch_date
 from .__support__ import __SUPPORTED_MODALITIES__, __SUPPORTED_IMAGES__
 from .__support__ import __SUPPORTED_LAYOUTS__
+
+FILE_PATH = os.path.realpath(__file__)
+DIR_PATH = os.path.dirname(FILE_PATH)
+CACHE_PATH = os.path.join(DIR_PATH, ".collected.d")
 
 # ---------------------------------------------------------------- #
 #                  Configuring Python Logger                       #
@@ -46,10 +52,10 @@ def collect_samples_ucf101(root, lbls, mod, ext,
     assert ext in __SUPPORTED_MODALITIES__[mod], NotImplementedError
 
     ## parse kwargs
-    if "sample_filter" in kwargs:
-        sample_filter = kwargs["sample_filter"]
+    if "filter" in kwargs:
+        filter = kwargs["filter"]
     else:
-        sample_filter = None
+        filter = None
 
     ## initializaion
     seq = ext in __SUPPORTED_IMAGES__[mod]
@@ -89,8 +95,62 @@ def collect_samples_ucf101(root, lbls, mod, ext,
                              lbl=_label, cid=_cid
                             )
             ## filter sample
-            if sample_filter is not None:
-                if sample_filter(_sample):
+            if filter is not None:
+                if not filter(_sample):
+                    continue
+            ## update sample set
+            samples.add(_sample)
+
+    info_str = "[collect_samples] get {} samples from a UCF style layout"\
+            .format(len(samples))
+    logger.info(info_str)
+
+    return samples
+
+
+def collect_samples_ucf101_reverse(root, annots, lbls, mod, ext,
+                        **kwargs):
+    """ Collect samples from a dataset with a 20BN style layout reversely
+    """
+    ## sanity check
+    assert isinstance(root, str), TypeError
+    assert os.path.exists(root) and os.path.isdir(root), NotADirectoryError
+    assert isinstance(lbls, dict), TypeError
+    assert ext in __SUPPORTED_MODALITIES__[mod], NotImplementedError
+
+    ## parse kwargs
+    if "filter" in kwargs:
+        filter = kwargs["filter"]
+    else:
+        filter = None
+
+    ## initializaion
+    seq = ext in __SUPPORTED_IMAGES__[mod]
+    samples = set()
+
+    ## traverse all categories/classes/labels
+    for _label in lbls:
+        _cid = lbls[_label]
+        ## travese all video files/image sequences
+        for _name in annots:
+            ## assemble paths
+            _video = _name if seq else "{}.{}".format(_name, ext)
+            _rpath = os.path.join(_label, _video)
+            _path = os.path.join(root, _rpath)
+            ## check existence
+            if not os.path.exists(_path):
+                if __config__.__STRICT__:
+                    raise Exception("Missing video [{}]".format(_rpath))
+                logger.warning("missing video [{}]".format(_rpath))
+                continue
+            ## generate Sample object
+            _sample = Sample(root=root, rpath=_rpath, name=_name,
+                             mod=mod, ext=ext,
+                             lbl=_label, cid=_cid
+                            )
+            ## filter sample
+            if filter is not None:
+                if not filter(_sample):
                     continue
             ## update sample set
             samples.add(_sample)
@@ -115,10 +175,10 @@ def collect_samples_20bn(root, annots, lbls, mod, ext,
     assert ext in __SUPPORTED_MODALITIES__[mod], NotImplementedError
 
     ## parse kwargs
-    if "sample_filter" in kwargs:
-        sample_filter = kwargs["sample_filter"]
+    if "filter" in kwargs:
+        filter = kwargs["filter"]
     else:
-        sample_filter = None
+        filter = None
 
     ## initializaion
     seq = ext in __SUPPORTED_IMAGES__[mod]
@@ -151,8 +211,8 @@ def collect_samples_20bn(root, annots, lbls, mod, ext,
                          mod=mod, ext=ext,
                          lbl=_label, cid=_cid)
         ## filter sample
-        if sample_filter is not None:
-            if sample_filter(_sample):
+        if filter is not None:
+            if not filter(_sample):
                 continue
         ## update sample set
         samples.add(_sample)
@@ -162,6 +222,65 @@ def collect_samples_20bn(root, annots, lbls, mod, ext,
     logger.info(info_str)
 
     return samples
+
+
+def collect_samples_20bn_reverse(root, annots, lbls, mod, ext,
+                         **kwargs):
+    """ Collect samples from a dataset with a 20BN style layout reversely
+    This function will collect samples according to annotations
+    """
+    ## santity check
+    assert isinstance(root, str), TypeError
+    assert os.path.exists(root) and os.path.isdir(root), NotADirectoryError
+    assert isinstance(annots, dict), TypeError
+    assert isinstance(lbls, dict), TypeError
+    assert ext in __SUPPORTED_MODALITIES__[mod], NotImplementedError
+
+    ## parse kwargs
+    if "filter" in kwargs:
+        filter = kwargs["filter"]
+    else:
+        filter = None
+
+    ## initializaion
+    seq = ext in __SUPPORTED_IMAGES__[mod]
+    samples = set()
+
+    ## traverse all official samples
+    for _name in annots:
+        ## bypass invalid labels
+        _label = annots[_name]
+        if _label not in lbls:
+            continue
+        ## get cid
+        _cid = lbls[_label]
+        ## check existence
+        _rpath = _name if seq else (_name + "." + ext)
+        _path = os.path.join(root, _rpath)
+        # if not os.path.exists(_path):
+        #     if __config__.__STRICT__:
+        #         raise Exception("Missing video [{}]".format(_rpath))
+        #     logger.warning("missing video [{}]".format(_rpath))
+        #     continue
+        
+        ## get sample
+        _sample = Sample(root=root, rpath=_rpath, name=_name,
+                         mod=mod, ext=ext,
+                         lbl=_label, cid=_cid
+                        )
+        ## filter sample
+        if filter is not None:
+            if not filter(_sample):
+                continue
+        ## update sample set
+        samples.add(_sample)
+
+    info_str = "[collect_samples] get {} samples from a 20BN style layout"\
+            .format(len(samples))
+    logger.info(info_str)
+
+    return samples
+
 
 
 def collect_samples(root, layout, lbls, mod, ext,
@@ -175,34 +294,73 @@ def collect_samples(root, layout, lbls, mod, ext,
     """
     ## sanity check
     assert layout in __SUPPORTED_LAYOUTS__, NotImplementedError
+    
+    ## assemble cache file information
+    cache_file = "{}.samples.pkl".format(hashstr(**locals()))
+    cache_file = os.path.join(CACHE_PATH, cache_file)
+    
+    ## seek valid cache
+    if (
+        os.path.exists(cache_file)
+        and os.path.isfile(cache_file)
+        and touch_date(cache_file) > touch_date(FILE_PATH)
+        and touch_date(cache_file) > touch_date(root)
+    ):              
+        ## find valid cache
+        warn_str = "[collect_samples] find valid cache {}".\
+            format(cache_file)
+        logger.warning(warn_str)
+        with open(cache_file, "rb") as f:
+            return pickle.load(f)
+
+    ## re-generate samples
     if layout == "UCF101":
-        return collect_samples_ucf101(root=root, lbls=lbls, mod=mod, ext=ext,
-                                   **kwargs)
-    if layout == "20BN":
+        samples = collect_samples_ucf101(root=root, lbls=lbls,
+                                         mod=mod, ext=ext,
+                                         **kwargs
+                                        )
+    elif layout == "20BN":
         if "annots" not in kwargs:
             raise Exception("20BN style layout must specify annotations")
-        return collect_samples_20bn(root=root, lbls=lbls, mod=mod, ext=ext,
-                                    **kwargs)
-    raise NotImplementedError
+        samples = collect_samples_20bn_reverse(root=root, lbls=lbls,
+                                       mod=mod, ext=ext,
+                                       **kwargs
+                                       )
+    else:
+        raise NotImplementedError
+
+    ## dump to cache file
+    os.makedirs(CACHE_PATH, exist_ok=True)
+    with open(cache_file, "wb") as f:
+        pickle.dump(samples, f)
+    
+    return samples
 
 
-
-def test():
+def test(dataset):
     import importlib
 
-    dataset = "jester_v1"
     metaset = importlib.import_module(
         "datasets.metadata.metasets.{}".format(dataset))
 
     kwargs = {
         "root" : metaset.JPG_DATA_PATH,
         "layout" : metaset.__layout__,
-        "annots" : metaset.__ANNOTATIONS__,
         "lbls" : metaset.__LABELS__,
         "mod" : "RGB",
         "ext" : "jpg",
     }
+    
+    if hasattr(metaset, "__ANNOTATIONS__"):
+        kwargs["annots"] = metaset.__ANNOTATIONS__
 
+    if hasattr(metaset, "JPG_FILE_TMPL"):
+        kwargs["tmpl"] = metaset.JPG_FILE_TMPL
+    
+    if hasattr(metaset, "JPG_IDX_OFFSET"):
+        kwargs["offset"] = metaset.JPG_IDX_OFFSET
+    
+    print("Collecting Metadata")
     import time
     st_time = time.time()
     samples = collect_samples(**kwargs)
@@ -212,8 +370,9 @@ def test():
     sample_set = SampleSet(samples)
     x = set(sample_set)
 
-    print(sorted(x))
     print(sorted(sample_set.get_samples()) == sorted(samples))
 
 if __name__ == "__main__":
-    test()
+    import sys
+    for _i in range(1, len(sys.argv)):
+        test(sys.argv[_i])

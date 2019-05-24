@@ -59,8 +59,9 @@ class Worker(object):
         self._kwargs = copy.deepcopy(kwargs)
         self._results = []
 
-        self._filename = "mapreduce.worker{}.{}.tmp.pkl".format(
-            hash((self._wid, self._mapper, self._reducer)),
+        self._filename = "mapreduce.worker{}.{}.{}.tmp.pkl".format(
+            self._wid,
+            hash((self._wid, str(self._mapper), str(self._reducer))),
             int(time.time())
             )
 
@@ -104,6 +105,8 @@ class Worker(object):
         """
         Get a copy of this worker's results
         """
+        if not os.path.exists(self._filename):
+            return None
         f = open(self._filename, "rb")
         _result = pickle.load(f)
         f.close()
@@ -178,14 +181,14 @@ class Manager(object):
             task_queue.put(END_FLAG)
 
         info_str = "MANAGER : [{}] waiting for late workers".format(self.name)
-        logger.info(info_str)
+        logger.warning(info_str)
 
         ## waiting for workers to join
         for p in process_list:
             p.join()
 
         info_str = "MANAGER : [{}] aggregating".format(self.name)
-        logger.info(info_str)
+        logger.warning(info_str)
 
         ## aggregate results from workers
         results = []

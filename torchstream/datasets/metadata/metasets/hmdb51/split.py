@@ -10,7 +10,7 @@ import os
 from . import __config__
 from .label import __LABELS__
 from .__support__ import __SUPPORTED_SPLIT_OPTS__
-from ...sample import Sample
+from torchstream.datasets.metadata.sample import Sample
 
 FILE_PATH = os.path.realpath(__file__)
 DIR_PATH = os.path.dirname(FILE_PATH)
