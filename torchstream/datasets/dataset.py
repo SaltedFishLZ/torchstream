@@ -74,7 +74,10 @@ class VideoDataset(torchdata.Dataset):
                                 mod=mod, ext=ext,
                                 **kwargs
                                )
+
+        logger.critical("Turning set to list...")
         _samplelist = list(_sampleset)
+        logger.critical("Sorting list...")
         _samplelist.sort()
         self.samples = _samplelist
 
@@ -116,6 +119,7 @@ def test(dataset, use_tqdm=True):
         "torchloader" : True
     }
     
+
     print("Dataset - [{}]".format(dataset))
     if (test_components["basic"]):
         metaset = importlib.import_module(
@@ -175,8 +179,6 @@ def test(dataset, use_tqdm=True):
                         drop_last=True)  # prevent something not % n_GPU
                 for _i, (inputs, targets) in enumerate(train_loader):
                     print(_i, inputs, targets)
-                
-
 
 if __name__ == "__main__":
     print(sys.argv)
