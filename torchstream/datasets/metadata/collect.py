@@ -257,11 +257,11 @@ def collect_samples_20bn_reverse(root, annots, lbls, mod, ext,
         ## check existence
         _rpath = _name if seq else (_name + "." + ext)
         _path = os.path.join(root, _rpath)
-        if not os.path.exists(_path):
-            if __config__.__STRICT__:
-                raise Exception("Missing video [{}]".format(_rpath))
-            logger.warning("missing video [{}]".format(_rpath))
-            continue
+        # if not os.path.exists(_path):
+        #     if __config__.__STRICT__:
+        #         raise Exception("Missing video [{}]".format(_rpath))
+        #     logger.warning("missing video [{}]".format(_rpath))
+        #     continue
         
         ## get sample
         _sample = Sample(root=root, rpath=_rpath, name=_name,
