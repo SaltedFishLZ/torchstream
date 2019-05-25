@@ -1,6 +1,6 @@
 import torch
 
-from .typing import _is_vtensor
+from .blob import _is_vtensor
 
 def normalize(tensor, mean, std, inplace=False):
     """Normalize a tensor video with mean and standard deviation.

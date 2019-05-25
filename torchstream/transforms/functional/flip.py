@@ -1,7 +1,7 @@
 """
 """
 import numpy as np
-from .typing import _is_varray
+from .blob import _is_varray
 
 def hflip(varray):
     """Horizontally flip the given varray.

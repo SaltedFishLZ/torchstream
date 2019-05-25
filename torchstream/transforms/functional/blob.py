@@ -1,13 +1,23 @@
-"""Tensor Transformation
+"""Blob Transformation
 Default np.ndarray layout [T][H][W][C]
 Default Tensor data layout [C][T][H][W]
 """
-__all__ = ["to_tensor"]
+__all__ = ["to_tensor", "to_varray"]
 
 import torch
 import numpy as np
 
-from .typing import _is_varray
+def _is_vtensor(x):
+    return(
+        torch.is_tensor(x)
+        and (x.ndimension() == 3)
+    )
+
+def _is_varray(x):
+    return(
+        isinstance(x, np.ndarray)
+        and (x.ndim == 4)
+    )
 
 def to_tensor(varray):
     """Convert a ``varray`` to tensor.
@@ -27,3 +37,18 @@ def to_tensor(varray):
         return vtensor.float().div(255)
     else:
         return vtensor
+
+def to_varray(vid):
+    """Convert tensor to ``varray``
+    """
+    if not _is_vtensor(vid):
+        raise TypeError
+    
+    if isinstance(vid, torch.FloatTensor):
+        vid = vid.mul(255).byte()
+
+    ## CTHW -> THWC
+    if isinstance(vid, torch.Tensor):
+        varray = np.transpose(vid.numpy(), (1, 2, 3, 0))
+    
+    return varray
