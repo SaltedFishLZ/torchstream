@@ -24,7 +24,7 @@ def center_crop(vid, output_size):
     """
     if isinstance(output_size, numbers.Number):
         output_size = (int(output_size), int(output_size))
-    w, h = vid.shape[1:3]
+    h, w = vid.shape[1:3]
     th, tw = output_size
     i = int(round((h - th) / 2.))
     j = int(round((w - tw) / 2.))

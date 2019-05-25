@@ -197,10 +197,7 @@ class CenterClip(object):
     """
     """
     def __init__(self, size):
-        if isinstance(size, numbers.Number):
-            self.size = (int(size), int(size))
-        else:
-            self.size = size
+        self.size = size
     
     def __call__(self, vid):
         return F.center_clip(vid, self.size)        
