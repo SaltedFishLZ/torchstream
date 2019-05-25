@@ -7,6 +7,10 @@ __all__ = ["to_tensor", "to_varray"]
 import torch
 import numpy as np
 
+SHAPE_THWC = 0
+SHAPE_TCHW = 1
+SHAPE_CTHW = 2
+
 def _is_vtensor(x):
     return(
         torch.is_tensor(x)
@@ -19,7 +23,7 @@ def _is_varray(x):
         and (x.ndim == 4)
     )
 
-def to_tensor(varray):
+def to_tensor(varray, shape_out=SHAPE_CTHW):
     """Convert a ``varray`` to tensor.
     See ``ToTensor`` for more details.
     Args:
@@ -31,14 +35,21 @@ def to_tensor(varray):
         raise TypeError('varray should be ndarray. Got {}'.format(varray))
 
     # handle numpy array
-    vtensor = torch.from_numpy(varray.transpose((3, 0, 1, 2)))
+    if shape_out == SHAPE_CTHW:
+        varray = np.transpose(varray, (3, 0, 1, 2))
+    elif shape_out == SHAPE_TCHW:
+        varray = np.transpose(varray, (0, 3, 1, 2))
+    else:
+        raise NotImplementedError
+
+    vtensor = torch.from_numpy(varray)
     # backward compatibility
     if isinstance(vtensor, torch.ByteTensor):
         return vtensor.float().div(255)
     else:
         return vtensor
 
-def to_varray(vid):
+def to_varray(vid, shape_out=SHAPE_THWC):
     """Convert tensor to ``varray``
     """
     if not _is_vtensor(vid):
@@ -47,8 +58,12 @@ def to_varray(vid):
     if isinstance(vid, torch.FloatTensor):
         vid = vid.mul(255).byte()
 
-    ## CTHW -> THWC
     if isinstance(vid, torch.Tensor):
-        varray = np.transpose(vid.numpy(), (1, 2, 3, 0))
+        varray = vid.numpy()
+        ## CTHW -> THWC
+        if shape_out == SHAPE_TCHW:
+            varray = np.transpose(varray, (1, 2, 3, 0))
+        else:
+            raise NotImplementedError
     
     return varray
