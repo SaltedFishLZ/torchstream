@@ -50,11 +50,11 @@ def main(name):
     metaset = importlib.import_module(metaset)
 
     kwargs = {
-        "root" : metaset.WEBM_DATA_PATH,
+        "root" : metaset.AVI_DATA_PATH,
         "layout" : metaset.__layout__,
         "lbls" : metaset.__LABELS__,
         "mod" : "RGB",
-        "ext" : "webm",
+        "ext" : "avi",
     }
 
     if hasattr(metaset, "__ANNOTATIONS__"):
@@ -68,7 +68,8 @@ def main(name):
 
     samples = collect_samples(**kwargs)
 
-    transform_videos(name, samples, dst_root=metaset.AVI_DATA_PATH)
+    # transform_videos(name, samples, dst_root=metaset.AVI_DATA_PATH)
+    slice_videos(name, samples, dst_root=metaset.JPG_DATA_PATH)
 
 if __name__ == "__main__":
     import  sys

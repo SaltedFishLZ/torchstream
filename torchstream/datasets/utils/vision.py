@@ -100,12 +100,12 @@ def failure_suspection(**kwargs):
 
 
 def convert_farray_color(farray, cin, cout, **kwargs):
-    '''
+    """
     - farray : input frame as a Numpy ndarray
     - cin : input frame's color space
     - cout : output frame's color space
     - return value : output frame as a Numpy ndarray   
-    '''
+    """
     if (cin == cout):
         return(farray)
     if (cin, cout) == ("BGR", "GRAY"):
@@ -142,13 +142,13 @@ def farray_show(caption, farray, cin="RGB", **kwargs):
 # ------------------------------------------------------------------------- #
 
 def video2ndarray(video, cin="BGR", cout="RGB", **kwargs):
-    '''
+    """
     Read video from given file path ${video} and return the video array.
     - video : input video file path
     - cin : input video's color space
     - cout : output ndarray's color space
     - return value : a Numpy ndarray for the video
-    '''
+    """
     # Check santity
     # TODO: currenly only support input BGR video
     assert "BGR" == cin, NotImplementedError("Only supported BGR video")
@@ -372,6 +372,8 @@ def frame2ndarray(frame, cin="BGR", cout="RGB"):
     # TODO
     # read image
     farray = cv2.imread(frame)
+    assert farray is not None, "cv2.imread {} failed".format(frame)
+    ## convert color
     farray = convert_farray_color(farray, cin, cout)
     
     # output status
@@ -386,13 +388,13 @@ def frame2ndarray(frame, cin="BGR", cout="RGB"):
 
 
 def frames2ndarray(frames, cin="BGR", cout="RGB", **kwargs):
-    '''
+    """
     Read all frames, take them as a continuous video, and get a varray
     - frames : input frames' file paths
     - cin : input video's color space
     - cout : output ndarray's color space  
     - return value : the corresponding varray of all the frames
-    '''
+    """
     # get video shape & check santity
     _f = len(frames)
     if __config__.__STRICT__:

@@ -341,7 +341,7 @@ def test(dataset):
     import importlib
 
     metaset = importlib.import_module(
-        "datasets.metadata.metasets.{}".format(dataset))
+        "torchstream.datasets.metadata.metasets.{}".format(dataset))
 
     kwargs = {
         "root" : metaset.JPG_DATA_PATH,
@@ -368,8 +368,9 @@ def test(dataset):
     print("collecting time", ed_time - st_time)
 
     sample_set = SampleSet(samples)
+    print(sample_set)
+    
     x = set(sample_set)
-
     print(sorted(sample_set.get_samples()) == sorted(samples))
 
 if __name__ == "__main__":

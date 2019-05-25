@@ -46,25 +46,21 @@ class VideoDataset(torchdata.Dataset):
         filter: Sample filter
 
     """
-
-    def __init__(self, root, layout, lbls, 
-                 mod, ext,
+    def __init__(self, root, layout, lbls, mod, ext,
+                 transform=None, target_transform=None,
                  **kwargs
                 ):
         """
         Args:
-            configs: a list of dict 
-            {
-                "root": <root path>,
-                "mod": <modality>,
-                "ext": <file extension>
-            }
+
         """
-        self.root = root        
+        self.root = root
         self.layout = layout
         self.lbls = lbls
         self.mod = mod
         self.ext = ext
+        self.transform = transform
+        self.target_transform = target_transform
         self.kwargs = kwargs
 
         
@@ -81,12 +77,18 @@ class VideoDataset(torchdata.Dataset):
         _samplelist.sort()
         self.samples = _samplelist
 
-        self.iohandles = []
-        for _sample in self.samples:
+        self.iohandles = self.generate_iohandles(self.samples, **kwargs)
+
+    @staticmethod
+    def generate_iohandles(samples, **kwargs):
+        print("It is VideoDataset's method")
+        iohandles = []
+        for _sample in samples:
             if _sample.seq:
-                self.iohandles.append(ImageSequence(_sample, **kwargs))
+                iohandles.append(ImageSequence(_sample, **kwargs))
             else:
-                self.iohandles.append(VideoArray(x=_sample, **kwargs))
+                iohandles.append(VideoArray(x=_sample, **kwargs))
+        return iohandles
 
     def __len__(self):
         return len(self.samples)
@@ -100,12 +102,58 @@ class VideoDataset(torchdata.Dataset):
         _blob = np.array(_iohanlde)
         _sample = self.samples[idx]
         _cid = self.lbls[_sample.lbl]
+        if self.transform is not None:
+            _blob = self.transform(_blob)
+        if self.target_transform is not None:
+            _cid = self.target_transform(_cid)
         # return (a [T][H][W][C] ndarray, class id)
         # ndarray may need to be converted to [T][C][H][W] format in PyTorch
         return (_blob, _cid)
 
 class ClippedVideoDataset(VideoDataset):
-    pass
+    """
+    """
+    def __init__(self, root, layout, lbls, mod, ext,
+                 transform=None, target_transform=None,
+                 **kwargs
+                ):
+        assert ext == "jpg", TypeError
+        super(ClippedVideoDataset, self).__init__(
+            root, layout, lbls, mod, ext,
+            transform=transform, target_transform=None,
+            **kwargs
+        )
+
+    @staticmethod
+    def generate_iohandles(samples, **kwargs):
+        print("It is Clipped's method")
+        iohandles = []
+        for _sample in samples:
+            iohandles.append(ClippedImageSequence(_sample, **kwargs))
+        return iohandles
+
+
+class SegmentedVideoDataset(VideoDataset):
+    """
+    """
+    def __init__(self, root, layout, lbls, mod, ext,
+                 transform=None, target_transform=None,
+                 **kwargs
+                ):
+        assert ext == "jpg", TypeError
+        super(SegmentedVideoDataset, self).__init__(
+            root, layout, lbls, mod, ext,
+            transform=transform, target_transform=None,
+            **kwargs
+        )
+
+    @staticmethod
+    def generate_iohandles(samples, **kwargs):
+        print("It is Segmented's method")
+        iohandles = []
+        for _sample in samples:
+            iohandles.append(SegmentedImageSequence(_sample, **kwargs))
+        return iohandles
 
 
 
@@ -133,9 +181,9 @@ def test(dataset, use_tqdm=True):
             "ext": "jpg",
         }
 
-        if hasattr(metaset, "AVI_DATA_PATH"):
-            kwargs["root"] = metaset.AVI_DATA_PATH
-            kwargs["ext"] = "avi"
+        # if hasattr(metaset, "AVI_DATA_PATH"):
+        #     kwargs["root"] = metaset.AVI_DATA_PATH
+        #     kwargs["ext"] = "avi"
 
         if hasattr(metaset, "__ANNOTATIONS__"):
             kwargs["annots"] = metaset.__ANNOTATIONS__
@@ -154,6 +202,7 @@ def test(dataset, use_tqdm=True):
         #                      )
         testset = VideoDataset(
                               filter=metaset.TestsetFilter(),
+                              seg_num=7,
                               **kwargs
                              )
 
@@ -177,8 +226,9 @@ def test(dataset, use_tqdm=True):
                         testset, batch_size=1, shuffle=True,
                         num_workers=1, pin_memory=True,
                         drop_last=True)  # prevent something not % n_GPU
-                for _i, (inputs, targets) in enumerate(train_loader):
-                    print(_i, inputs, targets)
+                for _i, (inputs, _) in enumerate(train_loader):
+                    print(inputs.shape)
+                    
 
 if __name__ == "__main__":
     print(sys.argv)
