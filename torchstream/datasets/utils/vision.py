@@ -99,7 +99,7 @@ def failure_suspection(**kwargs):
     return ';'.join(reasons)
 
 
-def convert_farray_color(farray, cin, cout):
+def convert_farray_color(farray, cin, cout, **kwargs):
     '''
     - farray : input frame as a Numpy ndarray
     - cin : input frame's color space
@@ -127,7 +127,7 @@ def convert_farray_color(farray, cin, cout):
     
     return(output)
 
-def farray_show(caption, farray, cin="RGB"):
+def farray_show(caption, farray, cin="RGB", **kwargs):
     _i = convert_farray_color(farray, cin, "BGR")
     # must convert to uint8, see:
     # https://stackoverflow.com/questions/48331211/\
@@ -141,7 +141,7 @@ def farray_show(caption, farray, cin="RGB"):
 #                   Main Functions (To Be Used outside)                     #
 # ------------------------------------------------------------------------- #
 
-def video2ndarray(video, cin="BGR", cout="RGB"):
+def video2ndarray(video, cin="BGR", cout="RGB", **kwargs):
     '''
     Read video from given file path ${video} and return the video array.
     - video : input video file path
@@ -242,7 +242,7 @@ def video2ndarray(video, cin="BGR", cout="RGB"):
 
 ## Video -> Frames
 #  Dump a video file to frame files
-def video2frames(video, dst_path, cin="BGR", cout="BGR"):
+def video2frames(video, dst_path, cin="BGR", cout="BGR", **kwargs):
     """
     Read 1 video from ${video} and dump to frames in ${dst_path}.
     - video : the input video file path
@@ -319,7 +319,7 @@ def video2frames(video, dst_path, cin="BGR", cout="BGR"):
     return (True, cnt)
 
 
-def ndarray2frames(varray, dst_path, cin="RGB", cout="BGR"):
+def ndarray2frames(varray, dst_path, cin="RGB", cout="BGR", **kwargs):
     """
     Dump 1 video array ${varray} to frames in ${dst_path}
     - varray : input numpy.ndarray format video
@@ -349,7 +349,7 @@ def ndarray2frames(varray, dst_path, cin="RGB", cout="BGR"):
         farray = varray[_i, :, :, :]
         farray = convert_farray_color(farray, cin, cout)
         ret = cv2.imwrite(frame, farray)
-        assert ret, "Cannot write image file {}".format(img_path)
+        assert ret, "Cannot write image file {}".format(frame)
         cnt += 1
     
     # output status
@@ -385,7 +385,7 @@ def frame2ndarray(frame, cin="BGR", cout="RGB"):
     return(farray)
 
 
-def frames2ndarray(frames, cin="BGR", cout="RGB"):
+def frames2ndarray(frames, cin="BGR", cout="RGB", **kwargs):
     '''
     Read all frames, take them as a continuous video, and get a varray
     - frames : input frames' file paths

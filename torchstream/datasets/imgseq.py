@@ -106,9 +106,12 @@ class ImageSequence(object):
         _file_path = self.get_frame_path(self.fcount)
         while (os.path.exists(_file_path)):
             self.fpaths.append(_file_path)
+            # logger.info("found image {}".format(_file_path))
             self.fcount += 1       
             _file_path = self.get_frame_path(self.fcount)
-        
+        # logger.info("cannot found image {}".format(_file_path))
+
+
         if __config__.__STRICT__:
             assert self.fcount > 0, "Empty video folder {}".format(path)
             if self.fcount <= 0:

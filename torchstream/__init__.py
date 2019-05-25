@@ -1,2 +1,1 @@
-
-from . import functional
+from torchstream import datasets

@@ -25,8 +25,8 @@ __all__ = [
 #   information (including but not limited to __verbose__ information)
 #   in stdout.
 __STRICT__ = True
-__VERBOSE__ = False
-__VERY_VERBOSE__ = False
+__VERBOSE__ = True
+__VERY_VERBOSE__ = True
 __VERY_VERY_VERBOSE__ = False
 
 def show_config():

@@ -26,5 +26,5 @@ TESTSET = 3
 IMGSEQ = "jpg"
 IMGEXT = "jpg"
 
-UNKOWN_LABEL = None
+UNKOWN_LABEL = "Unknown"
 UNKOWN_CID = -1
