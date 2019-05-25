@@ -244,24 +244,20 @@ class SegmentedImageSequence(ImageSequence):
         assert fcount >= seg_num, \
             "Segment number [{}] exceeds video length [{}]".\
                 format(seg_num, fcount)
-
-        # interval (length of each segment) = ceil(fcount/seg_num)
-        # ((a + b - 1) // b) == ceil(a/b)
-        _interval = (fcount + seg_num - 1) // seg_num
-        _residual = fcount - _interval * (seg_num - 1)
-        _snip_idxs = []         # key frame ids
-
+        
         # short path
-        if _residual == 0:
-            for _i in range(seg_num):
-                _idx = _i * _interval + np.random.randint(_interval)
-                _snip_idxs.append(_idx)
-        else:
-            for _i in range(seg_num - 1):
-                _idx = _i * _interval + np.random.randint(_interval)
-                _snip_idxs.append(_idx)
-            _idx = _interval * (seg_num - 1) + np.random.randint(_residual)
+        if fcount == seg_num:
+            return list(range(fcount))
+        
+        # interval (length of each segment) = floor(fcount/seg_num)
+        _interval = (fcount - seg_num + 1) // seg_num
+        # key frame ids
+        _snip_idxs = []
+
+        for _i in range(seg_num):
+            _idx = _i * _interval + np.random.randint(_interval)
             _snip_idxs.append(_idx)
+        _snip_idxs.append(_idx)
 
         # logging
         logger.info("[__segment__] frames {}".format(_snip_idxs))
