@@ -19,7 +19,7 @@ f = open(LIST_FILE, "r")
 for _line in f:
     text = _line.split('\n')[0]
     text = text.split(' ')
-    __LABELS__[text[1]] = int(text[0])
+    __LABELS__[text[1]] = int(text[0]) - 1
 f.close()
 
 

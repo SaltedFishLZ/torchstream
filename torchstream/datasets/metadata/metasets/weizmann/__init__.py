@@ -19,16 +19,16 @@ from .path import *
 # ------------------------------------------------------------------------ #
 
 __LABELS__ = {
-    'bend'  : 1,
-    'jack'  : 2,
-    'jump'  : 3,
-    'pjump' : 4,
-    'run'   : 5,
-    'side'  : 6,
-    'skip'  : 7,
-    'walk'  : 8,
-    'wave1' : 9,    # wave with 1 hand
-    'wave2' : 10    # wave with 2 hands
+    'bend'  : 0,
+    'jack'  : 1,
+    'jump'  : 2,
+    'pjump' : 3,
+    'run'   : 4,
+    'side'  : 5,
+    'skip'  : 6,
+    'walk'  : 7,
+    'wave1' : 8,    # wave with 1 hand
+    'wave2' : 9     # wave with 2 hands
 }
 
 __SAMPLES_PER_LABEL__ = {
