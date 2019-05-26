@@ -158,6 +158,7 @@ class TemporalPad(object):
         return self.__class__.__name__ + '(padding={0}, padding_mode={2})'.\
             format(self.padding, self.padding_mode)
 
+
 # -------------------------------- #
 #           Video Crop             #
 # -------------------------------- #
@@ -223,6 +224,93 @@ class RandomCrop(object):
 
     def __repr__(self):
         return self.__class__.__name__ + "(size={})".format(self.size)
+
+class MultiScaleCrop(object):
+    """Copy from TSM, need to be reconstructed later
+    """
+    def __init__(self, output_size,
+                 scales=[1, .875, .75, .66],
+                 max_distort=1, fix_crop=True,
+                 more_fix_crop=True,
+                 interpolation=cv2.INTER_LINEAR
+                ):
+
+        self.scales = scales
+        self.max_distort = max_distort
+        self.fix_crop = fix_crop
+        self.more_fix_crop = more_fix_crop
+        self.interpolation = interpolation
+        if isinstance(output_size, int):
+            output_size = (output_size, output_size)
+        self.output_size = output_size
+
+    def __call__(self, vid):
+
+        img_size = vid.shape[1:2]
+
+        crop_w, crop_h, offset_w, offset_h = self._sample_crop_size(img_size)
+        
+        ## crop_img_group = [img.crop((offset_w, offset_h, offset_w + crop_w, offset_h + crop_h)) for img in img_group]
+        ## ret_img_group = [img.resize((self.output_size[0], self.output_size[1]), self.interpolation)
+        ##                  for img in crop_img_group]
+        ## return ret_img_group
+        cropped_video = F.crop(offset_w, offset_h, crop_w, crop_h)
+        resized_video = F.resize(cropped_video, self.output_size, self.interpolation)
+        return resized_video
+
+    def _sample_crop_size(self, im_size):
+        image_w, image_h = im_size[0], im_size[1]
+
+        # find a crop size
+        base_size = min(image_w, image_h)
+        crop_sizes = [int(base_size * x) for x in self.scales]
+        crop_h = [self.output_size[1] if abs(x - self.output_size[1]) < 3 else x for x in crop_sizes]
+        crop_w = [self.output_size[0] if abs(x - self.output_size[0]) < 3 else x for x in crop_sizes]
+
+        pairs = []
+        for i, h in enumerate(crop_h):
+            for j, w in enumerate(crop_w):
+                if abs(i - j) <= self.max_distort:
+                    pairs.append((w, h))
+        ## random sample 1 size
+        crop_pair = random.choice(pairs)
+        if not self.fix_crop:
+            w_offset = random.randint(0, image_w - crop_pair[0])
+            h_offset = random.randint(0, image_h - crop_pair[1])
+        else:
+            w_offset, h_offset = self._sample_fix_offset(image_w, image_h, crop_pair[0], crop_pair[1])
+
+        return crop_pair[0], crop_pair[1], w_offset, h_offset
+
+    def _sample_fix_offset(self, image_w, image_h, crop_w, crop_h):
+        offsets = self.fill_fix_offset(self.more_fix_crop, image_w, image_h, crop_w, crop_h)
+        return random.choice(offsets)
+
+    @staticmethod
+    def fill_fix_offset(more_fix_crop, image_w, image_h, crop_w, crop_h):
+        w_step = (image_w - crop_w) // 4
+        h_step = (image_h - crop_h) // 4
+
+        ret = list()
+        ret.append((0, 0))  # upper left
+        ret.append((4 * w_step, 0))  # upper right
+        ret.append((0, 4 * h_step))  # lower left
+        ret.append((4 * w_step, 4 * h_step))  # lower right
+        ret.append((2 * w_step, 2 * h_step))  # center
+
+        if more_fix_crop:
+            ret.append((0, 2 * h_step))  # center left
+            ret.append((4 * w_step, 2 * h_step))  # center right
+            ret.append((2 * w_step, 4 * h_step))  # lower center
+            ret.append((2 * w_step, 0 * h_step))  # upper center
+
+            ret.append((1 * w_step, 1 * h_step))  # upper left quarter
+            ret.append((3 * w_step, 1 * h_step))  # upper right quarter
+            ret.append((1 * w_step, 3 * h_step))  # lower left quarter
+            ret.append((3 * w_step, 3 * h_step))  # lower righ quarter
+
+        return ret
+
 
 
 # -------------------------------- #
