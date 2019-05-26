@@ -15,7 +15,7 @@ from torch.autograd import Variable
 
 from torchstream.datasets.dataset import VideoDataset
 from torchstream.models import c3d
-from torchstream.transforms.transform import Compose, Resize, RandomClip, CenterCrop, RandomCrop, ToTensor
+from torchstream.transforms.transform import Compose, Resize, CenterClip, RandomClip, CenterCrop, RandomCrop, ToTensor
 
 # Use GPU if available else revert to CPU
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -115,33 +115,33 @@ def train_model(dataset=dataset, save_dir=save_dir, num_classes=num_classes, lr=
     train_dataset = VideoDataset(
                           **kwargs,
                           transform=Compose([
-                              RandomClip(16),
-                              RandomCrop(112),
-                              ToTensor
+                              CenterClip(16),
+                              CenterCrop(112),
+                              ToTensor()
                           ])
                          )
-    train_dataloader = DataLoader(train_dataset, batch_size=32, shuffle=True, num_workers=8)
+    train_dataloader = DataLoader(train_dataset, batch_size=8, shuffle=True, num_workers=8)
     
     val_dataset = VideoDataset(
                           **kwargs,
                           transform=Compose([
-                              RandomClip(16),
+                              CenterClip(16),
                               CenterCrop(112),
                               ToTensor(),
                           ])
                          )
-    val_dataloader = DataLoader(val_dataset, batch_size=32, shuffle=True, num_workers=8)    
+    val_dataloader = DataLoader(val_dataset, batch_size=8, shuffle=True, num_workers=8)    
     
     
     test_dataset = VideoDataset(
                           **kwargs,
                           transform=Compose([
-                              RandomClip(16),
+                              CenterClip(16),
                               CenterCrop(112),
                               ToTensor(),
                           ])
                          )
-    test_dataloader = DataLoader(test_dataset, batch_size=32, shuffle=True, num_workers=8)  
+    test_dataloader = DataLoader(test_dataset, batch_size=8, shuffle=True, num_workers=8)  
 
     trainval_loaders = {'train': train_dataloader, 'val': val_dataloader}
     trainval_sizes = {x: len(trainval_loaders[x].dataset) for x in ['train', 'val']}
