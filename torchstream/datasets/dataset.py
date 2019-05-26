@@ -110,6 +110,7 @@ class VideoDataset(torchdata.Dataset):
         # ndarray may need to be converted to [T][C][H][W] format in PyTorch
         return (_blob, _cid)
 
+
 class ClippedVideoDataset(VideoDataset):
     """
     """
