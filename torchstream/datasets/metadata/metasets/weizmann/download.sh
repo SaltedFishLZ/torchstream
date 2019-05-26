@@ -1,35 +1,25 @@
-mkdir -p ~/Datasets/Weizmann/Weizmann-avi
-mkdir -p ~/Datasets/Weizmann/Weizmann-jpg
+ZIP_DIR="${HOME}/Datasets/Weizmann/Weizmann-zip"
+AVI_DIR="${HOME}/Datasets/Weizmann/Weizmann-avi"
+JPG_DIR="${HOME}/Datasets/Weizmann/Weizmann-jpg"
 
-cd ~/Datasets/Weizmann/Weizmann-avi
-wget http://www.wisdom.weizmann.ac.il/~vision/VideoAnalysis/Demos/SpaceTimeActions/DB/walk.zip
-unzip walk.zip
+labels=(
+    walk
+    run
+    jump
+    pjump
+    side
+    bend
+    wave1
+    wave2
+    jack
+    skip
+)
 
-wget http://www.wisdom.weizmann.ac.il/~vision/VideoAnalysis/Demos/SpaceTimeActions/DB/run.zip
-unzip run.zip
-
-wget http://www.wisdom.weizmann.ac.il/~vision/VideoAnalysis/Demos/SpaceTimeActions/DB/jump.zip
-unzip run.zip
-
-wget http://www.wisdom.weizmann.ac.il/~vision/VideoAnalysis/Demos/SpaceTimeActions/DB/side.zip
-unzip side.zip
-
-wget http://www.wisdom.weizmann.ac.il/~vision/VideoAnalysis/Demos/SpaceTimeActions/DB/bend.zip
-unzip bend.zip
-
-wget http://www.wisdom.weizmann.ac.il/~vision/VideoAnalysis/Demos/SpaceTimeActions/DB/wave1.zip
-unzip wave1.zip
-
-wget http://www.wisdom.weizmann.ac.il/~vision/VideoAnalysis/Demos/SpaceTimeActions/DB/wave2.zip
-unzip wave2.zip
-
-wget http://www.wisdom.weizmann.ac.il/~vision/VideoAnalysis/Demos/SpaceTimeActions/DB/pjump.zip
-unzip pjump.zip
-
-wget http://www.wisdom.weizmann.ac.il/~vision/VideoAnalysis/Demos/SpaceTimeActions/DB/jack.zip
-unzip jack.zip
-
-wget http://www.wisdom.weizmann.ac.il/~vision/VideoAnalysis/Demos/SpaceTimeActions/DB/skip.zip
-unzip skip.zip
-
-rm *.zip
+cd ${ZIP_DIR}
+for label in "${labels[@]}"
+do
+    wget "http://www.wisdom.weizmann.ac.il/~vision/VideoAnalysis/Demos/SpaceTimeActions/DB/${label}.zip"
+    target_directory="${AVI_DIR}/${label}"
+    mkdir -p ${target_directory}
+    unzip "${label}.zip" -d ${target_directory}
+done
