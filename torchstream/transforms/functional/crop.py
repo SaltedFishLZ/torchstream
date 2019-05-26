@@ -1,6 +1,5 @@
 import numbers
 import numpy as np
-
 from .blob import _is_varray
 
 
@@ -14,6 +13,8 @@ def crop(vid, i, j, h, w):
         w (int): Width of the cropped video.
     Returns:
         vid: Cropped video array.
+    NOTE:
+        The outside wrapper must gurantee that the indices are in range.
     """
     if not _is_varray(vid):
         raise TypeError('vid should be ndarray. Got {}'.format(vid))

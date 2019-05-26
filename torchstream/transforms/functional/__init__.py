@@ -13,3 +13,4 @@ from .crop import crop, center_crop
 from .clip import clip, center_clip
 from .flip import hflip, vflip
 from .resize import resize
+from .pad import pad, spad, tpad
