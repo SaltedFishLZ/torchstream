@@ -209,7 +209,7 @@ class RandomCrop(object):
         Returns:
             tuple: params (i, j, h, w) to be passed to ``crop``.
         """
-        w, h = vid.shape[1: 3]
+        h, w = vid.shape[1: 3]
         th, tw = output_size
         if w == tw and h == th:
             return 0, 0, h, w
