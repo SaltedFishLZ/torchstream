@@ -12,7 +12,9 @@ def hflip(varray):
     """
     if not _is_varray(varray):
         raise TypeError('varray should be ndarray. Got {}'.format(varray))
-    return np.flip(varray, 2)
+    # We need to copy to make memory contiguous, otherwise ToTensor will crash
+    # Ref: https://discuss.pytorch.org/t/torch-from-numpy-not-support-negative-strides/3663
+    return np.flip(varray, 2).copy()
 
 def vflip(varray):
     """Vertically flip the given varray.
@@ -23,4 +25,4 @@ def vflip(varray):
     """
     if not _is_varray(varray):
         raise TypeError('varray should be ndarray. Got {}'.format(varray))
-    return np.flip(varray, 1)
+    return np.flip(varray, 1).copy()
