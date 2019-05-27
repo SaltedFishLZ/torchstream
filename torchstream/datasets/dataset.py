@@ -15,7 +15,7 @@ from . import __config__
 from .metadata import sample, collect
 from .imgseq import ImageSequence, ClippedImageSequence, SegmentedImageSequence
 from .vidarr import VideoArray
-from ..utils.cache import hashid, hashstr
+from .utils.cache import hashid, hashstr
 
 FILE_PATH = os.path.realpath(__file__)
 DIR_PATH = os.path.dirname(FILE_PATH)
