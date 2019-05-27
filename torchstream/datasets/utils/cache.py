@@ -20,7 +20,7 @@ def hashid(x):
         for item in x:
             string += str(item)
     else:
-        string = str(_pairs)
+        string = str(x)
     hasher = hashlib.md5(string.encode(encoding="utf-8"))
     hashid = hasher.hexdigest()
     return hashid

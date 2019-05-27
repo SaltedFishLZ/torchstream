@@ -46,7 +46,7 @@ else:
 
 def generate_imgseqs(samples, **kwargs):
     # TODO: hash kwargs
-    cache_file = "{}.imgseqs.pkl".format(hashid(samples))
+    cache_file = "imgseqs{}.pkl".format(hashid(samples))
     cache_file = os.path.join(CACHE_PATH, cache_file)
 
     if (
@@ -75,7 +75,8 @@ def generate_imgseqs(samples, **kwargs):
 
 def generate_segimgseqs(samples, **kwargs):
     # TODO: hash kwargs
-    cache_file = "{}.segimgseqs.pkl".format(hashid(samples))
+    print(type(samples))
+    cache_file = "segimgseqs{}.pkl".format(hashid(samples))
     cache_file = os.path.join(CACHE_PATH, cache_file)
 
     if (
@@ -92,8 +93,12 @@ def generate_segimgseqs(samples, **kwargs):
 
     print("Generating Segmented Image Sequences...")
     imgseqs = []
+
+    def create_imgseq(x):
+        return SegmentedImageSequence(x)
+
     p = mp.Pool(32)
-    imgseqs = p.map(SegmentedImageSequence, samples)
+    imgseqs = p.map(create_imgseq, samples)
 
     ## dump to cache file
     os.makedirs(CACHE_PATH, exist_ok=True)
@@ -104,7 +109,7 @@ def generate_segimgseqs(samples, **kwargs):
 
 def generate_clipimgseqs(samples, **kwargs):
     # TODO: hash kwargs
-    cache_file = "{}.clipimgseqs.pkl".format(hashid(samples))
+    cache_file = "clipimgseqs{}.pkl".format(hashid(samples))
     cache_file = os.path.join(CACHE_PATH, cache_file)
 
     if (
@@ -293,7 +298,7 @@ def test(dataset, use_tqdm=True):
         #                       mod="RGB",
         #                       ext="avi"
         #                      )
-        testset = VideoDataset(
+        testset = SegmentedVideoDataset(
                               filter=metaset.TestsetFilter(),
                               seg_num=7,
                               **kwargs
@@ -317,7 +322,7 @@ def test(dataset, use_tqdm=True):
                 print("Testing torch dataloader")
                 train_loader = torchdata.DataLoader(
                         testset, batch_size=1, shuffle=True,
-                        num_workers=1, pin_memory=True,
+                        num_workers=8, pin_memory=True,
                         drop_last=True)  # prevent something not % n_GPU
                 for _i, (inputs, _) in enumerate(train_loader):
                     print(inputs.shape)
