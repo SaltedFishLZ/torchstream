@@ -62,9 +62,12 @@ def generate_imgseqs(samples, **kwargs):
             return pickle.load(f)
 
     print("Generating Image Sequences...")
+    def create_imgseq(x):
+        return ImageSequence(x)
     imgseqs = []
     p = mp.Pool(32)
-    imgseqs = p.map(ImageSequence, samples)
+    imgseqs = p.map(create_imgseq, samples)
+
 
     ## dump to cache file
     os.makedirs(CACHE_PATH, exist_ok=True)
@@ -72,6 +75,40 @@ def generate_imgseqs(samples, **kwargs):
         pickle.dump(samples, f)    
     
     return imgseqs
+
+
+def generate_clipimgseqs(samples, **kwargs):
+    # TODO: hash kwargs
+    cache_file = "clipimgseqs{}.pkl".format(hashid(samples))
+    cache_file = os.path.join(CACHE_PATH, cache_file)
+
+    if (
+        os.path.exists(cache_file)
+        and os.path.isfile(cache_file)
+        # and touch_date(cache_file) > touch_date(FILE_PATH)
+    ):              
+        ## find valid cache
+        warn_str = "[generate_clipimgseqs] find valid cache {}".\
+            format(cache_file)
+        logger.warning(warn_str)
+        with open(cache_file, "rb") as f:
+            return pickle.load(f)
+
+    print("Generating Clipped Image Sequences...")
+    def create_imgseq(x):
+        return ClippedImageSequence(x)
+    imgseqs = []
+    p = mp.Pool(32)
+    imgseqs = p.map(create_imgseq, samples)
+
+
+    ## dump to cache file
+    os.makedirs(CACHE_PATH, exist_ok=True)
+    with open(cache_file, "wb") as f:
+        pickle.dump(samples, f)    
+    
+    return imgseqs
+
 
 def generate_segimgseqs(samples, **kwargs):
     # TODO: hash kwargs
@@ -92,11 +129,10 @@ def generate_segimgseqs(samples, **kwargs):
             return pickle.load(f)
 
     print("Generating Segmented Image Sequences...")
-    imgseqs = []
 
     def create_imgseq(x):
         return SegmentedImageSequence(x)
-
+    imgseqs = []
     p = mp.Pool(32)
     imgseqs = p.map(create_imgseq, samples)
 
@@ -107,34 +143,6 @@ def generate_segimgseqs(samples, **kwargs):
     
     return imgseqs
 
-def generate_clipimgseqs(samples, **kwargs):
-    # TODO: hash kwargs
-    cache_file = "clipimgseqs{}.pkl".format(hashid(samples))
-    cache_file = os.path.join(CACHE_PATH, cache_file)
-
-    if (
-        os.path.exists(cache_file)
-        and os.path.isfile(cache_file)
-        # and touch_date(cache_file) > touch_date(FILE_PATH)
-    ):              
-        ## find valid cache
-        warn_str = "[generate_clipimgseqs] find valid cache {}".\
-            format(cache_file)
-        logger.warning(warn_str)
-        with open(cache_file, "rb") as f:
-            return pickle.load(f)
-
-    print("Generating Clipped Image Sequences...")
-    imgseqs = []
-    p = mp.Pool(32)
-    imgseqs = p.map(ClippedImageSequence, samples)
-
-    ## dump to cache file
-    os.makedirs(CACHE_PATH, exist_ok=True)
-    with open(cache_file, "wb") as f:
-        pickle.dump(samples, f)    
-    
-    return imgseqs
 
 
 # ------------------------------------------------------------------------- #
@@ -181,19 +189,7 @@ class VideoDataset(torchdata.Dataset):
         _samplelist.sort()
         self.samples = _samplelist
 
-        self.iohandles = self.generate_iohandles(self.samples, **kwargs)
-
-    @staticmethod
-    def generate_iohandles(samples, **kwargs):
-        print("It is VideoDataset's method")
-        ## TODO: support mixing types
-        if samples[0].seq:
-            return generate_imgseqs(samples, **kwargs)
-        else:
-            iohandles = []
-            for _sample in samples:
-                iohandles.append(VideoArray(x=_sample, **kwargs))
-        return iohandles
+        self.iohandles = generate_imgseqs(self.samples, **kwargs)
 
     def __len__(self):
         return len(self.samples)
@@ -224,15 +220,30 @@ class ClippedVideoDataset(VideoDataset):
                  **kwargs
                 ):
         assert ext == "jpg", TypeError
-        super(ClippedVideoDataset, self).__init__(
-            root, layout, lbls, mod, ext,
-            transform=transform, target_transform=None,
-            **kwargs
-        )
+        self.root = root
+        self.layout = layout
+        self.lbls = lbls
+        self.mod = mod
+        self.ext = ext
+        self.transform = transform
+        self.target_transform = target_transform
+        self.kwargs = kwargs
 
-    @staticmethod
-    def generate_iohandles(samples, **kwargs):
-        return generate_clipimgseqs(sample, **kwargs)
+        
+        ## collect samples
+        _sampleset = collect.collect_samples(root=root,
+                                layout=self.layout, lbls=self.lbls,
+                                mod=mod, ext=ext,
+                                **kwargs
+                               )
+
+        logger.critical("Turning set to list...")
+        _samplelist = list(_sampleset)
+        logger.critical("Sorting list...")
+        _samplelist.sort()
+        self.samples = _samplelist
+
+        self.iohandles = generate_clipimgseqs(self.samples, **kwargs)
 
 
 class SegmentedVideoDataset(VideoDataset):
@@ -243,15 +254,30 @@ class SegmentedVideoDataset(VideoDataset):
                  **kwargs
                 ):
         assert ext == "jpg", TypeError
-        super(SegmentedVideoDataset, self).__init__(
-            root, layout, lbls, mod, ext,
-            transform=transform, target_transform=None,
-            **kwargs
-        )
+        self.root = root
+        self.layout = layout
+        self.lbls = lbls
+        self.mod = mod
+        self.ext = ext
+        self.transform = transform
+        self.target_transform = target_transform
+        self.kwargs = kwargs
 
-    @staticmethod
-    def generate_iohandles(samples, **kwargs):
-        return generate_segimgseqs(sample, **kwargs)
+        
+        ## collect samples
+        _sampleset = collect.collect_samples(root=root,
+                                layout=self.layout, lbls=self.lbls,
+                                mod=mod, ext=ext,
+                                **kwargs
+                               )
+
+        logger.critical("Turning set to list...")
+        _samplelist = list(_sampleset)
+        logger.critical("Sorting list...")
+        _samplelist.sort()
+        self.samples = _samplelist
+
+        self.iohandles = generate_segimgseqs(self.samples, **kwargs)
 
 
 
