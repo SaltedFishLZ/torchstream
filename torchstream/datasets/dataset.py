@@ -72,7 +72,7 @@ def generate_imgseqs(samples, **kwargs):
     ## dump to cache file
     os.makedirs(CACHE_PATH, exist_ok=True)
     with open(cache_file, "wb") as f:
-        pickle.dump(samples, f)    
+        pickle.dump(imgseqs, f)    
     
     return imgseqs
 
@@ -105,11 +105,14 @@ def generate_clipimgseqs(samples, **kwargs):
     ## dump to cache file
     os.makedirs(CACHE_PATH, exist_ok=True)
     with open(cache_file, "wb") as f:
-        pickle.dump(samples, f)    
+        pickle.dump(imgseqs, f)    
     
     return imgseqs
 
 
+def create_segimgseq(x):
+    return SegmentedImageSequence(x)
+ 
 def generate_segimgseqs(samples, **kwargs):
     # TODO: hash kwargs
     print(type(samples))
@@ -129,17 +132,14 @@ def generate_segimgseqs(samples, **kwargs):
             return pickle.load(f)
 
     print("Generating Segmented Image Sequences...")
-
-    def create_imgseq(x):
-        return SegmentedImageSequence(x)
     imgseqs = []
     p = mp.Pool(32)
-    imgseqs = p.map(create_imgseq, samples)
+    imgseqs = p.map(create_segimgseq, samples)
 
     ## dump to cache file
     os.makedirs(CACHE_PATH, exist_ok=True)
     with open(cache_file, "wb") as f:
-        pickle.dump(samples, f)    
+        pickle.dump(imgseqs, f)    
     
     return imgseqs
 
