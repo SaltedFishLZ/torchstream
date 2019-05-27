@@ -15,6 +15,10 @@ def hashid(x):
     if isinstance(x, dict):
         _pairs = sorted_dictitems(x)
         string = str(_pairs)
+    elif isinstance(x, list):
+        string = ""
+        for item in x:
+            string += str(item)
     else:
         string = str(_pairs)
     hasher = hashlib.md5(string.encode(encoding="utf-8"))

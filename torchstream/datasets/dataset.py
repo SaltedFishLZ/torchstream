@@ -6,6 +6,7 @@ import copy
 import pickle
 import logging
 import importlib
+import multiprocessing as mp
 
 import tqdm
 import numpy as np
@@ -45,7 +46,7 @@ else:
 
 def generate_imgseqs(samples, **kwargs):
     # TODO: hash kwargs
-    cache_file = "{}.imgseqs.pkl".format(hash(tuple(samples)))
+    cache_file = "{}.imgseqs.pkl".format(hashid(samples))
     cache_file = os.path.join(CACHE_PATH, cache_file)
 
     if (
@@ -62,8 +63,8 @@ def generate_imgseqs(samples, **kwargs):
 
     print("Generating Image Sequences...")
     imgseqs = []
-    for _sample in samples:
-        imgseqs.append(ImageSequence(_sample, **kwargs))
+    p = mp.Pool(32)
+    imgseqs = p.map(ImageSequence, samples)
 
     ## dump to cache file
     os.makedirs(CACHE_PATH, exist_ok=True)
@@ -74,7 +75,7 @@ def generate_imgseqs(samples, **kwargs):
 
 def generate_segimgseqs(samples, **kwargs):
     # TODO: hash kwargs
-    cache_file = "{}.imgseqs.pkl".format(hash(tuple(samples)))
+    cache_file = "{}.segimgseqs.pkl".format(hashid(samples))
     cache_file = os.path.join(CACHE_PATH, cache_file)
 
     if (
@@ -91,8 +92,8 @@ def generate_segimgseqs(samples, **kwargs):
 
     print("Generating Segmented Image Sequences...")
     imgseqs = []
-    for _sample in samples:
-        imgseqs.append(SegmentedImageSequence(_sample, **kwargs))
+    p = mp.Pool(32)
+    imgseqs = p.map(SegmentedImageSequence, samples)
 
     ## dump to cache file
     os.makedirs(CACHE_PATH, exist_ok=True)
@@ -103,7 +104,7 @@ def generate_segimgseqs(samples, **kwargs):
 
 def generate_clipimgseqs(samples, **kwargs):
     # TODO: hash kwargs
-    cache_file = "{}.imgseqs.pkl".format(hash(tuple(samples)))
+    cache_file = "{}.clipimgseqs.pkl".format(hashid(samples))
     cache_file = os.path.join(CACHE_PATH, cache_file)
 
     if (
@@ -120,8 +121,8 @@ def generate_clipimgseqs(samples, **kwargs):
 
     print("Generating Clipped Image Sequences...")
     imgseqs = []
-    for _sample in samples:
-        imgseqs.append(ClippedImageSequence(_sample, **kwargs))
+    p = mp.Pool(32)
+    imgseqs = p.map(ClippedImageSequence, samples)
 
     ## dump to cache file
     os.makedirs(CACHE_PATH, exist_ok=True)
