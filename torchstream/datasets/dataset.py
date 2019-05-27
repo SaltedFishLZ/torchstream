@@ -3,6 +3,7 @@
 import os
 import sys
 import copy
+import pickle
 import logging
 import importlib
 
@@ -14,6 +15,11 @@ from . import __config__
 from .metadata import sample, collect
 from .imgseq import ImageSequence, ClippedImageSequence, SegmentedImageSequence
 from .vidarr import VideoArray
+from ..utils.cache import hashid, hashstr
+
+FILE_PATH = os.path.realpath(__file__)
+DIR_PATH = os.path.dirname(FILE_PATH)
+CACHE_PATH = os.path.join(DIR_PATH, ".cache")
 
 # ---------------------------------------------------------------- #
 #                  Configuring Python Logger                       #
@@ -31,6 +37,98 @@ elif __config__.__VERBOSE__:
 else:
     logger.setLevel(logging.CRITICAL)
 
+
+
+# ------------------------------------------------------------------------- #
+#                          Internal Functions                               #
+# ------------------------------------------------------------------------- #
+
+def generate_imgseqs(samples, **kwargs):
+    # TODO: hash kwargs
+    cache_file = "{}.imgseqs.pkl".format(hash(tuple(samples)))
+    cache_file = os.path.join(CACHE_PATH, cache_file)
+
+    if (
+        os.path.exists(cache_file)
+        and os.path.isfile(cache_file)
+        # and touch_date(cache_file) > touch_date(FILE_PATH)
+    ):              
+        ## find valid cache
+        warn_str = "[generate_imgseqs] find valid cache {}".\
+            format(cache_file)
+        logger.warning(warn_str)
+        with open(cache_file, "rb") as f:
+            return pickle.load(f)
+
+    print("Generating Image Sequences...")
+    imgseqs = []
+    for _sample in samples:
+        imgseqs.append(ImageSequence(_sample, **kwargs))
+
+    ## dump to cache file
+    os.makedirs(CACHE_PATH, exist_ok=True)
+    with open(cache_file, "wb") as f:
+        pickle.dump(samples, f)    
+    
+    return imgseqs
+
+def generate_segimgseqs(samples, **kwargs):
+    # TODO: hash kwargs
+    cache_file = "{}.imgseqs.pkl".format(hash(tuple(samples)))
+    cache_file = os.path.join(CACHE_PATH, cache_file)
+
+    if (
+        os.path.exists(cache_file)
+        and os.path.isfile(cache_file)
+        # and touch_date(cache_file) > touch_date(FILE_PATH)
+    ):              
+        ## find valid cache
+        warn_str = "[generate_segimgseqs] find valid cache {}".\
+            format(cache_file)
+        logger.warning(warn_str)
+        with open(cache_file, "rb") as f:
+            return pickle.load(f)
+
+    print("Generating Segmented Image Sequences...")
+    imgseqs = []
+    for _sample in samples:
+        imgseqs.append(SegmentedImageSequence(_sample, **kwargs))
+
+    ## dump to cache file
+    os.makedirs(CACHE_PATH, exist_ok=True)
+    with open(cache_file, "wb") as f:
+        pickle.dump(samples, f)    
+    
+    return imgseqs
+
+def generate_clipimgseqs(samples, **kwargs):
+    # TODO: hash kwargs
+    cache_file = "{}.imgseqs.pkl".format(hash(tuple(samples)))
+    cache_file = os.path.join(CACHE_PATH, cache_file)
+
+    if (
+        os.path.exists(cache_file)
+        and os.path.isfile(cache_file)
+        # and touch_date(cache_file) > touch_date(FILE_PATH)
+    ):              
+        ## find valid cache
+        warn_str = "[generate_clipimgseqs] find valid cache {}".\
+            format(cache_file)
+        logger.warning(warn_str)
+        with open(cache_file, "rb") as f:
+            return pickle.load(f)
+
+    print("Generating Clipped Image Sequences...")
+    imgseqs = []
+    for _sample in samples:
+        imgseqs.append(ClippedImageSequence(_sample, **kwargs))
+
+    ## dump to cache file
+    os.makedirs(CACHE_PATH, exist_ok=True)
+    with open(cache_file, "wb") as f:
+        pickle.dump(samples, f)    
+    
+    return imgseqs
 
 
 # ------------------------------------------------------------------------- #
@@ -82,11 +180,12 @@ class VideoDataset(torchdata.Dataset):
     @staticmethod
     def generate_iohandles(samples, **kwargs):
         print("It is VideoDataset's method")
-        iohandles = []
-        for _sample in samples:
-            if _sample.seq:
-                iohandles.append(ImageSequence(_sample, **kwargs))
-            else:
+        ## TODO: support mixing types
+        if samples[0].seq:
+            return generate_imgseqs(samples, **kwargs)
+        else:
+            iohandles = []
+            for _sample in samples:
                 iohandles.append(VideoArray(x=_sample, **kwargs))
         return iohandles
 
@@ -127,11 +226,7 @@ class ClippedVideoDataset(VideoDataset):
 
     @staticmethod
     def generate_iohandles(samples, **kwargs):
-        print("It is Clipped's method")
-        iohandles = []
-        for _sample in samples:
-            iohandles.append(ClippedImageSequence(_sample, **kwargs))
-        return iohandles
+        return generate_clipimgseqs(sample, **kwargs)
 
 
 class SegmentedVideoDataset(VideoDataset):
@@ -150,11 +245,7 @@ class SegmentedVideoDataset(VideoDataset):
 
     @staticmethod
     def generate_iohandles(samples, **kwargs):
-        print("It is Segmented's method")
-        iohandles = []
-        for _sample in samples:
-            iohandles.append(SegmentedImageSequence(_sample, **kwargs))
-        return iohandles
+        return generate_segimgseqs(sample, **kwargs)
 
 
 
