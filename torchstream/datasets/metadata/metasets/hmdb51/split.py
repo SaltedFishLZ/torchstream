@@ -69,7 +69,7 @@ class DatasetFilter(object):
 
     def __call__(self, sample):
         name = sample.name
-        label = sample.lbl
+        label = sample.label
         rec = '_'.join([label, name])
         if "train" == self.split:
             return rec in TRAINSETS[self.split_option]

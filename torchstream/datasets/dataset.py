@@ -159,14 +159,14 @@ def test(dataset, use_tqdm=True):
         kwargs = {
             "root": metaset.JPG_DATA_PATH,
             "layout": metaset.__layout__,
-            "lbls": metaset.__LABELS__,
+            "class_to_idx": metaset.__LABELS__,
             "mod": "RGB",
             "ext": "jpg",
         }
 
-        if hasattr(metaset, "AVI_DATA_PATH"):
-            kwargs["root"] = metaset.AVI_DATA_PATH
-            kwargs["ext"] = "avi"
+        # if hasattr(metaset, "AVI_DATA_PATH"):
+        #     kwargs["root"] = metaset.AVI_DATA_PATH
+        #     kwargs["ext"] = "avi"
 
         if hasattr(metaset, "__ANNOTATIONS__"):
             kwargs["annots"] = metaset.__ANNOTATIONS__

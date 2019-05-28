@@ -42,7 +42,7 @@ class DatasetFilter(object):
         NOTE:
         Here, we require the input `sample` to be a Sample type.
         """
-        return "{}/{}".format(sample.lbl, sample.name) in self.split_set
+        return "{}/{}".format(sample.label, sample.name) in self.split_set
 
 
 class TrainsetFilter(DatasetFilter):
