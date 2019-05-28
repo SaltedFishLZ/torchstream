@@ -20,7 +20,13 @@ def normalize(tensor, mean, std, inplace=False):
     if not inplace:
         tensor = tensor.clone()
 
-    mean = torch.as_tensor(mean, dtype=torch.float32, device=tensor.device)
-    std = torch.as_tensor(std, dtype=torch.float32, device=tensor.device)
+
+    if torch.__version__ >= "1.0.0": 
+        mean = torch.as_tensor(mean, dtype=torch.float32, device=tensor.device)
+        std = torch.as_tensor(std, dtype=torch.float32, device=tensor.device)
+    else:
+        mean = torch.Tensor(mean)
+        std = torch.Tensor(std)
+        
     tensor.sub_(mean[:, None, None, None]).div_(std[:, None, None, None])
     return tensor

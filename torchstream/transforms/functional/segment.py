@@ -14,8 +14,8 @@ def _get_snip_indices(t, s, mode):
     interval = (t - s + 1) // s
     offsets = []
     for i in range(s):
-        offsets[i] = i * interval
-        offsets = np.array(offsets)
+        offsets.append(i * interval)
+    offsets = np.array(offsets)
 
     if mode == "center":
         indices = offsets + np.array([interval // 2] * s)
@@ -46,7 +46,7 @@ def segment(vid, s, mode="center"):
     if t == s:
         return vid
     
-    vout = np.empty(s, h, w, c)
+    vout = np.empty((s, h, w, c))
 
     snip_indices = _get_snip_indices(t, s, mode=mode)
     for idx in range(len(snip_indices)):

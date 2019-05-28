@@ -37,14 +37,6 @@ else:
 
 class ImageSequence(object):
     """A wrapper for a folder containing dumped frames from a video.
-    The folder shall looks like this:
-    video path
-    ├── frame 0
-    ├── frame 1
-    ├── ...
-    └── frame N
-    NOTE: Following the "do one thing at once" priciple, we only deal with 1 
-    data type of 1 data modality in 1 collector object.
     """
     def __init__(self, datapoint=None, **kwargs):
         """

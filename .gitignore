@@ -1,3 +1,7 @@
+# model file
+*.pth
+*.pth.tar
+
 # cache files
 .cahce/
 
