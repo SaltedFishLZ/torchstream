@@ -6,7 +6,7 @@ import logging
 import collections
 
 from . import __config__
-from .__const__ import IMGSEQ, UNKOWN_LABEL, UNKOWN_CID
+from .__const__ import UNKNOWN_LABEL
 from .__support__ import __SUPPORTED_MODALITIES__, \
     __SUPPORTED_IMAGES__, __SUPPORTED_VIDEOS__
 from ..utils.filesys import strip_extension
@@ -52,7 +52,7 @@ class DataPoint(object):
     #      label of the sample, is a unique string in certain dataset
     #  @param cid str:  
     #      class id of the sample, is the numerical representation of label
-    def __init__(self, root, rpath, name, label=UNKOWN_LABEL,
+    def __init__(self, root, rpath, name, label=UNKNOWN_LABEL,
                  mod="RGB", ext="jpg"):
         assert isinstance(root, str), TypeError
         assert isinstance(rpath, str), TypeError

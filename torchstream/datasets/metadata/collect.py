@@ -123,6 +123,7 @@ def collect_datapoints_20bn(root, annots, mod, ext, **kwargs):
         name = data if seq else strip_extension(data)
         
         label = annots[name]
+        print(label)
 
         datapoint = DataPoint(root=root, rpath="", name=name, label=label,
                               mod=mod, ext=ext)
