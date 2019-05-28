@@ -60,6 +60,8 @@ def _is_valid_datapoint(path, mod, ext):
 
     return True
 
+
+
 # ---------------------------------------------------------------- #
 #            Collect Samples and Get A Set of Samples              #
 # ---------------------------------------------------------------- #
@@ -135,7 +137,7 @@ def collect_datapoints_20bn(root, annots, mod, ext, **kwargs):
     return datapoints
 
 
-def collect_datapoints(root, layout, mod, ext, **kwargs):
+def collect_datapoints(root, layout, mod, ext, datapoint_filter=None, **kwargs):
     """Collect datapoints according to given conditions
     Args
     Return:
@@ -143,7 +145,6 @@ def collect_datapoints(root, layout, mod, ext, **kwargs):
     """
     assert layout in __SUPPORTED_LAYOUTS__, NotImplementedError
 
-    allpoints = []
     ## Cache Mechanism
     md5 = hashlib.md5(root.encode('utf-8')).hexdigest()
     cache_file = "{}.{}.all{}.datapoints".format(mod, ext, md5)
@@ -174,14 +175,14 @@ def collect_datapoints(root, layout, mod, ext, **kwargs):
                                                  **kwargs)
         else:
             raise NotImplementedError
-    ## dump to cache file
-    os.makedirs(CACHE_PATH, exist_ok=True)
-    with open(cache_file, "wb") as f:
-        pickle.dump(allpoints, f)
+        
+        ## dump to cache file
+        os.makedirs(CACHE_PATH, exist_ok=True)
+        with open(cache_file, "wb") as f:
+            pickle.dump(allpoints, f)
 
     ## filter datapoints
-    if "datapoint_filter" in kwargs:
-        datapoint_filter = kwargs["datapoint_filter"]
+    if datapoint_filter is not None:
         datapoints = list(filter(datapoint_filter, allpoints))
     else:
         datapoints = allpoints

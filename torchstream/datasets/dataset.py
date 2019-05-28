@@ -5,7 +5,7 @@ import sys
 import copy
 import pickle
 import logging
-import importlib
+import hashlib
 import multiprocessing as mp
 
 import tqdm
@@ -13,10 +13,10 @@ import numpy as np
 import torch.utils.data as torchdata
 
 from . import __config__
-from .metadata import sample, collect
-from .imgseq import ImageSequence, ClippedImageSequence, SegmentedImageSequence
-from .vidarr import VideoArray
-from .utils.cache import hashid, hashstr
+from .metadata import datapoint, collect, __SUPPORTED_MODALITIES__, __SUPPORTED_VIDEOS__, __SUPPORTED_IMAGES__
+from .imgseq import ImageSequence, _to_imgseq
+from .vidarr import VideoArray,_to_vidarr
+from .utils import filesys
 
 FILE_PATH = os.path.realpath(__file__)
 DIR_PATH = os.path.dirname(FILE_PATH)
@@ -77,38 +77,6 @@ def generate_imgseqs(samples, **kwargs):
     return imgseqs
 
 
-def generate_clipimgseqs(samples, **kwargs):
-    # TODO: hash kwargs
-    cache_file = "clipimgseqs{}.pkl".format(hashid(samples))
-    cache_file = os.path.join(CACHE_PATH, cache_file)
-
-    if (
-        os.path.exists(cache_file)
-        and os.path.isfile(cache_file)
-        # and touch_date(cache_file) > touch_date(FILE_PATH)
-    ):              
-        ## find valid cache
-        warn_str = "[generate_clipimgseqs] find valid cache {}".\
-            format(cache_file)
-        logger.warning(warn_str)
-        with open(cache_file, "rb") as f:
-            return pickle.load(f)
-
-    print("Generating Clipped Image Sequences...")
-    def create_imgseq(x):
-        return ClippedImageSequence(x)
-    imgseqs = []
-    p = mp.Pool(32)
-    imgseqs = p.map(create_imgseq, samples)
-
-
-    ## dump to cache file
-    os.makedirs(CACHE_PATH, exist_ok=True)
-    with open(cache_file, "wb") as f:
-        pickle.dump(imgseqs, f)    
-    
-    return imgseqs
-
 
 def create_segimgseq(x):
     return SegmentedImageSequence(x)
@@ -144,7 +112,6 @@ def generate_segimgseqs(samples, **kwargs):
     return imgseqs
 
 
-
 # ------------------------------------------------------------------------- #
 #                   Main Classes (To Be Used outside)                       #
 # ------------------------------------------------------------------------- #
@@ -158,7 +125,7 @@ class VideoDataset(torchdata.Dataset):
         filter: Sample filter
 
     """
-    def __init__(self, root, layout, lbls, mod, ext,
+    def __init__(self, root, layout, mod, ext, datapoint_filter=None,
                  transform=None, target_transform=None,
                  **kwargs
                 ):
@@ -166,30 +133,59 @@ class VideoDataset(torchdata.Dataset):
         Args:
 
         """
+        assert isinstance(root, str), TypeError
+        assert os.path.exists(root), "Root Path Not Exists"
+        assert mod in __SUPPORTED_MODALITIES__, NotImplementedError
+        assert ext in __SUPPORTED_MODALITIES__[mod], NotImplementedError
+
         self.root = root
         self.layout = layout
-        self.lbls = lbls
         self.mod = mod
         self.ext = ext
+        self.seq = ext in __SUPPORTED_IMAGES__[mod]
         self.transform = transform
         self.target_transform = target_transform
         self.kwargs = kwargs
-
         
-        ## collect samples
-        _sampleset = collect.collect_samples(root=root,
-                                layout=self.layout, lbls=self.lbls,
-                                mod=mod, ext=ext,
-                                **kwargs
-                               )
+        ## collect datapoints
+        datapoints = collect.collect_datapoints(root=root, layout=self.layout,
+                                                datapoint_filter=datapoint_filter,
+                                                mod=mod, ext=ext, **kwargs)
+        self.datapoints = datapoints
 
-        logger.critical("Turning set to list...")
-        _samplelist = list(_sampleset)
-        logger.critical("Sorting list...")
-        _samplelist.sort()
-        self.samples = _samplelist
+        import time
+        st_time = time.time()
+        p = mp.Pool(32)
+        if self.seq:
+            # Cache Mechanism
+            md5 = hashlib.md5(root.encode('utf-8')).hexdigest()
+            cache_file = "{}.{}.all{}.imgseqs".format(mod, ext, md5)
+            cache_file = os.path.join(CACHE_PATH, cache_file)
+            if (os.path.exists(cache_file)
+                    and os.path.isfile(cache_file)
+                    # and filesys.touch_date(cache_file) > filesys.touch_date(FILE_PATH)
+                    and filesys.touch_date(cache_file) > filesys.touch_date(root)
+                ):
+                warn_str = "[video dataset] find valid cache {}".\
+                    format(cache_file)
+                logger.warning(warn_str)
+                with open(cache_file, "rb") as f:
+                    allseqs = pickle.load(f)
+            else:
+                ## re-generate all image sequences
+                allpoints = collect.collect_datapoints(root=root, layout=self.layout,
+                                                       mod=mod, ext=ext, **kwargs)
+                allseqs = p.map(_to_imgseq, allpoints)
+                
+                ## dump to cache file
+                os.makedirs(CACHE_PATH, exist_ok=True)
+                with open(cache_file, "wb") as f:
+                    pickle.dump(allseqs, f)                
 
-        self.iohandles = generate_imgseqs(self.samples, **kwargs)
+        else:
+            self.samples = p.map(_to_vidarr, self.datapoints)
+        ed_time = time.time()
+        print("generating time", ed_time - st_time)
 
     def __len__(self):
         return len(self.samples)
@@ -197,9 +193,10 @@ class VideoDataset(torchdata.Dataset):
     def __getitem__(self, idx):
         """
         """
-        # currently, we intended to return a Numpy ndarray although it
+        # currently, we return a Numpy ndarray although it
         # may consume too much memory.
-        _iohanlde = self.iohandles[idx]
+
+        sample = self.samples[idx]
         _blob = np.array(_iohanlde)
         _sample = self.samples[idx]
         _cid = self.lbls[_sample.lbl]
@@ -212,85 +209,16 @@ class VideoDataset(torchdata.Dataset):
         return (_blob, _cid)
 
 
-class ClippedVideoDataset(VideoDataset):
-    """
-    """
-    def __init__(self, root, layout, lbls, mod, ext,
-                 transform=None, target_transform=None,
-                 **kwargs
-                ):
-        assert ext == "jpg", TypeError
-        self.root = root
-        self.layout = layout
-        self.lbls = lbls
-        self.mod = mod
-        self.ext = ext
-        self.transform = transform
-        self.target_transform = target_transform
-        self.kwargs = kwargs
-
-        
-        ## collect samples
-        _sampleset = collect.collect_samples(root=root,
-                                layout=self.layout, lbls=self.lbls,
-                                mod=mod, ext=ext,
-                                **kwargs
-                               )
-
-        logger.critical("Turning set to list...")
-        _samplelist = list(_sampleset)
-        logger.critical("Sorting list...")
-        _samplelist.sort()
-        self.samples = _samplelist
-
-        self.iohandles = generate_clipimgseqs(self.samples, **kwargs)
-
-
-class SegmentedVideoDataset(VideoDataset):
-    """
-    """
-    def __init__(self, root, layout, lbls, mod, ext,
-                 transform=None, target_transform=None,
-                 **kwargs
-                ):
-        assert ext == "jpg", TypeError
-        self.root = root
-        self.layout = layout
-        self.lbls = lbls
-        self.mod = mod
-        self.ext = ext
-        self.transform = transform
-        self.target_transform = target_transform
-        self.kwargs = kwargs
-
-        
-        ## collect samples
-        _sampleset = collect.collect_samples(root=root,
-                                layout=self.layout, lbls=self.lbls,
-                                mod=mod, ext=ext,
-                                **kwargs
-                               )
-
-        logger.critical("Turning set to list...")
-        _samplelist = list(_sampleset)
-        logger.critical("Sorting list...")
-        _samplelist.sort()
-        self.samples = _samplelist
-
-        self.iohandles = generate_segimgseqs(self.samples, **kwargs)
-
-
-
-
 def test(dataset, use_tqdm=True):
 
     test_components = {
         "basic" : True,
         "__len__" : True,
         "__getitem__" : True,
-        "torchloader" : True
+        "dataloader" : True
     }
-    
+    import importlib
+
 
     print("Dataset - [{}]".format(dataset))
     if (test_components["basic"]):
@@ -305,9 +233,9 @@ def test(dataset, use_tqdm=True):
             "ext": "jpg",
         }
 
-        # if hasattr(metaset, "AVI_DATA_PATH"):
-        #     kwargs["root"] = metaset.AVI_DATA_PATH
-        #     kwargs["ext"] = "avi"
+        if hasattr(metaset, "AVI_DATA_PATH"):
+            kwargs["root"] = metaset.AVI_DATA_PATH
+            kwargs["ext"] = "avi"
 
         if hasattr(metaset, "__ANNOTATIONS__"):
             kwargs["annots"] = metaset.__ANNOTATIONS__
@@ -318,17 +246,8 @@ def test(dataset, use_tqdm=True):
         if hasattr(metaset, "JPG_IDX_OFFSET"):
             kwargs["offset"] = metaset.JPG_IDX_OFFSET
 
-        # allset = VideoDataset(root=metaset.AVI_DATA_PATH,
-        #                       layout=metaset.__layout__,
-        #                       lbls=metaset.__LABELS__,
-        #                       mod="RGB",
-        #                       ext="avi"
-        #                      )
-        testset = SegmentedVideoDataset(
-                              filter=metaset.TestsetFilter(),
-                              seg_num=7,
-                              **kwargs
-                             )
+        testset = VideoDataset(datapoint_filter=metaset.TestsetFilter(),
+                               **kwargs)
 
         if test_components["__len__"]:
             # print("All samples number:")
@@ -344,7 +263,7 @@ def test(dataset, use_tqdm=True):
                 for _i in irange:
                     testset.__getitem__(_i)
 
-            if test_components["torchloader"]:
+            if test_components["dataloader"]:
                 print("Testing torch dataloader")
                 train_loader = torchdata.DataLoader(
                         testset, batch_size=1, shuffle=True,

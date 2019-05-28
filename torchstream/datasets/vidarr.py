@@ -5,7 +5,7 @@ __all__ = ["VideoArray"]
 import numpy as np
 
 from torchstream.datasets.utils.vision import video2ndarray
-from torchstream.datasets.metadata.sample import Sample
+from torchstream.datasets.metadata.datapoint import DataPoint
 
 class VideoArray(object):
     """
@@ -15,8 +15,7 @@ class VideoArray(object):
         """PyCharm will get wrong type checking
         """
         self.kwargs = kwargs
-        # print(id(x.__class__), id(Sample))
-        if isinstance(x, Sample):
+        if isinstance(x, DataPoint):
             assert not x.seq, NotImplementedError
             ## for the safety of your memory, we set "lazy" as
             #  the default mode
@@ -49,6 +48,16 @@ class VideoArray(object):
         np.ndarray.
         """
         return self.get_varray()
+
+
+def _to_vidarr(x):
+    """
+    """
+    assert isinstance(x, DataPoint), TypeError
+    return VideoArray(x)
+
+
+
 
 def test():
 

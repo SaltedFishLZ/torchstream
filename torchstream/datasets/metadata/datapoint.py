@@ -72,12 +72,15 @@ class DataPoint(object):
         self.label = label
         self.seq = ext in __SUPPORTED_IMAGES__[mod]
         self.path = os.path.join(root, rpath)
-
+        self.fcount = None
+        if self.seq:
+            self.fcount = len(os.listdir(self.path))
+        
     def __repr__(self, idents=0):
         string = idents * "\t" + "DataPoint: \n"
         string += idents * "\t" + str(self.name)
         if self.seq:
-            string += "(frame sequence)"
+            string += "(frame sequence len [{}])".format(self.fcount)
         string += '\n'
         string += idents * "\t" + "[label] : {}  \t".format(self.label)
         string += idents * "\t" + "[path] : {}".format(self.path)
