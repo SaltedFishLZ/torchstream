@@ -3,7 +3,7 @@
 
 from torchstream.datasets import preprocess
 from torchstream.datasets.utils.mapreduce import Manager
-from torchstream.datasets.metadata.collect import collect_samples
+from torchstream.datasets.metadata.collect import collect_datapoints
 
 def transform_videos(name, samples, dst_root, ext="avi",
                  worker_num=16, **kwargs):
