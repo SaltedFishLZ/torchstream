@@ -70,7 +70,7 @@ class DatasetFilter(object):
 
             for idx, row in self.split_df.iterrows():
                 video = row["video"]
-                self.split_set.add(video)
+                self.split_set.add(str(video))
             ## TODO: wrtie failure check
             fout = open(set_file, "wb")
             pickle.dump(self.split_set, fout)
@@ -100,7 +100,7 @@ class ValsetFilter(DatasetFilter):
     """
     def __init__(self):
         # the same as test set
-        super(ValsetFilter, self).__init__(split="test")
+        super(ValsetFilter, self).__init__(split="val")
         self.valset = self.split_set
 
 

@@ -72,7 +72,7 @@ class DatasetFilter(object):
 
             for _jdict in self.split_jlist:
                 video = _jdict["id"]
-                self.split_set.add(video)
+                self.split_set.add(str(video))
             ## TODO: wrtie failure check
             fout = open(set_file, "wb")
             pickle.dump(self.split_set, fout)
@@ -98,11 +98,11 @@ class TestsetFilter(DatasetFilter):
         self.testset = self.split_set
 
 class ValsetFilter(DatasetFilter):
-    """Wrapper: filter for validation set, the same as test set
+    """Wrapper: filter for validation set
     """
     def __init__(self):
         # the same as test set
-        super(ValsetFilter, self).__init__(split="test")
+        super(ValsetFilter, self).__init__(split="val")
         self.valset = self.split_set
 
 

@@ -169,11 +169,11 @@ class ImageSequence(object):
         return self.get_varray()
 
 
-def _to_imgseq(x):
+def _to_imgseq(x, **kwargs):
     """
     """
     assert isinstance(x, DataPoint), TypeError
-    return ImageSequence(x)
+    return ImageSequence(x, **kwargs)
 
 
 
