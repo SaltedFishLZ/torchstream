@@ -11,7 +11,7 @@ import logging
 
 from . import __config__
 from .csvparse import TRAINSET_DF, VALSET_DF, TESTSET_DF
-from ...__const__ import UNKOWN_LABEL, UNKOWN_CID
+from ...__const__ import UNKNOWN_LABEL, UNKNOWN_CID
 from ....utils.filesys import touch_date
 
 FILE_PATH = os.path.realpath(__file__)
@@ -76,8 +76,8 @@ CIDS = CIDS[1:len(CIDS)] + [0]
 __LABELS__ = dict(zip(__LABELS__, CIDS))
 
 # add UNKNOWN LABEL
-__LABELS__[UNKOWN_LABEL] = UNKOWN_CID
-__SAMPLES_PER_LABEL__[UNKOWN_LABEL] = [0, 999999]
+__LABELS__[UNKNOWN_LABEL] = UNKNOWN_CID
+__SAMPLES_PER_LABEL__[UNKNOWN_LABEL] = [0, 999999]
 
 
 
@@ -110,7 +110,7 @@ else:
     for df in (TESTSET_DF, ):
         for idx, row in df.iterrows():
             video = str(row["video"])
-            __ANNOTATIONS__[video] = UNKOWN_LABEL
+            __ANNOTATIONS__[video] = UNKNOWN_LABEL
     ## TODO: write failure check
     fout = open(ANNOT_FILE, "wb")
     pickle.dump(__ANNOTATIONS__, fout)

@@ -9,7 +9,6 @@ import os
 
 from . import __config__
 from .__support__ import __SUPPORTED_SPLIT_OPTS__
-from ...sample import Sample
 
 FILE_PATH = os.path.realpath(__file__)
 DIR_PATH = os.path.dirname(FILE_PATH)
@@ -43,9 +42,7 @@ class DatasetFilter(object):
         NOTE:
         Here, we require the input `sample` to be a Sample type.
         """
-        if __config__.__STRICT__:
-            assert isinstance(sample, Sample), TypeError
-        return "{}/{}".format(sample.lbl, sample.name) in self.split_set
+        return "{}/{}".format(sample.label, sample.name) in self.split_set
 
 
 class TrainsetFilter(DatasetFilter):

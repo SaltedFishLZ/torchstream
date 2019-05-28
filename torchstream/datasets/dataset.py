@@ -3,17 +3,25 @@
 import os
 import sys
 import copy
+import pickle
 import logging
-import importlib
+import hashlib
+import multiprocessing as mp
 
 import tqdm
 import numpy as np
 import torch.utils.data as torchdata
 
 from . import __config__
-from .metadata import sample, collect
-from .imgseq import ImageSequence, ClippedImageSequence, SegmentedImageSequence
-from .vidarr import VideoArray
+from .metadata import __SUPPORTED_MODALITIES__, __SUPPORTED_VIDEOS__, __SUPPORTED_IMAGES__
+from .metadata.collect import collect_datapoints
+from .imgseq import ImageSequence, _to_imgseq
+from .vidarr import VideoArray,_to_vidarr
+from .utils import filesys
+
+FILE_PATH = os.path.realpath(__file__)
+DIR_PATH = os.path.dirname(FILE_PATH)
+CACHE_PATH = os.path.join(DIR_PATH, ".cache")
 
 # ---------------------------------------------------------------- #
 #                  Configuring Python Logger                       #
@@ -31,8 +39,6 @@ elif __config__.__VERBOSE__:
 else:
     logger.setLevel(logging.CRITICAL)
 
-
-
 # ------------------------------------------------------------------------- #
 #                   Main Classes (To Be Used outside)                       #
 # ------------------------------------------------------------------------- #
@@ -46,7 +52,7 @@ class VideoDataset(torchdata.Dataset):
         filter: Sample filter
 
     """
-    def __init__(self, root, layout, lbls, mod, ext,
+    def __init__(self, root, layout, class_to_idx, mod, ext, datapoint_filter=None,
                  transform=None, target_transform=None,
                  **kwargs
                 ):
@@ -54,41 +60,62 @@ class VideoDataset(torchdata.Dataset):
         Args:
 
         """
+        assert isinstance(root, str), TypeError
+        assert os.path.exists(root), "Root Path Not Exists"
+        assert isinstance(class_to_idx, dict), TypeError
+        assert mod in __SUPPORTED_MODALITIES__, NotImplementedError
+        assert ext in __SUPPORTED_MODALITIES__[mod], NotImplementedError
+
         self.root = root
         self.layout = layout
-        self.lbls = lbls
+        self.class_to_idx = class_to_idx
+        self.datapoint_filter = datapoint_filter
         self.mod = mod
         self.ext = ext
+        self.seq = ext in __SUPPORTED_IMAGES__[mod]
         self.transform = transform
         self.target_transform = target_transform
         self.kwargs = kwargs
-
         
-        ## collect samples
-        _sampleset = collect.collect_samples(root=root,
-                                layout=self.layout, lbls=self.lbls,
-                                mod=mod, ext=ext,
-                                **kwargs
-                               )
+        ## collect datapoints
+        datapoints = collect_datapoints(root=root, layout=self.layout,
+                                        datapoint_filter=datapoint_filter,
+                                        mod=mod, ext=ext, **kwargs)
+        self.datapoints = datapoints
 
-        logger.critical("Turning set to list...")
-        _samplelist = list(_sampleset)
-        logger.critical("Sorting list...")
-        _samplelist.sort()
-        self.samples = _samplelist
-
-        self.iohandles = self.generate_iohandles(self.samples, **kwargs)
-
-    @staticmethod
-    def generate_iohandles(samples, **kwargs):
-        print("It is VideoDataset's method")
-        iohandles = []
-        for _sample in samples:
-            if _sample.seq:
-                iohandles.append(ImageSequence(_sample, **kwargs))
-            else:
-                iohandles.append(VideoArray(x=_sample, **kwargs))
-        return iohandles
+        import time
+        st_time = time.time()
+        p = mp.Pool(32)
+        if self.seq:
+            # Cache Mechanism
+            # md5 = hashlib.md5(root.encode('utf-8')).hexdigest()
+            # cache_file = "{}.{}.all{}.imgseqs".format(mod, ext, md5)
+            # cache_file = os.path.join(CACHE_PATH, cache_file)
+            # if (os.path.exists(cache_file)
+            #         and os.path.isfile(cache_file)
+            #         # and filesys.touch_date(cache_file) > filesys.touch_date(FILE_PATH)
+            #         and filesys.touch_date(cache_file) > filesys.touch_date(root)
+            #     ):
+            #     warn_str = "[video dataset] find valid cache {}".\
+            #         format(cache_file)
+            #     logger.warning(warn_str)
+            #     with open(cache_file, "rb") as f:
+            #         allseqs = pickle.load(f)
+            # else:
+            #     ## re-generate all image sequences
+            #     allpoints = collect.collect_datapoints(root=root, layout=self.layout,
+            #                                            mod=mod, ext=ext, **kwargs)
+            #     allseqs = p.map(_to_imgseq, allpoints)
+                
+            #     ## dump to cache file
+            #     os.makedirs(CACHE_PATH, exist_ok=True)
+            #     with open(cache_file, "wb") as f:
+            #         pickle.dump(allseqs, f)                
+            self.samples = p.map(_to_imgseq, self.datapoints)
+        else:
+            self.samples = p.map(_to_vidarr, self.datapoints)
+        ed_time = time.time()
+        print("generating time", ed_time - st_time)
 
     def __len__(self):
         return len(self.samples)
@@ -96,67 +123,21 @@ class VideoDataset(torchdata.Dataset):
     def __getitem__(self, idx):
         """
         """
-        # currently, we intended to return a Numpy ndarray although it
+        # currently, we return a Numpy ndarray although it
         # may consume too much memory.
-        _iohanlde = self.iohandles[idx]
-        _blob = np.array(_iohanlde)
-        _sample = self.samples[idx]
-        _cid = self.lbls[_sample.lbl]
+        datapoint = self.datapoints[idx]
+        sample = self.samples[idx]
+        blob = np.array(sample)
+        cid = self.class_to_idx[datapoint.label]
+
         if self.transform is not None:
-            _blob = self.transform(_blob)
+            blob = self.transform(blob)
         if self.target_transform is not None:
-            _cid = self.target_transform(_cid)
+            cid = self.target_transform(cid)
+
         # return (a [T][H][W][C] ndarray, class id)
         # ndarray may need to be converted to [T][C][H][W] format in PyTorch
-        return (_blob, _cid)
-
-
-class ClippedVideoDataset(VideoDataset):
-    """
-    """
-    def __init__(self, root, layout, lbls, mod, ext,
-                 transform=None, target_transform=None,
-                 **kwargs
-                ):
-        assert ext == "jpg", TypeError
-        super(ClippedVideoDataset, self).__init__(
-            root, layout, lbls, mod, ext,
-            transform=transform, target_transform=None,
-            **kwargs
-        )
-
-    @staticmethod
-    def generate_iohandles(samples, **kwargs):
-        print("It is Clipped's method")
-        iohandles = []
-        for _sample in samples:
-            iohandles.append(ClippedImageSequence(_sample, **kwargs))
-        return iohandles
-
-
-class SegmentedVideoDataset(VideoDataset):
-    """
-    """
-    def __init__(self, root, layout, lbls, mod, ext,
-                 transform=None, target_transform=None,
-                 **kwargs
-                ):
-        assert ext == "jpg", TypeError
-        super(SegmentedVideoDataset, self).__init__(
-            root, layout, lbls, mod, ext,
-            transform=transform, target_transform=None,
-            **kwargs
-        )
-
-    @staticmethod
-    def generate_iohandles(samples, **kwargs):
-        print("It is Segmented's method")
-        iohandles = []
-        for _sample in samples:
-            iohandles.append(SegmentedImageSequence(_sample, **kwargs))
-        return iohandles
-
-
+        return (blob, cid)
 
 
 def test(dataset, use_tqdm=True):
@@ -165,9 +146,10 @@ def test(dataset, use_tqdm=True):
         "basic" : True,
         "__len__" : True,
         "__getitem__" : True,
-        "torchloader" : True
+        "dataloader" : True
     }
-    
+    import importlib
+
 
     print("Dataset - [{}]".format(dataset))
     if (test_components["basic"]):
@@ -177,7 +159,7 @@ def test(dataset, use_tqdm=True):
         kwargs = {
             "root": metaset.JPG_DATA_PATH,
             "layout": metaset.__layout__,
-            "lbls": metaset.__LABELS__,
+            "class_to_idx": metaset.__LABELS__,
             "mod": "RGB",
             "ext": "jpg",
         }
@@ -195,17 +177,8 @@ def test(dataset, use_tqdm=True):
         if hasattr(metaset, "JPG_IDX_OFFSET"):
             kwargs["offset"] = metaset.JPG_IDX_OFFSET
 
-        # allset = VideoDataset(root=metaset.AVI_DATA_PATH,
-        #                       layout=metaset.__layout__,
-        #                       lbls=metaset.__LABELS__,
-        #                       mod="RGB",
-        #                       ext="avi"
-        #                      )
-        testset = VideoDataset(
-                              filter=metaset.TestsetFilter(),
-                              seg_num=7,
-                              **kwargs
-                             )
+        testset = VideoDataset(datapoint_filter=metaset.TestsetFilter(),
+                               **kwargs)
 
         if test_components["__len__"]:
             # print("All samples number:")
@@ -221,11 +194,11 @@ def test(dataset, use_tqdm=True):
                 for _i in irange:
                     testset.__getitem__(_i)
 
-            if test_components["torchloader"]:
+            if test_components["dataloader"]:
                 print("Testing torch dataloader")
                 train_loader = torchdata.DataLoader(
                         testset, batch_size=1, shuffle=True,
-                        num_workers=1, pin_memory=True,
+                        num_workers=8, pin_memory=True,
                         drop_last=True)  # prevent something not % n_GPU
                 for _i, (inputs, _) in enumerate(train_loader):
                     print(inputs.shape)
