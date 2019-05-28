@@ -171,7 +171,7 @@ def main(name):
         kwargs["offset"] = metaset.JPG_IDX_OFFSET
     
     print("Collecting Metadatas")
-    samples = collect_samples(**kwargs)
+    samples = collect_datapoints(**kwargs)
 
     # fps_hist(name, samples, **kwargs)
     norm_params(name, samples, **kwargs)
