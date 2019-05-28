@@ -86,14 +86,15 @@ def collect_datapoints_ucf101(root, mod, ext, **kwargs):
         ## travese all video files/image sequences
         for data in os.listdir(label_path):
             
-            data_path = os.path.join(label_path, data)
+            rpath = os.path.join(label, data)
+            data_path = os.path.join(root, rpath)
             if not _is_valid_datapoint(data_path, mod=mod, ext=ext):
                 continue
 
             name = data if seq else strip_extension(data)
             
             ## generate DataPoint object
-            datapoint = DataPoint(root=root, rpath=label, name=name,
+            datapoint = DataPoint(root=root, rpath=rpath, name=name,
                                   label=label, mod=mod, ext=ext)
 
             datapoints.append(datapoint)
@@ -126,7 +127,7 @@ def collect_datapoints_20bn(root, annots, mod, ext, **kwargs):
         
         label = annots[name]
 
-        datapoint = DataPoint(root=root, rpath="", name=name, label=label,
+        datapoint = DataPoint(root=root, rpath=data, name=name, label=label,
                               mod=mod, ext=ext)
 
         ## update datapoint set
@@ -212,9 +213,9 @@ def test(dataset):
     if hasattr(metaset, "JPG_IDX_OFFSET"):
         kwargs["offset"] = metaset.JPG_IDX_OFFSET
 
-    if hasattr(metaset, "AVI_DATA_PATH"):
-        kwargs["root"] = metaset.AVI_DATA_PATH
-        kwargs["ext"] = "avi"
+    # if hasattr(metaset, "AVI_DATA_PATH"):
+    #     kwargs["root"] = metaset.AVI_DATA_PATH
+    #     kwargs["ext"] = "avi"
 
     # kwargs["datapoint_filter"] = lambda x: x.label == "pjump"
 
@@ -229,6 +230,7 @@ def test(dataset):
     datapoint_counter = DataPointCounter(datapoints)
     print(datapoint_counter)
     
+    print(datapoints)
 
 if __name__ == "__main__":
     import sys

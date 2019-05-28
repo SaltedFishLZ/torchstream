@@ -13,7 +13,8 @@ import numpy as np
 import torch.utils.data as torchdata
 
 from . import __config__
-from .metadata import datapoint, collect, __SUPPORTED_MODALITIES__, __SUPPORTED_VIDEOS__, __SUPPORTED_IMAGES__
+from .metadata import __SUPPORTED_MODALITIES__, __SUPPORTED_VIDEOS__, __SUPPORTED_IMAGES__
+from .metadata.collect import collect_datapoints
 from .imgseq import ImageSequence, _to_imgseq
 from .vidarr import VideoArray,_to_vidarr
 from .utils import filesys
@@ -38,80 +39,6 @@ elif __config__.__VERBOSE__:
 else:
     logger.setLevel(logging.CRITICAL)
 
-
-
-# ------------------------------------------------------------------------- #
-#                          Internal Functions                               #
-# ------------------------------------------------------------------------- #
-
-def generate_imgseqs(samples, **kwargs):
-    # TODO: hash kwargs
-    cache_file = "imgseqs{}.pkl".format(hashid(samples))
-    cache_file = os.path.join(CACHE_PATH, cache_file)
-
-    if (
-        os.path.exists(cache_file)
-        and os.path.isfile(cache_file)
-        # and touch_date(cache_file) > touch_date(FILE_PATH)
-    ):              
-        ## find valid cache
-        warn_str = "[generate_imgseqs] find valid cache {}".\
-            format(cache_file)
-        logger.warning(warn_str)
-        with open(cache_file, "rb") as f:
-            return pickle.load(f)
-
-    print("Generating Image Sequences...")
-    def create_imgseq(x):
-        return ImageSequence(x)
-    imgseqs = []
-    p = mp.Pool(32)
-    imgseqs = p.map(create_imgseq, samples)
-
-
-    ## dump to cache file
-    os.makedirs(CACHE_PATH, exist_ok=True)
-    with open(cache_file, "wb") as f:
-        pickle.dump(imgseqs, f)    
-    
-    return imgseqs
-
-
-
-def create_segimgseq(x):
-    return SegmentedImageSequence(x)
- 
-def generate_segimgseqs(samples, **kwargs):
-    # TODO: hash kwargs
-    print(type(samples))
-    cache_file = "segimgseqs{}.pkl".format(hashid(samples))
-    cache_file = os.path.join(CACHE_PATH, cache_file)
-
-    if (
-        os.path.exists(cache_file)
-        and os.path.isfile(cache_file)
-        # and touch_date(cache_file) > touch_date(FILE_PATH)
-    ):              
-        ## find valid cache
-        warn_str = "[generate_segimgseqs] find valid cache {}".\
-            format(cache_file)
-        logger.warning(warn_str)
-        with open(cache_file, "rb") as f:
-            return pickle.load(f)
-
-    print("Generating Segmented Image Sequences...")
-    imgseqs = []
-    p = mp.Pool(32)
-    imgseqs = p.map(create_segimgseq, samples)
-
-    ## dump to cache file
-    os.makedirs(CACHE_PATH, exist_ok=True)
-    with open(cache_file, "wb") as f:
-        pickle.dump(imgseqs, f)    
-    
-    return imgseqs
-
-
 # ------------------------------------------------------------------------- #
 #                   Main Classes (To Be Used outside)                       #
 # ------------------------------------------------------------------------- #
@@ -125,7 +52,7 @@ class VideoDataset(torchdata.Dataset):
         filter: Sample filter
 
     """
-    def __init__(self, root, layout, mod, ext, datapoint_filter=None,
+    def __init__(self, root, layout, class_to_idx, mod, ext, datapoint_filter=None,
                  transform=None, target_transform=None,
                  **kwargs
                 ):
@@ -135,11 +62,14 @@ class VideoDataset(torchdata.Dataset):
         """
         assert isinstance(root, str), TypeError
         assert os.path.exists(root), "Root Path Not Exists"
+        assert isinstance(class_to_idx, dict), TypeError
         assert mod in __SUPPORTED_MODALITIES__, NotImplementedError
         assert ext in __SUPPORTED_MODALITIES__[mod], NotImplementedError
 
         self.root = root
         self.layout = layout
+        self.class_to_idx = class_to_idx
+        self.datapoint_filter = datapoint_filter
         self.mod = mod
         self.ext = ext
         self.seq = ext in __SUPPORTED_IMAGES__[mod]
@@ -148,9 +78,9 @@ class VideoDataset(torchdata.Dataset):
         self.kwargs = kwargs
         
         ## collect datapoints
-        datapoints = collect.collect_datapoints(root=root, layout=self.layout,
-                                                datapoint_filter=datapoint_filter,
-                                                mod=mod, ext=ext, **kwargs)
+        datapoints = collect_datapoints(root=root, layout=self.layout,
+                                        datapoint_filter=datapoint_filter,
+                                        mod=mod, ext=ext, **kwargs)
         self.datapoints = datapoints
 
         import time
@@ -158,30 +88,30 @@ class VideoDataset(torchdata.Dataset):
         p = mp.Pool(32)
         if self.seq:
             # Cache Mechanism
-            md5 = hashlib.md5(root.encode('utf-8')).hexdigest()
-            cache_file = "{}.{}.all{}.imgseqs".format(mod, ext, md5)
-            cache_file = os.path.join(CACHE_PATH, cache_file)
-            if (os.path.exists(cache_file)
-                    and os.path.isfile(cache_file)
-                    # and filesys.touch_date(cache_file) > filesys.touch_date(FILE_PATH)
-                    and filesys.touch_date(cache_file) > filesys.touch_date(root)
-                ):
-                warn_str = "[video dataset] find valid cache {}".\
-                    format(cache_file)
-                logger.warning(warn_str)
-                with open(cache_file, "rb") as f:
-                    allseqs = pickle.load(f)
-            else:
-                ## re-generate all image sequences
-                allpoints = collect.collect_datapoints(root=root, layout=self.layout,
-                                                       mod=mod, ext=ext, **kwargs)
-                allseqs = p.map(_to_imgseq, allpoints)
+            # md5 = hashlib.md5(root.encode('utf-8')).hexdigest()
+            # cache_file = "{}.{}.all{}.imgseqs".format(mod, ext, md5)
+            # cache_file = os.path.join(CACHE_PATH, cache_file)
+            # if (os.path.exists(cache_file)
+            #         and os.path.isfile(cache_file)
+            #         # and filesys.touch_date(cache_file) > filesys.touch_date(FILE_PATH)
+            #         and filesys.touch_date(cache_file) > filesys.touch_date(root)
+            #     ):
+            #     warn_str = "[video dataset] find valid cache {}".\
+            #         format(cache_file)
+            #     logger.warning(warn_str)
+            #     with open(cache_file, "rb") as f:
+            #         allseqs = pickle.load(f)
+            # else:
+            #     ## re-generate all image sequences
+            #     allpoints = collect.collect_datapoints(root=root, layout=self.layout,
+            #                                            mod=mod, ext=ext, **kwargs)
+            #     allseqs = p.map(_to_imgseq, allpoints)
                 
-                ## dump to cache file
-                os.makedirs(CACHE_PATH, exist_ok=True)
-                with open(cache_file, "wb") as f:
-                    pickle.dump(allseqs, f)                
-
+            #     ## dump to cache file
+            #     os.makedirs(CACHE_PATH, exist_ok=True)
+            #     with open(cache_file, "wb") as f:
+            #         pickle.dump(allseqs, f)                
+            self.samples = p.map(_to_imgseq, self.datapoints)
         else:
             self.samples = p.map(_to_vidarr, self.datapoints)
         ed_time = time.time()
@@ -195,18 +125,19 @@ class VideoDataset(torchdata.Dataset):
         """
         # currently, we return a Numpy ndarray although it
         # may consume too much memory.
-
+        datapoint = self.datapoints[idx]
         sample = self.samples[idx]
-        _blob = np.array(_iohanlde)
-        _sample = self.samples[idx]
-        _cid = self.lbls[_sample.lbl]
+        blob = np.array(sample)
+        cid = self.class_to_idx[datapoint.label]
+
         if self.transform is not None:
-            _blob = self.transform(_blob)
+            blob = self.transform(blob)
         if self.target_transform is not None:
-            _cid = self.target_transform(_cid)
+            cid = self.target_transform(cid)
+
         # return (a [T][H][W][C] ndarray, class id)
         # ndarray may need to be converted to [T][C][H][W] format in PyTorch
-        return (_blob, _cid)
+        return (blob, cid)
 
 
 def test(dataset, use_tqdm=True):
