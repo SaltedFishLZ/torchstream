@@ -10,7 +10,6 @@ import os
 from . import __config__
 from .label import __LABELS__
 from .__support__ import __SUPPORTED_SPLIT_OPTS__
-from torchstream.datasets.metadata.sample import Sample
 
 FILE_PATH = os.path.realpath(__file__)
 DIR_PATH = os.path.dirname(FILE_PATH)
@@ -69,15 +68,13 @@ class DatasetFilter(object):
         self.split_option = split_option
 
     def __call__(self, sample):
-        if __config__.__STRICT__:
-            assert isinstance(sample, Sample), TypeError
-        _name = sample.name
-        _label = sample.lbl
-        _rec = '_'.join([_label, _name])
+        name = sample.name
+        label = sample.lbl
+        rec = '_'.join([label, name])
         if "train" == self.split:
-            return _rec in TRAINSETS[self.split_option]
+            return rec in TRAINSETS[self.split_option]
         if "test" == self.split:
-            return _rec in TESTSETS[self.split_option]
+            return rec in TESTSETS[self.split_option]
         if __config__.__STRICT__:
             raise NotImplementedError
         return False
