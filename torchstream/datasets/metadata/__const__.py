@@ -5,7 +5,7 @@ Package Constants
 __all__ = [
     "ALLSET", "TRAINSET", "VALSET", "TESTSET",
     "IMGSEQ", "IMGEXT",
-    "UNKOWN_LABEL", "UNKOWN_CID"
+    "UNKNOWN_LABEL", "UNKNOWN_CID"
 ]
 
 

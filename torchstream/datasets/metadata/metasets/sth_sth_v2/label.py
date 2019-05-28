@@ -12,7 +12,7 @@ import logging
 
 from . import __config__
 from .jsonparse import TRAINSET_JLIST, VALSET_JLIST, TESTSET_JLIST
-from ...__const__ import UNKOWN_LABEL, UNKOWN_CID
+from ...__const__ import UNKNOWN_LABEL, UNKNOWN_CID
 from ....utils.filesys import touch_date
 
 FILE_PATH = os.path.realpath(__file__)
