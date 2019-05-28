@@ -76,8 +76,8 @@ CIDS = CIDS[1:len(CIDS)] + [0]
 __LABELS__ = dict(zip(__LABELS__, CIDS))
 
 # add UNKNOWN LABEL
-__LABELS__[UNKOWN_LABEL] = UNKOWN_CID
-__SAMPLES_PER_LABEL__[UNKOWN_LABEL] = [0, 999999]
+__LABELS__[UNKNOWN_LABEL] = UNKNOWN_CID
+__SAMPLES_PER_LABEL__[UNKNOWN_LABEL] = [0, 999999]
 
 
 
@@ -110,7 +110,7 @@ else:
     for df in (TESTSET_DF, ):
         for idx, row in df.iterrows():
             video = str(row["video"])
-            __ANNOTATIONS__[video] = UNKOWN_LABEL
+            __ANNOTATIONS__[video] = UNKNOWN_LABEL
     ## TODO: write failure check
     fout = open(ANNOT_FILE, "wb")
     pickle.dump(__ANNOTATIONS__, fout)

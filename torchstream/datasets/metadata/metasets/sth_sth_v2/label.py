@@ -233,8 +233,8 @@ assert __LABELS__.keys() == __SAMPLES_PER_LABEL__.keys(), \
     "Inconsistent"
 
 # add UNKNOWN LABEL
-__LABELS__[UNKOWN_LABEL] = UNKOWN_CID
-__SAMPLES_PER_LABEL__[UNKOWN_LABEL] = [0, 999999]
+__LABELS__[UNKNOWN_LABEL] = UNKNOWN_CID
+__SAMPLES_PER_LABEL__[UNKNOWN_LABEL] = [0, 999999]
 
 
 # ------------------------------------------------------------------------ #
@@ -266,7 +266,7 @@ else:
     for _jlist in (TESTSET_JLIST, ):
         for _jdict in _jlist:
             video = str(_jdict["id"])
-            __ANNOTATIONS__[video] = UNKOWN_LABEL  
+            __ANNOTATIONS__[video] = UNKNOWN_LABEL  
     ## TODO: write failure check
     f = open(ANNOT_FILE, "wb")
     pickle.dump(__ANNOTATIONS__, f)

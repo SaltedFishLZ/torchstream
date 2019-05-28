@@ -221,8 +221,8 @@ CIDS = list(range(len(__LABELS__)))
 __LABELS__ = dict(zip(__LABELS__, CIDS))
 
 # add UNKNOWN LABEL
-__LABELS__[UNKOWN_LABEL] = UNKOWN_CID
-__SAMPLES_PER_LABEL__[UNKOWN_LABEL] = [0, 999999]
+__LABELS__[UNKNOWN_LABEL] = UNKNOWN_CID
+__SAMPLES_PER_LABEL__[UNKNOWN_LABEL] = [0, 999999]
 
 
 
@@ -251,14 +251,11 @@ else:
             video = str(row["video"])
             label = str(row["label"])
             __ANNOTATIONS__[video] = label
-            if label is None:
-                print(video)
     ## testing set doesn't have labels
     for df in (TESTSET_DF, ):
         for idx, row in df.iterrows():
             video = str(row["video"])
             __ANNOTATIONS__[video] = UNKNOWN_LABEL
-            print(UNKNOWN_LABEL)
     ## TODO: write failure check
     fout = open(ANNOT_FILE, "wb")
     pickle.dump(__ANNOTATIONS__, fout)
