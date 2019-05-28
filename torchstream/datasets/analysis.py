@@ -1,5 +1,6 @@
 """Dataset Analysis Toolbox
 """
+import os
 import subprocess
 try:
     from subprocess import DEVNULL # python 3.x

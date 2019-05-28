@@ -1,24 +1,19 @@
 """Helper functions for collecting metadata from a dataset directory
 """
-__all__ = [
-    "collect_samples_ucf101", "collect_samples_20bn",
-    "collect_samples"
-]
-
 import os
 import pickle
 import logging
+import hashlib
 
 from . import __config__
-from torchstream.datasets.metadata.sample import Sample, SampleSet
-from ..utils.cache import hashid, hashstr
+from .datapoint import DataPoint, DataPointCounter
 from ..utils.filesys import strip_extension, touch_date
 from .__support__ import __SUPPORTED_MODALITIES__, __SUPPORTED_IMAGES__
 from .__support__ import __SUPPORTED_LAYOUTS__
 
 FILE_PATH = os.path.realpath(__file__)
 DIR_PATH = os.path.dirname(FILE_PATH)
-CACHE_PATH = os.path.join(DIR_PATH, ".collected.d")
+CACHE_PATH = os.path.join(DIR_PATH, ".cache")
 
 # ---------------------------------------------------------------- #
 #                  Configuring Python Logger                       #
@@ -36,305 +31,162 @@ elif __config__.__VERBOSE__:
 else:
     logger.setLevel(logging.CRITICAL)
 
+# ---------------------------------------------------------------- #
+#                       Utility Functions                          #
+# ---------------------------------------------------------------- #
+
+def _is_valid_datapoint(path, mod, ext):
+    """Check whether a path is a valid datapoint
+    """
+    if not isinstance(path, str):
+        raise TypeError
+    if not isinstance(mod, str):
+        raise TypeError
+    if ext not in __SUPPORTED_MODALITIES__[mod]:
+        raise NotImplementedError
+    
+    seq = ext in __SUPPORTED_IMAGES__
+    ## invalid video files
+    if (not seq) and (ext not in path):
+        warn_str = "Insane dataset: invalid file {}".format(path)
+        logger.warning(warn_str)
+        return False
+            
+    ## bypass invalid image sequences
+    if seq and (not os.path.isdir(path)):
+        warn_str = "Insane dataset: sequence folder {}".format(path)
+        logger.warning(warn_str)
+        return False
+
+    return True
 
 # ---------------------------------------------------------------- #
 #            Collect Samples and Get A Set of Samples              #
 # ---------------------------------------------------------------- #
 
-def collect_samples_ucf101(root, lbls, mod, ext,
-                        **kwargs):
-    """ Collect samples from a dataset with a 20BN style layout
+def collect_datapoints_ucf101(root, mod, ext, **kwargs):
+    """ Collect datapoints from a dataset with a UCF101 style layout
     """
-    ## santity check
     assert isinstance(root, str), TypeError
     assert os.path.exists(root) and os.path.isdir(root), NotADirectoryError
-    assert isinstance(lbls, dict), TypeError
+    assert isinstance(mod, str), TypeError
     assert ext in __SUPPORTED_MODALITIES__[mod], NotImplementedError
-
-    ## parse kwargs
-    if "filter" in kwargs:
-        filter = kwargs["filter"]
-    else:
-        filter = None
 
     ## initializaion
     seq = ext in __SUPPORTED_IMAGES__[mod]
-    samples = set()
+    datapoints = []
 
     ## traverse all categories/classes/labels
-    for _label in os.listdir(root):
+    for label in os.listdir(root):
 
-        ## bypass invalid labels
-        if _label not in lbls:
-            continue
-        
-        _cid = lbls[_label]
-        _label_path = os.path.join(root, _label)
+        label_path = os.path.join(root, label)
 
         ## travese all video files/image sequences
-        for _video in os.listdir(_label_path):
-            ## bypass invalid video files
-            if (not seq) and (ext not in _video):
-                warn_str = "Insane dataset: invalid file {} in path {}".\
-                    format(_video, _label)
-                logger.warning(warn_str)
+        for data in os.listdir(label_path):
+            
+            data_path = os.path.join(label_path, data)
+            if not _is_valid_datapoint(data_path, mod=mod, ext=ext):
                 continue
-            ## bypass invalid image sequences
-            if seq and (not os.path.isdir(os.path.join(_label_path, _video))):
-                warn_str = "Insane dataset: sequence folder {} in path {}".\
-                    format(_video, _label)
-                logger.warning(warn_str)
-                continue
-            ## assemble relative path
-            _rpath = os.path.join(_label, _video)
-            ## strip file extension if it is a video file
-            _name = _video if seq else strip_extension(_video)
-            ## generate Sample object
-            _sample = Sample(root=root, rpath=_rpath, name=_name,
-                             mod=mod, ext=ext,
-                             lbl=_label, cid=_cid
-                            )
-            ## filter sample
-            if filter is not None:
-                if not filter(_sample):
-                    continue
-            ## update sample set
-            samples.add(_sample)
 
-    info_str = "[collect_samples] get {} samples from a UCF style layout"\
-            .format(len(samples))
-    logger.info(info_str)
+            name = data if seq else strip_extension(data)
+            
+            ## generate DataPoint object
+            datapoint = DataPoint(root=root, rpath=label, name=name,
+                                  label=label, mod=mod, ext=ext)
 
-    return samples
+            datapoints.append(datapoint)
+
+    logger.info("{} datapoints from a UCF layout".format(len(datapoints)))
+
+    return datapoints
 
 
-def collect_samples_ucf101_reverse(root, annots, lbls, mod, ext,
-                        **kwargs):
-    """ Collect samples from a dataset with a 20BN style layout reversely
-    """
-    ## sanity check
-    assert isinstance(root, str), TypeError
-    assert os.path.exists(root) and os.path.isdir(root), NotADirectoryError
-    assert isinstance(lbls, dict), TypeError
-    assert ext in __SUPPORTED_MODALITIES__[mod], NotImplementedError
-
-    ## parse kwargs
-    if "filter" in kwargs:
-        filter = kwargs["filter"]
-    else:
-        filter = None
-
-    ## initializaion
-    seq = ext in __SUPPORTED_IMAGES__[mod]
-    samples = set()
-
-    ## traverse all categories/classes/labels
-    for _label in lbls:
-        _cid = lbls[_label]
-        ## travese all video files/image sequences
-        for _name in annots:
-            ## assemble paths
-            _video = _name if seq else "{}.{}".format(_name, ext)
-            _rpath = os.path.join(_label, _video)
-            _path = os.path.join(root, _rpath)
-            ## check existence
-            if not os.path.exists(_path):
-                if __config__.__STRICT__:
-                    raise Exception("Missing video [{}]".format(_rpath))
-                logger.warning("missing video [{}]".format(_rpath))
-                continue
-            ## generate Sample object
-            _sample = Sample(root=root, rpath=_rpath, name=_name,
-                             mod=mod, ext=ext,
-                             lbl=_label, cid=_cid
-                            )
-            ## filter sample
-            if filter is not None:
-                if not filter(_sample):
-                    continue
-            ## update sample set
-            samples.add(_sample)
-
-    info_str = "[collect_samples] get {} samples from a UCF style layout"\
-            .format(len(samples))
-    logger.info(info_str)
-
-    return samples
-
-
-def collect_samples_20bn(root, annots, lbls, mod, ext,
-                         **kwargs):
-    """ Collect samples from a dataset with a 20BN style layout
+def collect_datapoints_20bn(root, annots, mod, ext, **kwargs):
+    """ Collect datapoints from a dataset with a 20BN style layout
     You must provide annotations
     """
-    ## santity check
     assert isinstance(root, str), TypeError
     assert os.path.exists(root) and os.path.isdir(root), NotADirectoryError
     assert isinstance(annots, dict), TypeError
-    assert isinstance(lbls, dict), TypeError
+    assert isinstance(mod, str), TypeError
     assert ext in __SUPPORTED_MODALITIES__[mod], NotImplementedError
-
-    ## parse kwargs
-    if "filter" in kwargs:
-        filter = kwargs["filter"]
-    else:
-        filter = None
 
     ## initializaion
     seq = ext in __SUPPORTED_IMAGES__[mod]
-    samples = set()
+    datapoints = []
 
     ## traverse all video files/image sequences
-    for _video in os.listdir(root):
-        ## bypass invalid video files
-        if (not seq) and (ext not in _video):
-            warn_str = "Insane dataset: invalid file {}".\
-                format(_video)
-            logger.warning(warn_str)
-            continue
-        ## bypass invalid image sequences
-        if seq and (not os.path.isdir(os.path.join(root, _video))):
-            warn_str = "Insane dataset: sequence folder {}".\
-                format(_video)
-            logger.warning(warn_str)
-            continue
+    for data in os.listdir(root):
+        data_path = os.path.join(root, data)
+
         ## strip file extension if it is a video file
-        _name = _video if seq else strip_extension(_video)
-        ## get label
-        _label = annots[_name]
-        ## bypass invalid labels
-        if _label not in lbls:
-            continue
-        ## get cid
-        _cid = lbls[_label]
-        _sample = Sample(root=root, rpath=_video, name=_name,
-                         mod=mod, ext=ext,
-                         lbl=_label, cid=_cid)
-        ## filter sample
-        if filter is not None:
-            if not filter(_sample):
-                continue
-        ## update sample set
-        samples.add(_sample)
-
-    info_str = "[collect_samples] get {} samples from a 20BN style layout"\
-            .format(len(samples))
-    logger.info(info_str)
-
-    return samples
-
-
-def collect_samples_20bn_reverse(root, annots, lbls, mod, ext,
-                         **kwargs):
-    """ Collect samples from a dataset with a 20BN style layout reversely
-    This function will collect samples according to annotations
-    """
-    ## santity check
-    assert isinstance(root, str), TypeError
-    assert os.path.exists(root) and os.path.isdir(root), NotADirectoryError
-    assert isinstance(annots, dict), TypeError
-    assert isinstance(lbls, dict), TypeError
-    assert ext in __SUPPORTED_MODALITIES__[mod], NotImplementedError
-
-    ## parse kwargs
-    if "filter" in kwargs:
-        filter = kwargs["filter"]
-    else:
-        filter = None
-
-    ## initializaion
-    seq = ext in __SUPPORTED_IMAGES__[mod]
-    samples = set()
-
-    ## traverse all official samples
-    for _name in annots:
-        ## bypass invalid labels
-        _label = annots[_name]
-        if _label not in lbls:
-            continue
-        ## get cid
-        _cid = lbls[_label]
-        ## check existence
-        _rpath = _name if seq else (_name + "." + ext)
-        _path = os.path.join(root, _rpath)
-        # if not os.path.exists(_path):
-        #     if __config__.__STRICT__:
-        #         raise Exception("Missing video [{}]".format(_rpath))
-        #     logger.warning("missing video [{}]".format(_rpath))
-        #     continue
+        name = data if seq else strip_extension(data)
         
-        ## get sample
-        _sample = Sample(root=root, rpath=_rpath, name=_name,
-                         mod=mod, ext=ext,
-                         lbl=_label, cid=_cid
-                        )
-        ## filter sample
-        if filter is not None:
-            if not filter(_sample):
-                continue
-        ## update sample set
-        samples.add(_sample)
+        label = annots[name]
 
-    info_str = "[collect_samples] get {} samples from a 20BN style layout"\
-            .format(len(samples))
-    logger.info(info_str)
+        datapoint = DataPoint(root=root, rpath="", name=name, label=label,
+                              mod=mod, ext=ext)
 
-    return samples
+        ## update datapoint set
+        datapoints.append(datapoint)
+
+    logger.info("get {} datapoints from a 20BN layout".format(len(datapoints)))
+
+    return datapoints
 
 
-
-def collect_samples(root, layout, lbls, mod, ext,
-                    **kwargs):
-    """Collect samples according to given conditions
-    @param return set:
+def collect_datapoints(root, layout, mod, ext, **kwargs):
+    """Collect datapoints according to given conditions
     Args
-        lbls: dict with keys = labels, values = cids
-    Return
-        a set of Sample objects
+    Return:
+        a list of DataPoint objects
     """
-    ## sanity check
     assert layout in __SUPPORTED_LAYOUTS__, NotImplementedError
-    
-    ## assemble cache file information
-    cache_file = "{}.samples.pkl".format(hashstr(**locals()))
+
+    allpoints = []
+    ## Cache Mechanism
+    md5 = hashlib.md5(root.encode('utf-8')).hexdigest()
+    cache_file = "{}.{}.all{}.datapoints".format(mod, ext, md5)
     cache_file = os.path.join(CACHE_PATH, cache_file)
-    
-    ## seek valid cache
     if (
-        os.path.exists(cache_file)
-        and os.path.isfile(cache_file)
-        and touch_date(cache_file) > touch_date(FILE_PATH)
-        and touch_date(cache_file) > touch_date(root)
-    ):              
-        ## find valid cache
-        warn_str = "[collect_samples] find valid cache {}".\
+            os.path.exists(cache_file)
+            and os.path.isfile(cache_file)
+            and touch_date(cache_file) > touch_date(FILE_PATH)
+            and touch_date(cache_file) > touch_date(root)
+    ):
+        warn_str = "[collect_datapoints] find valid cache {}".\
             format(cache_file)
         logger.warning(warn_str)
         with open(cache_file, "rb") as f:
-            return pickle.load(f)
-
-    ## re-generate samples
-    if layout == "UCF101":
-        samples = collect_samples_ucf101(root=root, lbls=lbls,
-                                         mod=mod, ext=ext,
-                                         **kwargs
-                                        )
-    elif layout == "20BN":
-        if "annots" not in kwargs:
-            raise Exception("20BN style layout must specify annotations")
-        samples = collect_samples_20bn_reverse(root=root, lbls=lbls,
-                                       mod=mod, ext=ext,
-                                       **kwargs
-                                       )
+            allpoints = pickle.load(f)
     else:
-        raise NotImplementedError
-
+        ## re-generate all datapoints
+        warn_str = "[collect_datapoints] regenerating all data points of {}".\
+            format(root)
+        logger.warning(warn_str)        
+        if layout == "UCF101":
+            allpoints = collect_datapoints_ucf101(root=root, mod=mod,
+                                                  ext=ext, **kwargs)
+        elif layout == "20BN":
+            if "annots" not in kwargs:
+                raise Exception("20BN style layout must specify annotations")
+            allpoints = collect_datapoints_20bn(root=root, mod=mod, ext=ext,
+                                                 **kwargs)
+        else:
+            raise NotImplementedError
     ## dump to cache file
     os.makedirs(CACHE_PATH, exist_ok=True)
     with open(cache_file, "wb") as f:
-        pickle.dump(samples, f)
-    
-    return samples
+        pickle.dump(allpoints, f)
+
+    ## filter datapoints
+    if "datapoint_filter" in kwargs:
+        datapoint_filter = kwargs["datapoint_filter"]
+        datapoints = list(filter(datapoint_filter, allpoints))
+    else:
+        datapoints = allpoints
+
+    return datapoints
 
 
 def test(dataset):
@@ -346,11 +198,10 @@ def test(dataset):
     kwargs = {
         "root" : metaset.JPG_DATA_PATH,
         "layout" : metaset.__layout__,
-        "lbls" : metaset.__LABELS__,
         "mod" : "RGB",
         "ext" : "jpg",
     }
-    
+
     if hasattr(metaset, "__ANNOTATIONS__"):
         kwargs["annots"] = metaset.__ANNOTATIONS__
 
@@ -359,19 +210,24 @@ def test(dataset):
     
     if hasattr(metaset, "JPG_IDX_OFFSET"):
         kwargs["offset"] = metaset.JPG_IDX_OFFSET
-    
+
+    if hasattr(metaset, "AVI_DATA_PATH"):
+        kwargs["root"] = metaset.AVI_DATA_PATH
+        kwargs["ext"] = "avi"
+
+    # kwargs["datapoint_filter"] = lambda x: x.label == "pjump"
+
     print("Collecting Metadata")
     import time
     st_time = time.time()
-    samples = collect_samples(**kwargs)
+    datapoints = collect_datapoints(**kwargs)
+    print(len(datapoints))
     ed_time = time.time()
     print("collecting time", ed_time - st_time)
 
-    sample_set = SampleSet(samples)
-    print(sample_set)
+    datapoint_counter = DataPointCounter(datapoints)
+    print(datapoint_counter)
     
-    x = set(sample_set)
-    print(sorted(sample_set.get_samples()) == sorted(samples))
 
 if __name__ == "__main__":
     import sys
