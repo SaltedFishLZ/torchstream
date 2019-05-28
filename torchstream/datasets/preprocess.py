@@ -15,7 +15,7 @@ except ImportError:
 
 
 from . import __config__
-from .metadata.sample import Sample
+from .metadata.datapoint import DataPoint
 from .utils.vision import video2frames
 
 # ---------------------------------------------------------------- #
@@ -53,20 +53,19 @@ logger = logging.getLogger(__name__)
 
 ## Video -> Video Conversion
 #  using ffmpeg to convert videos
-#  @param src_sample Sample: source video's meta-data
-#  @param dst_sample Sample: destination video's meta-data
+#  @param src_sample datapoint: source video's meta-data
+#  @param dst_sample datapoint: destination video's meta-data
 def vid2vid(src_sample, dst_sample, **kwargs):
     """
     """
-    ## Santity Check 
     if __config__.__STRICT__:
         ## Check Source Oprand
-        assert isinstance(src_sample, Sample), \
+        assert isinstance(src_sample, DataPoint), \
             TypeError
         assert not src_sample.seq, \
             "Source sample is not a video"
         ## Check Destination Oprand
-        assert isinstance(dst_sample, Sample), \
+        assert isinstance(dst_sample, DataPoint), \
             TypeError
         assert not dst_sample.seq, \
             "Destination sample is not a video"
@@ -107,12 +106,12 @@ def vid2seq(src_sample, dst_sample, **kwargs):
     ## Santity Check 
     if __config__.__STRICT__:
         ## Check Source Oprand
-        assert isinstance(src_sample, Sample), \
+        assert isinstance(src_sample, DataPoint), \
             TypeError
         assert not src_sample.seq, \
             "Source sample is not a video"
         ## Check Destination Oprand
-        assert isinstance(dst_sample, Sample), \
+        assert isinstance(dst_sample, DataPoint), \
             TypeError
         assert dst_sample.seq, \
             "Destination sample is not a image sequence"
@@ -144,12 +143,12 @@ if __name__ == "__main__":
 
     # self-testing
     DIR_PATH = os.path.dirname(os.path.realpath(__file__))
-    SRC_VID_SAMPLE = Sample(root=DIR_PATH,
+    SRC_VID_SAMPLE = DataPoint(root=DIR_PATH,
                             rpath="test.webm", name="test", ext="webm")
-    DST_VID_SAMPLE = Sample(root=DIR_PATH,
+    DST_VID_SAMPLE = DataPoint(root=DIR_PATH,
                             rpath="test.avi", name="test", ext="avi")
     print(vid2vid(SRC_VID_SAMPLE, DST_VID_SAMPLE, retries=10))
 
-    DST_SEQ_SAMPLE = Sample(root=DIR_PATH,
+    DST_SEQ_SAMPLE = DataPoint(root=DIR_PATH,
                             rpath="test_seq", name="test_seq", ext="jpg")
     print(vid2seq(DST_VID_SAMPLE, DST_SEQ_SAMPLE))

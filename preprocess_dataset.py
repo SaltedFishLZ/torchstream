@@ -3,7 +3,7 @@
 
 from torchstream.datasets import preprocess
 from torchstream.datasets.utils.mapreduce import Manager
-from torchstream.datasets.metadata.collect import collect_samples
+from torchstream.datasets.metadata.collect import collect_datapoints
 
 def transform_videos(name, samples, dst_root, ext="avi",
                  worker_num=16, **kwargs):
@@ -66,7 +66,7 @@ def main(name):
     if hasattr(metaset, "JPG_IDX_OFFSET"):
         kwargs["offset"] = metaset.JPG_IDX_OFFSET
 
-    samples = collect_samples(**kwargs)
+    samples = collect_datapoints(**kwargs)
 
     # transform_videos(name, samples, dst_root=metaset.AVI_DATA_PATH)
     slice_videos(name, samples, dst_root=metaset.JPG_DATA_PATH)

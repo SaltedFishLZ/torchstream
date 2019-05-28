@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 
 from torchstream.datasets import analysis
 from torchstream.datasets.utils.mapreduce import Manager
-from torchstream.datasets.metadata.collect import collect_samples
+from torchstream.datasets.metadata.collect import collect_datapoints
 
 FILE_PATH = os.path.realpath(__file__)
 DIR_PATH = os.path.dirname(__file__)
@@ -171,7 +171,7 @@ def main(name):
         kwargs["offset"] = metaset.JPG_IDX_OFFSET
     
     print("Collecting Metadatas")
-    samples = collect_samples(**kwargs)
+    samples = collect_datapoints(**kwargs)
 
     # fps_hist(name, samples, **kwargs)
     norm_params(name, samples, **kwargs)

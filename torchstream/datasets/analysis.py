@@ -11,7 +11,7 @@ import numpy as np
 
 from .vidarr import VideoArray
 from .imgseq import ImageSequence
-from .metadata.sample import Sample
+from .metadata.datapoint import DataPoint
 from .utils.regex import match_first
 
 # ---------------------------------------------------------------- #
@@ -66,7 +66,7 @@ def varray_rss(varray, means=None, **kwargs):
 def sample_sum(sample, **kwargs):
     """Wrapper
     """
-    assert isinstance(sample, Sample), TypeError
+    assert isinstance(sample, DataPoint), TypeError
     if sample.seq:
         varray = np.array(ImageSequence(sample, **kwargs))
     else:
@@ -76,7 +76,7 @@ def sample_sum(sample, **kwargs):
 def sample_rss(sample, **kwargs):
     """Wrapper
     """
-    assert isinstance(sample, Sample), TypeError
+    assert isinstance(sample, DataPoint), TypeError
     if sample.seq:
         varray = np.array(ImageSequence(sample, **kwargs))
     else:
@@ -101,7 +101,7 @@ def varray_hxw(varray, **kwargs):
 def sample_len(sample, **kwargs):
     """
     """
-    assert isinstance(sample, Sample), TypeError
+    assert isinstance(sample, DataPoint), TypeError
     ## short path for image sequence
     if sample.seq:
         img_seq = ImageSequence(sample, **kwargs)
@@ -125,7 +125,7 @@ def sample_len(sample, **kwargs):
 def sample_hxw(sample, **kwargs):
     """
     """
-    assert isinstance(sample, Sample), TypeError
+    assert isinstance(sample, DataPoint), TypeError
     ## short path for image sequence
     if sample.seq:
         img_seq = ImageSequence(sample, **kwargs)
@@ -144,7 +144,7 @@ def sample_hxw(sample, **kwargs):
 def sample_fps(sample, **kwargs):
     """
     """
-    assert isinstance(sample, Sample), TypeError
+    assert isinstance(sample, DataPoint), TypeError
     assert not sample.seq, "Image Sequence has no fps data"
     
     command = r'ffmpeg -i {} 2>&1 | sed -n "s/.*, \(.*\) fp.*/\1/p"'
@@ -171,7 +171,7 @@ def sample_fps(sample, **kwargs):
 
 def test_sample_fps():
     file_name = "Climbing_roof_in_TCA_climb_f_cm_np1_ba_med_2.avi"
-    sample = Sample(root="~/Datasets/HMDB51/HMDB51-avi/",
+    sample = DataPoint(root="~/Datasets/HMDB51/HMDB51-avi/",
                     rpath="climb/{}".format(file_name),
                     name=file_name,
                     ext="avi"
