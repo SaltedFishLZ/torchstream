@@ -1,147 +1,327 @@
-# -*- coding: utf-8 -*-
-# Video Blob Transform
-# Author: Zheng Liang
-# 
-# This module handles extra video data transformations which
-# might not be included in the official PyTorch package.
+from __future__ import division
+import sys
 import math
-import copy
-import time
+import types
+import random
 import numbers
+import warnings
+import collections
 
-import numpy as np
 import cv2
 import torch
-import torchvision
+import numpy as np
 
-from .__init__ import *
-from .video import *
+from . import functional as F
+
+if sys.version_info < (3, 3):
+    Sequence = collections.Sequence
+    Iterable = collections.Iterable
+else:
+    Sequence = collections.abc.Sequence
+    Iterable = collections.abc.Iterable
 
 
-__test__ = True
+
+class Compose(object):
+    """Composes several transforms together.
+    Args:
+        transforms (list of ``Transform`` objects): list of transforms to compose.
+    Example:
+        >>> transforms.Compose([
+        >>>     transforms.CenterCrop(10),
+        >>>     transforms.ToTensor(),
+        >>> ])
+    """
+
+    def __init__(self, transforms):
+        self.transforms = transforms
+
+    def __call__(self, vid):
+        for t in self.transforms:
+            vid = t(vid)
+        return vid
+
+    def __repr__(self):
+        format_string = self.__class__.__name__ + '('
+        for t in self.transforms:
+            format_string += '\n'
+            format_string += '    {0}'.format(t)
+        format_string += '\n)'
+        return format_string
+
+
+class ToTensor(object):
+    """Convert a ``numpy.ndarray`` to tensor.
+    Converts a numpy.ndarray (T x H x W x C) in the range [0, 255] to a
+    torch.FloatTensor of shape (C x T x H x W) in the range [0.0, 1.0]
+    if the numpy.ndarray has dtype = np.uint8
+    In the other cases, tensors are returned without scaling.
+    """
+
+    def __call__(self, varray):
+        """
+        Args:
+            varray (numpy.ndarray): varray to be converted to tensor.
+        Returns:
+            Tensor: Converted video.
+        """
+        return F.to_tensor(varray)
+
+    def __repr__(self):
+        return self.__class__.__name__ + '()'
+
+
+class ToVarray(object):
+    """Convert a tensor to a varray
+    CxTxHxW -> TxHxWxC
+    """
+    def __call__(self, vid):
+        """
+        """
+        return F.to_varray(vid)
+
+    def __repr__(self):
+        return self.__class__.__name__ + '()'
+
+
+
+# -------------------------------- #
+#        Video Normalize           #
+# -------------------------------- #
+
+class VideoNormalize(object):
+    """Normalize a tensor video with mean and standard deviation.
+    Given mean: ``(M1,...,Mn)`` and std: ``(S1,..,Sn)`` for ``n`` channels, 
+    this transform will normalize each channel of the input ``torch.*Tensor``
+    i.e. ``input[channel] = (input[channel] - mean[channel]) / std[channel]``
+
+    Args:
+        mean (sequence): Sequence of means for each channel.
+        std (sequence): Sequence of standard deviations for each channel.
+    """
+
+    def __init__(self, mean, std, inplace=False):
+        self.mean = mean
+        self.std = std
+        self.inplace = inplace
+
+    def __call__(self, tensor):
+        """
+        Args:
+            tensor (Tensor): Tensor image of size (C, H, W) to be normalized.
+
+        Returns:
+            Tensor: Normalized Tensor image.
+        """
+        return F.normalize(tensor, self.mean, self.std, self.inplace)
+
+    def __repr__(self):
+        paramstr = '(mean={0}, std={1})'.format(self.mean, self.std)
+        return self.__class__.__name__ + paramstr
+
+
+# -------------------------------- #
+#          Video Padding           #
+# -------------------------------- #
+
+class SpatialPad(object):
+    r""" Spatial Padding
+    """
+    def __init__(self, padding, padding_mode='constant', **kwargs):
+        self.padding = padding
+        self.padding_mode = padding_mode
+        self.kwargs = kwargs
+
+    def __call__(self, img):
+        """
+        """
+        return F.spad(img, self.padding, self.padding_mode, **(self.kwargs))
+
+    def __repr__(self):
+        return self.__class__.__name__ + '(padding={0}, padding_mode={2})'.\
+            format(self.padding, self.padding_mode)
+
+class TemporalPad(object):
+    r""" Temporal Padding
+    """
+    def __init__(self, padding, padding_mode='constant', **kwargs):
+        self.padding = padding
+        self.padding_mode = padding_mode
+        self.kwargs = kwargs
+
+    def __call__(self, img):
+        """
+        """
+        return F.spad(img, self.padding, self.padding_mode, **(self.kwargs))
+
+    def __repr__(self):
+        return self.__class__.__name__ + '(padding={0}, padding_mode={2})'.\
+            format(self.padding, self.padding_mode)
 
 
 # -------------------------------- #
 #           Video Crop             #
 # -------------------------------- #
 
-class VideoRandomCrop(object):
-    '''
-    Random crop an certain area in the [H][W] dimension and
-    keep all frames in a crop consistent in [H][W]
-    '''
+class CenterCrop(object):
+    """ Crop a given video spatially in the center area
+    Crop in the [H][W] dimension and keep all frames consistent
+    in crop location.
+
+    Args
+        size : an integer S or a tuple (H, W)
+    """
     def __init__(self, size):
-        '''
-        Initialization function
-        - size : an integer S or a tuple (H, W)
-        '''
-        if isinstance(size, numbers.Number):
-            self.size = (int(size), int(size))
-        else:
-            self.size = size
 
-    def __call__(self, varray):
-        '''
-        Video level random crop
-        - varray : video in a numpy ndarray, data layout is [T][H][W][C]
-        - return : a cropped varray with the same data layout
-        '''
-        h, w = varray.shape[1:3]
-        th, tw = self.size
-        # short cut
-        if ((h == th) and (w == tw)):
-            return(varray)
-        # santity check
-        assert (th <= h), "Crop height exceeds frame height"
-        assert (tw <= w), "Crop width exceeds frame width"
-        # generate offset
-        i = np.random.randint(0, h - th)
-        j = np.random.randint(0, w - tw)
-        # crop
-        result = varray[:, i : i + th, j : j + tw, :]
-        return(result)
-
-    def __repr__(self):
-        return self.__class__.__name__ + '(size={})'.format(self.size)
-
-class VideoCenterCrop(object):
-    '''
-    Crop the center area in the [H][W] dimension and
-    keep all frames in a crop consistent in [H][W]    
-    '''
-    def __init__(self, size):
-        '''
-        Initialization function
-        - size : an integer S or a tuple (H, W)
-        '''
         if isinstance(size, numbers.Number):
             self.size = (int(size), int(size))
         else:
             self.size = size
     
     def __call__(self, varray):
-        '''
-        Video level random crop
-        - varray : video in a numpy ndarray, data layout is [T][H][W][C]
-        - return : a cropped varray with the same data layout
-        '''
-        h, w = varray.shape[1:3]
-        th, tw = self.size
-        # short cut
-        if ((h == th) and (w == tw)):
-            return(varray)
-        # santity check
-        assert (th <= h), "Crop height exceeds frame height"
-        assert (tw <= w), "Crop width exceeds frame width"
-        # generate offset
-        i = int(round((h - th) / 2.))
-        j = int(round((w - tw) / 2.))
-        # crop
-        result = varray[:, i : i + th, j : j + tw, :]
-        return(result)
+        return F.center_crop(varray, self.size)
 
     def __repr__(self):
-        return self.__class__.__name__ + '(size={})'.format(self.size)
+        return self.__class__.__name__ + "(size={})".format(self.size)
 
+class RandomCrop(object):
+    """Crop the given video at a random location.
+
+    Args:
+        size (sequence or int): Desired output size of the crop. If size is an
+            int instead of sequence like (h, w), a square crop (size, size) is
+            made.
+    """
+    def __init__(self, size):
+        if isinstance(size, numbers.Number):
+            self.size = (int(size), int(size))
+        else:
+            self.size = size
+
+    @staticmethod
+    def get_params(vid, output_size):
+        """Get parameters for ``crop`` for a random crop.
+
+        Args:
+            vid (varray): video to be cropped.
+            output_size (tuple): Expected output size of the crop.
+
+        Returns:
+            tuple: params (i, j, h, w) to be passed to ``crop``.
+        """
+        h, w = vid.shape[1: 3]
+        th, tw = output_size
+        if w == tw and h == th:
+            return 0, 0, h, w
+
+        i = random.randint(0, h - th)
+        j = random.randint(0, w - tw)
+        return i, j, th, tw
+
+    def __call__(self, vid):
+        i, j, h, w = self.get_params(vid, self.size)
+        return F.crop(vid, i, j, h, w)
+
+    def __repr__(self):
+        return self.__class__.__name__ + "(size={})".format(self.size)
+
+
+# -------------------------------- #
+#           Video Clip             #
+# -------------------------------- #
+
+class CenterClip(object):
+    """
+    """
+    def __init__(self, size):
+        self.size = size
+    
+    def __call__(self, vid):
+        return F.center_clip(vid, self.size)        
+
+    def __repr__(self):
+        return self.__class__.__name__ + "(size={})".format(self.size)
+
+class RandomClip(object):
+    """
+    """
+    def __init__(self, size):
+        self.size = size
+
+    @staticmethod
+    def get_params(vid, output_size):
+        t = vid.shape[0]
+        tt = output_size
+        if tt == t:
+            return 0, t
+        k = random.randint(0, t - tt)
+        return k, tt
+
+    def __call__(self, vid):
+        k, tt = self.get_params(vid, self.size)
+        return F.clip(vid, k, tt)
+
+    def __repr__(self):
+        return self.__class__.__name__ + "(size={})".format(self.size)
+
+
+# -------------------------------- #
+#           Video Clip             #
+# -------------------------------- #
+
+class CenterSegment(object):
+    """
+    """
+    def __init__(self, size):
+        self.size = size
+
+    def __call__(self, vid):
+        return F.segment(vid, s=self.size, mode="center")
+
+    def __repr__(self):
+        return self.__class__.__name__ + "(size={})".format(self.size)
+
+
+class RandomSegment(object):
+    """
+    """
+    def __init__(self, size):
+        self.size = size
+
+    def __call__(self, vid):
+        return F.segment(vid, s=self.size, mode="random")
+
+    def __repr__(self):
+        return self.__class__.__name__ + "(size={})".format(self.size)
 
 
 # -------------------------------- #
 #          Video Resize            #
 # -------------------------------- #
 
-class VideoResize(object):
-    '''
-    Resize a video via OpenCV's resize API
+class Resize(object):
+    """
+    Resize a video via OpenCV"s resize API
     NOTE: Currently, we only support spatial resize.
-    '''
+    """
     def __init__(self, size, interpolation=cv2.INTER_LINEAR):
-        '''
+        """
         - size 
         - interpolation
-        '''
+        """
         if isinstance(size, numbers.Number):
             self.size = (int(size), int(size))
         else:
             self.size = size
         self.interpolation = interpolation
-    
-    def __call__(self, varray):
-        '''
-        - varray : [T][H][W][C]
-        - return : [T][H][w][C]
-        '''
-        t, h, w, c = varray.shape
-        result_shape = (t, self.size[0], self.size[1], c)
-        result = np.empty(result_shape, np.dtype('float32'))
-        for _i in range(t):
-            farray = varray[_i, :, :, :]
-            result[_i, :, :, :] = cv2.resize(farray, 
-                dsize=(self.size[1], self.size[0]),
-                interpolation=self.interpolation)
-        return(result)
+
+    def __call__(self, vid):
+        """
+        """
+        return F.resize(vid, self.size, self.interpolation)
 
     def __repr__(self):
-        return self.__class__.__name__ + '(size={}, intrpl={})'.\
+        return self.__class__.__name__ + "(size={}, interpolation={})".\
             format(self.size, self.interpolation)
 
 
@@ -162,196 +342,46 @@ class VideoResize(object):
 # corresponds to get the opposite vector of the original
 # flow, which is "flow = - flow", rather than "flow = 
 # flip(flow)"
-class VideoFlip(object):
-    '''
-    Video level deterministic flip
-    '''
-    def __init__(self, dim="H"):
-        '''
-        Initialization
-        - dim : "H", "W" or "T", which dimension the flip
-        takes place. "H" is height, "W" is width, "T" is time.
-        '''
-        assert (dim in ["H", "W", "T"]), "Unsupported flip dimension"
-        self.dim = copy.deepcopy(dim)
-    
-    def __call__(self, varray):
-        '''
-        Flip a video, must execute
-        - varray : [T][H][W][C]
-        - return : flipped video
-        '''
-        if ("T" == self.dim):
-            return(np.flip(varray, 0))
-        elif ("H" == self.dim):
-            return(np.flip(varray, 1))
-        elif ("W" == self.dim):
-            return(np.flip(varray, 2))
-        else:
-            assert True, "Error in transform"
+
+
+class RandomHorizontalFlip(object):
+    """Horizontally flip the given video with a given probability.
+
+    Args:
+        p (float): probability of the image being flipped.
+            Default value is 0.5
+    """
+    def __init__(self, p=0.5):
+        self.p = p
+
+    def __call__(self, vid):
+        # TODO:
+        # how to notify the caller whether the video is flipped ?
+        if random.random() < self.p:
+            return F.hflip(vid)
+        return vid
 
     def __repr__(self):
-        return self.__class__.__name__ + '(dim={})'.format(self.dim)
+        return self.__class__.__name__ + '(p={})'.format(self.p)
 
+class RandomVerticalFlip(object):
+    """Vertically flip the given video with a given probability.
 
-class VideoRandomFlip(VideoFlip):
-    '''
-    Video level random flip
-    '''
-    def __init__(self, dim="H"):
-        super(VideoRandomFlip, self).__init__(dim=dim)
+    Args:
+        p (float): probability of the image being flipped.
+            Default value is 0.5
+    """
+    def __init__(self, p=0.5):
+        self.p = p
     
-    def __call__(self, varray):
-        # TODO: how to notify the caller whether the video is flipped ?
-        '''
-        Flip a video, execute with a probability of 0.5
-        - varray : [T][H][W][C]
-        - return : flipped video
-        '''
-        v = np.random.random()
-        # identical
-        if (v < 0.5):
-            return(varray)
-        # otherwise, flip
-        if ("T" == self.dim):
-            return(np.flip(varray, 0))
-        elif ("H" == self.dim):
-            return(np.flip(varray, 1))
-        elif ("W" == self.dim):
-            return(np.flip(varray, 2))
-        else:
-            assert True, "Error in transform"
-
-
-
-
-# -------------------------------- #
-#        Video Normalize           #
-# -------------------------------- #
-
-class VideoNormalize(object):
-    '''
-    Normalize all pixels of a video for each channel
-    '''
-    def __init__(self, means, stds):
-        '''
-        Initialization
-        - means : pixel mean values for all pixels ([T][H][W]) in
-        different channels
-        - stds : pixel standard deviations for all pixels in different
-        channels
-        '''
-        self.means = copy.deepcopy(means)
-        self.stds = copy.deepcopy(stds)
-
-    def __call__(self, varray):
-        '''
-        Normalize a video for each channel
-        - varray : input video as a Numpy ndarray in [T][H][W][C] format
-        - return : a normalized varray with the same format as input
-        '''
-        (_t, _h, _w) = varray.shape[0:3]
-        result = varray - np.tile(self.means, (_t, _h, _w, 1))
-        result = varray / np.tile(self.stds, (_t, _h, _w, 1))
-        return(result)
+    def __call__(self, vid):
+        # TODO:
+        # how to notify the caller whether the video is flipped ?
+        if (random.random() < self.p):
+            return F.vflip(vid)
+        return vid
 
     def __repr__(self):
-        return self.__class__.__name__ + '(means={}, stds={})'.\
-            format(self.means, self.stds)
+        return self.__class__.__name__ + '(p={})'.format(self.p)
 
 
-# -------------------------------- #
-#       PyTorch Tensor API         #
-# -------------------------------- #
-
-class ToTensor(object):
-    '''
-    Convert a video sequence ndarray which is stored as [T][H][W][C] to 
-    PyTorch float tensor [T][C][H][W].
-    NOTE: Orginal video pixel values are np.uint8, in [0, 255], if you want
-    to scale the value to [0, 1], please specify the 'scale' argument in 
-    __init__ with True. If use normalization before, there is no need to scale.
-    '''
-    def __init__(self, val_scale=False):
-        '''
-        Initialization function
-        - scale : whether the input blob will be scaled from [0,255] to [0,1]
-        '''
-        self.val_scale = val_scale
-
-    def __call__(self, varray):
-        '''
-        Transform a varray to a PyTorch tensor, while make sure the data 
-        layout is right.
-        - varray : input video array as a Numpy ndarray, [T][H][W][C]
-        '''    
-        ret = torch.from_numpy(varray).permute(3, 2, 0, 1).contiguous()
-        if (self.val_scale):
-            ret = ret.div(255.0)
-        return ret
-
-
-
-
-
-# -------------------------------- #
-#     Self Testing Utillities      #
-# -------------------------------- #
-
-def test_transforms(test_configuration):
-    dir_path = os.path.dirname(os.path.realpath(__file__))
-    vid_path = os.path.join(dir_path, "test.avi")
-    # read video to varray
-    varray = video2ndarray(vid_path,
-            color_in=test_configuration['video_color'],
-            color_out=test_configuration['varray_color'])
-    # # test video crop
-    # crop = VideoRandomCrop(size=(128,171))
-    # varray = crop(varray)
-    # print(varray.shape)
-    # _f = varray.shape[0]
-    # for _i in range(_f):
-    #     winname = "{}".format(_i)
-    #     farray_show(winname, varray[_i,:,:,:])
-    #     cv2.moveWindow(winname, 40,30) 
-    #     (cv2.waitKey(0) & 0xFF == ord('q'))
-    #     cv2.destroyAllWindows()
-
-    # # test video flip
-    # flip = VideoRandomFlip(dim="W")
-    # varray = flip(varray)
-    # print(varray.shape)
-    # _f = varray.shape[0]
-    # for _i in range(_f):
-    #     winname = "{}".format(_i)
-    #     farray_show(winname, varray[_i,:,:,:])
-    #     cv2.moveWindow(winname, 40,30) 
-    #     (cv2.waitKey(0) & 0xFF == ord('q'))
-    #     cv2.destroyAllWindows()
-
-    # test video resize
-    resize = VideoResize(size=(720, 720))
-    varray = resize(varray)
-    print(varray.shape)
-    _f = varray.shape[0]
-    for _i in range(_f):
-        winname = "{}".format(_i)
-        farray_show(winname, varray[_i,:,:,:])
-        cv2.moveWindow(winname, 40,30) 
-        (cv2.waitKey(0) & 0xFF == ord('q'))
-        cv2.destroyAllWindows()
-
-
-if __name__ == "__main__":
-
-
-    if (__test__):
-
-        test_configuration = {
-            'video_color'   : "BGR",
-            'varray_color'  : "RGB",
-            'frames_color'  : "BGR",
-            'imgseq_color'  : "RGB"
-        }
-
-        test_transforms(test_configuration)
