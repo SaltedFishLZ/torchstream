@@ -1,3 +1,6 @@
+# cache files
+.cahce/
+
 # project files
 log/
 pretrained/

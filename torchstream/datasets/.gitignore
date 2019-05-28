@@ -1,5 +1,6 @@
-# annotation cache
+# cache file
 *.annot
+.cache/
 
 # zip files
 *.zip

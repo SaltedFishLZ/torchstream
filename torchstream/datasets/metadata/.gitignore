@@ -1,8 +1,5 @@
 # cache
 .cache/
-
-# annotation cache
 *.annot
-
-# set cache
 *.set
+*.datapoints
