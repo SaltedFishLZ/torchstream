@@ -17,9 +17,9 @@ class UCF101(VideoDataset):
         class_to_idx = ucf101.__LABELS__
 
         if train:
-            datapoint_filter = ucf101.TrainsetFilter
+            datapoint_filter = ucf101.TrainsetFilter()
         else:
-            datapoint_filter = ucf101.TestsetFilter
+            datapoint_filter = ucf101.TestsetFilter()
 
         super(UCF101, self).__init__(root=root, layout=layout,
                                      class_to_idx=class_to_idx,

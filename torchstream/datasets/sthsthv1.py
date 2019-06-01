@@ -1,0 +1,32 @@
+import importlib
+
+from .dataset import VideoDataset
+import torchstream.datasets.metadata.metasets.sth_sth_v1 as sth_sth_v1
+
+class SomethingSomethingV1(VideoDataset):
+
+    def __init__(self, train=True, transform=None, target_transform=None,
+                 **kwargs):
+        """
+        """
+
+        mod = "RGB"
+        ext = "jpg"
+        root = sth_sth_v1.JPG_DATA_PATH
+        layout = sth_sth_v1.__layout__
+        class_to_idx = sth_sth_v1.__LABELS__
+        annots = sth_sth_v1.__ANNOTATIONS__
+
+        if train:
+            datapoint_filter = sth_sth_v1.TrainsetFilter()
+        else:
+            datapoint_filter = sth_sth_v1.TestsetFilter()
+
+        super(SomethingSomethingV1, self).__init__(root=root, layout=layout,
+                                                   annots=annots,
+                                                   class_to_idx=class_to_idx,
+                                                   mod=mod, ext=ext,
+                                                   datapoint_filter=datapoint_filter,
+                                                   transform=transform,
+                                                   target_transform=target_transform,
+                                                   **kwargs)
