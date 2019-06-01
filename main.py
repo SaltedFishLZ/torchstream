@@ -35,6 +35,8 @@ def main(args):
     best_prec1 = 0
     cudnn.benchmark = True
 
+    device = torch.device("cuda:0")
+
     input_mean = [0.485, 0.456, 0.406]
     input_std = [0.229, 0.224, 0.225]
 
@@ -73,21 +75,21 @@ def main(args):
 
     model = torch.nn.DataParallel(model, device_ids=[0, 1, 2, 3, 4, 5, 6, 7])
 
-    optimizer = torch.optim.SGD(model.parameters(), momentum=0.9)
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
 
 
     # define loss function (criterion) and optimizer
-    criterion = torch.nn.CrossEntropyLoss()
+    criterion = torch.nn.CrossEntropyLoss().to(device)
 
 
 
     for epoch in range(args.start_epoch, args.epochs):
         
         ## train for one epoch
-        train(train_loader, model, criterion, optimizer, epoch)
+        train(device, train_loader, model, criterion, optimizer, epoch)
 
         ## evaluate on validation set
-        prec1 = validate(val_loader, model, criterion, epoch)
+        prec1 = validate(device, val_loader, model, criterion, epoch)
 
         # remember best prec@1 
         is_best = prec1 > best_prec1
@@ -96,6 +98,7 @@ def main(args):
         print(output_best)
 
         # save checkpoint
+        os.makedirs("checkpoints", exist_ok=True)
         save_checkpoint(state={'epoch': epoch,
                                'model_state_dict': model.state_dict(),
                                'optimizer_state_dict': optimizer.state_dict(),

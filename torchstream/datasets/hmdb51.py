@@ -17,10 +17,10 @@ class HMDB51(VideoDataset):
         class_to_idx = hmdb51.__LABELS__
 
         if train:
-            datapoint_filter = hmdb51.TrainsetFilter
+            datapoint_filter = hmdb51.TrainsetFilter()
         else:
-            datapoint_filter = hmdb51.TestsetFilter
-
+            datapoint_filter = hmdb51.TestsetFilter()
+        print(datapoint_filter)
         super(HMDB51, self).__init__(root=root, layout=layout,
                                      class_to_idx=class_to_idx,
                                      mod=mod, ext=ext,
@@ -30,3 +30,9 @@ class HMDB51(VideoDataset):
                                      **kwargs
                                     )
 
+def test():
+    dataset = HMDB51(train=True)
+    print(dataset.__len__())
+
+if __name__ == "__main__":
+    test()

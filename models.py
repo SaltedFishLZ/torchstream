@@ -88,6 +88,12 @@ class TSN(nn.Module):
 
     def forward(self, input):
 
+        ## N C T H W -> N T C H W
+        input = input.permute(0, 2, 1, 3, 4).contiguous()
+        ## merge time to batch
+        N, T, C, H, W = input.size()
+        input = input.view(N*T, C, H, W)
+
         base_out = self.base_model(input)
 
         # if self.dropout > 0:

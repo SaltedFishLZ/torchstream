@@ -17,6 +17,7 @@ def train(device, loader, model, criterion, optimizer, epoch, print_interval=20,
     top5 = Meter()
 
     # switch to train mode
+    model.to(device)
     model.train()
 
     end = time.time()
@@ -26,12 +27,6 @@ def train(device, loader, model, criterion, optimizer, epoch, print_interval=20,
         
         input = input.to(device)
         target = target.to(device)
-
-        # N C T H W -> N T C H W
-        input = input.permute(0, 2, 1, 3, 4).contiguous()
-        # merge time to batch
-        N, T, C, H, W = input.size()
-        input = input.view(N*T, C, H, W)
 
         ## forward
         output = model(input)
@@ -77,6 +72,7 @@ def validate(device, loader, model, criterion, print_interval=20, **kwargs):
     top5 = Meter()
 
     # switch to evaluate mode
+    model.to(device)
     model.eval()
 
     end = time.time()
@@ -85,12 +81,6 @@ def validate(device, loader, model, criterion, print_interval=20, **kwargs):
         
             input = input.to(device)
             target = target.to(device)
-
-            # N C T H W -> N T C H W
-            input = input.permute(0, 2, 1, 3, 4).contiguous()
-            # merge time to batch
-            N, T, C, H, W = input.size()
-            input = input.view(N*T, C, H, W)
 
             # compute output
             output = model(input)
