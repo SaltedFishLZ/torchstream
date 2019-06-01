@@ -25,7 +25,7 @@ class TSN(nn.Module):
 
         self._prepare_base_model(base_model)
 
-        self.consensus = ConsensusModule("avg")
+        self.consensus = Consensus("avg")
 
         if self.use_softmax:
             self.softmax = nn.Softmax()

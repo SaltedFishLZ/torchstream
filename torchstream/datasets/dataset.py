@@ -84,6 +84,7 @@ class VideoDataset(torchdata.Dataset):
         self.datapoints = datapoints
 
         import time
+        p = mp.Pool(32)
         st_time = time.time()
         if self.seq:
             # Cache Mechanism
@@ -110,7 +111,6 @@ class VideoDataset(torchdata.Dataset):
             #     os.makedirs(CACHE_PATH, exist_ok=True)
             #     with open(cache_file, "wb") as f:
             #         pickle.dump(allseqs, f)                
-            p = mp.Pool(320)
             self.samples = [] 
             for datapoint in self.datapoints:
                 self.samples.append(_to_imgseq(datapoint, **kwargs))
