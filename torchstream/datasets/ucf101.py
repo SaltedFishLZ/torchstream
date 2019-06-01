@@ -1,7 +1,7 @@
 import importlib
 
 from .dataset import VideoDataset
-import torchstream.datasets.metadata.metasets.ucf101 as ucf101
+from .metadata.metasets import ucf101 as ucf101
 
 class UCF101(VideoDataset):
 

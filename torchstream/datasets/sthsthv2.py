@@ -1,7 +1,7 @@
 import importlib
 
 from .dataset import VideoDataset
-import torchstream.datasets.metadata.metasets.sth_sth_v2 as sth_sth_v2
+from .metadata.metasets import sth_sth_v2 as sth_sth_v2
 
 class SomethingSomethingV2(VideoDataset):
 

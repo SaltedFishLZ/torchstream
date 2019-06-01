@@ -1,7 +1,7 @@
 import importlib
 
 from .dataset import VideoDataset
-import torchstream.datasets.metadata.metasets.hmdb51 as hmdb51
+from .metadata.metasets import hmdb51 as hmdb51
 
 class HMDB51(VideoDataset):
 

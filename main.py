@@ -28,7 +28,7 @@ from utils import save_checkpoint
 
 def main(args):
 
-    with open(args.json_config, "r") as json_config:
+    with open(args.config, "r") as json_config:
         configs = json.load(json_config)
         model_config = configs["model"]
 

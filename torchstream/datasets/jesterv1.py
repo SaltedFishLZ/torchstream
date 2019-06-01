@@ -1,7 +1,7 @@
 import importlib
 
 from .dataset import VideoDataset
-import torchstream.datasets.metadata.metasets.jester_v1 as jester_v1
+from metadata.metasets import jester_v1 as jester_v1
 
 class JesterV1(VideoDataset):
 
