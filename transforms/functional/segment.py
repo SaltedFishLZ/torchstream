@@ -2,7 +2,7 @@
 """
 import numpy as np
 
-from .blob import _is_varray
+from torchstream.transforms.functional.blob import _is_varray
 
 
 def _get_snip_indices(t, s, mode):

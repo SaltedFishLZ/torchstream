@@ -23,6 +23,12 @@ def train(loader, model, criterion, optimizer, epoch, print_interval=20,
     for i, (input, target) in enumerate(loader):
         # measure data loading time
         data_time.update(time.time() - end)
+        
+        # N C T H W -> N T C H W
+        input = input.permute(0, 2, 1, 3, 4).contiguous()
+        # merge time to batch
+        N, T, C, H, W = input.size()
+        input = input.view(N*T, C, H, W)
 
         target = target.cuda()
         input_var = torch.autograd.Variable(input)
@@ -30,13 +36,14 @@ def train(loader, model, criterion, optimizer, epoch, print_interval=20,
 
         ## forward
         output = model(input_var)
+
         loss = criterion(output, target_var)
 
         ## measure accuracy and record loss
         prec1, prec5 = accuracy(output.data, target, topk=(1,5))
-        losses.update(loss.data[0], input.size(0))
-        top1.update(prec1[0], input.size(0))
-        top5.update(prec5[0], input.size(0))
+        losses.update(loss.item(), input.size(0))
+        top1.update(prec1.item(), input.size(0))
+        top5.update(prec5.item(), input.size(0))
 
 
         ## backward
@@ -78,6 +85,13 @@ def validate(loader, model, criterion, print_interval=20, **kwargs):
         for i, (input, target) in enumerate(loader):
             target = target.cuda()
 
+            # N C T H W -> N T C H W
+            input = input.permute(0, 2, 1, 3, 4).contiguous()
+            # merge time to batch
+            N, T, C, H, W = input.size()
+            input = input.view(N*T, C, H, W)
+
+
             # compute output
             output = model(input)
             loss = criterion(output, target)
@@ -93,7 +107,7 @@ def validate(loader, model, criterion, print_interval=20, **kwargs):
             batch_time.update(time.time() - end)
             end = time.time()
 
-            if i % print_interval == 0:
+            if i % 20 == 0:
                 output = ('Test: [{0}/{1}]\t'
                           'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
                           'Loss {loss.val:.4f} ({loss.avg:.4f})\t'

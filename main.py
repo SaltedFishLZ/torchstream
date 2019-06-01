@@ -18,7 +18,7 @@ from torchstream.datasets.hmdb51 import HMDB51
 import torchstream.transforms.transform as streamtransform
 
 from models import TSN
-from transforms.transforms import MultiScaleCrop
+from transforms.transforms import MultiScaleCrop, RandomSegment, CenterSegment
 from train import train, validate
 from opts import parser
 from utils import save_checkpoint
@@ -39,6 +39,7 @@ def main(args):
     input_std = [0.229, 0.224, 0.225]
 
     train_dataset = HMDB51(train=True, transform=streamtransform.Compose([
+                                RandomSegment(size=8),
                                 MultiScaleCrop(224, [1, .875, .75, .66]),
                                 streamtransform.RandomHorizontalFlip(),
                                 streamtransform.ToTensor(),
@@ -53,6 +54,7 @@ def main(args):
         drop_last=True)  # prevent something not % n_GPU
 
     val_dataset = HMDB51(train=False, transform=streamtransform.Compose([
+                                CenterSegment(size=8),
                                 streamtransform.Resize(256),
                                 streamtransform.CenterCrop(224),
                                 streamtransform.RandomHorizontalFlip(),

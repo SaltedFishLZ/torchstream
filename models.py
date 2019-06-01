@@ -90,15 +90,15 @@ class TSN(nn.Module):
 
         base_out = self.base_model(input)
 
-        if self.dropout > 0:
-            base_out = self.new_fc(base_out)
+        # if self.dropout > 0:
+        #     base_out = self.new_fc(base_out)
 
         if self.use_softmax:
             base_out = self.softmax(base_out)
 
-        if self.reshape:
-            base_out = base_out.view((-1, self.seg_num) + base_out.size()[1:])
-
+        ## reshape:
+        base_out = base_out.view((-1, self.seg_num) + base_out.size()[1:])
+        
         output = self.consensus(base_out)
         return output.squeeze(1)
 
