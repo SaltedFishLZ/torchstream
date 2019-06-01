@@ -7,7 +7,7 @@ import torch
 from utils import Meter, accuracy
 
 
-def train(loader, model, criterion, optimizer, epoch, print_interval=20,
+def train(device, loader, model, criterion, optimizer, epoch, print_interval=20,
           **kwargs):
     
     batch_time = Meter()
@@ -24,20 +24,19 @@ def train(loader, model, criterion, optimizer, epoch, print_interval=20,
         # measure data loading time
         data_time.update(time.time() - end)
         
+        input = input.to(device)
+        target = target.to(device)
+
         # N C T H W -> N T C H W
         input = input.permute(0, 2, 1, 3, 4).contiguous()
         # merge time to batch
         N, T, C, H, W = input.size()
         input = input.view(N*T, C, H, W)
 
-        target = target.cuda()
-        input_var = torch.autograd.Variable(input)
-        target_var = torch.autograd.Variable(target)
-
         ## forward
-        output = model(input_var)
+        output = model(input)
 
-        loss = criterion(output, target_var)
+        loss = criterion(output, target)
 
         ## measure accuracy and record loss
         prec1, prec5 = accuracy(output.data, target, topk=(1,5))
@@ -71,7 +70,7 @@ def train(loader, model, criterion, optimizer, epoch, print_interval=20,
                   )
 
 
-def validate(loader, model, criterion, print_interval=20, **kwargs):
+def validate(device, loader, model, criterion, print_interval=20, **kwargs):
     batch_time = Meter()
     losses = Meter()
     top1 = Meter()
@@ -83,14 +82,15 @@ def validate(loader, model, criterion, print_interval=20, **kwargs):
     end = time.time()
     with torch.no_grad():
         for i, (input, target) in enumerate(loader):
-            target = target.cuda()
+        
+            input = input.to(device)
+            target = target.to(device)
 
             # N C T H W -> N T C H W
             input = input.permute(0, 2, 1, 3, 4).contiguous()
             # merge time to batch
             N, T, C, H, W = input.size()
             input = input.view(N*T, C, H, W)
-
 
             # compute output
             output = model(input)
