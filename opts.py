@@ -1,11 +1,9 @@
 import argparse
 
 parser = argparse.ArgumentParser(description="PyTorch implementation of Temporal Segment Networks")
-parser.add_argument('dataset', type=str)
-parser.add_argument('modality', type=str, choices=['RGB', 'Flow'])
 
 # ========================== JSON Config =+=========================
-parser.add_argument("--json_config", type=str)
+parser.add_argument("--config", type=str)
 
 # ========================= Model Configs ==========================
 parser.add_argument('--arch', type=str, default="BNInception")

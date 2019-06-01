@@ -14,7 +14,7 @@ import torch.optim
 from torch.nn.utils import clip_grad_norm_
 
 
-from torchstream.datasets.hmdb51 import HMDB51
+from torchstream.datasets import HMDB51, UCF101
 import torchstream.transforms.transform as streamtransform
 
 from models import TSN
@@ -40,22 +40,15 @@ def main(args):
     input_mean = [0.485, 0.456, 0.406]
     input_std = [0.229, 0.224, 0.225]
 
-    train_dataset = HMDB51(train=True, transform=streamtransform.Compose([
+    train_transforms = streamtransform.Compose([
                                 RandomSegment(size=8),
                                 MultiScaleCrop(224, [1, .875, .75, .66]),
                                 streamtransform.RandomHorizontalFlip(),
                                 streamtransform.ToTensor(),
                                 streamtransform.VideoNormalize(mean=input_mean, std=input_std)
                                 ])
-                           )
 
-    train_loader = torch.utils.data.DataLoader(
-        train_dataset, 
-        batch_size=args.batch_size, shuffle=True,
-        num_workers=args.workers, pin_memory=True,
-        drop_last=True)  # prevent something not % n_GPU
-
-    val_dataset = HMDB51(train=False, transform=streamtransform.Compose([
+    val_transforms = streamtransform.Compose([
                                 CenterSegment(size=8),
                                 streamtransform.Resize(256),
                                 streamtransform.CenterCrop(224),
@@ -63,7 +56,22 @@ def main(args):
                                 streamtransform.ToTensor(),
                                 streamtransform.VideoNormalize(mean=input_mean, std=input_std)
                                 ])
-                           )
+
+    dataset_config = configs["dataset"]
+    if dataset_config["name"] == "hmdb51":
+        train_dataset = HMDB51(train=True, transform=train_transforms)
+        val_dataset = HMDB51(train=False, transform=val_transforms)
+    elif dataset_config["name"] == "ucf101":
+        train_dataset = UCF101(train=True, transform=train_transforms)
+        val_dataset = UCF101(train=False, transform=val_transforms)        
+
+    train_loader = torch.utils.data.DataLoader(
+        train_dataset, 
+        batch_size=args.batch_size, shuffle=True,
+        num_workers=args.workers, pin_memory=True,
+        drop_last=True)  # prevent something not % n_GPU
+
+
 
     val_loader = torch.utils.data.DataLoader(
         val_dataset,

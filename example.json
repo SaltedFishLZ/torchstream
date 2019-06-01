@@ -1,4 +1,7 @@
 {
+    "dataset": {
+        "name": "hmdb51"
+    },
 
     "train_loader":{
         "batch_size": 64,
@@ -15,7 +18,6 @@
         "pin_memory": true,
         "drop_last": true
     },
-
 
     "model": {
         "name": "TSN",
