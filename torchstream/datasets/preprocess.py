@@ -158,7 +158,7 @@ def seq2vid(src_sample, dst_sample, tmpl="{}", offset=0, fps=12, **kwargs):
 
     src_frames = []
     for i in range(src_sample.fcount):
-        frame_name = tmpl.format(i) + "." + src_sample.ext
+        frame_name = tmpl.format(i + offset) + "." + src_sample.ext
         frame_path = os.path.join(src_sample.path, frame_name)
         src_frames.append(frame_path)
     

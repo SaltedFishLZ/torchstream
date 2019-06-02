@@ -49,14 +49,14 @@ class Worker(object):
     #  block size limit, and the reducer might only produce partial results
     #  which might be further reduced by the same reducer)
     #  @param retries int: retry number (if execution failed)
-    def __init__(self, wid, mapper, reducer=None, **kwargs):
+    def __init__(self, wid, mapper, reducer=None):
         """
         """
         self._wid = wid
 
         self._mapper = mapper
         self._reducer = reducer
-        self._kwargs = copy.deepcopy(kwargs)
+        # self._kwargs = copy.deepcopy(kwargs)
         self._results = []
 
         self._filename = "mapreduce.worker{}.{}.{}.tmp.pkl".format(
@@ -80,7 +80,7 @@ class Worker(object):
             task = task_queue.get()
             if END_FLAG == task:
                 break
-            _result = self._mapper(**task, **(self._kwargs))
+            _result = self._mapper(**task)
             self._results.append(_result)
             if self._reducer is not None:
                 self._results = self._reducer(self._results)
