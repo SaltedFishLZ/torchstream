@@ -44,16 +44,21 @@ def segment(vid, s, mode="center"):
     assert isinstance(s, int), TypeError
 
     t, h, w, c = vid.shape
-    
-    if t < s:
-        raise ValueError
 
     # short path
     if t == s:
         return vid
-    
-    vout = np.empty((s, h, w, c))
 
+    ## needs to be padded (zero padding)
+    if t < s:
+        pad_widths = ((0, s-t), (0, 0), (0, 0), (0, 0))
+        constant_values=((0, 0), (0, 0), (0, 0), (0, 0))
+        return np.pad(vid, pad_widths,
+                      mode="constant",
+                      constant_values=constant_values)
+
+    ## 
+    vout = np.empty((s, h, w, c))
     snip_indices = _get_snip_indices(t, s, mode=mode)
     for idx in range(len(snip_indices)):
         vout[idx] = vid[snip_indices[idx]]
