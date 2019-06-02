@@ -16,7 +16,7 @@ except ImportError:
 
 from . import __config__
 from .metadata.datapoint import DataPoint
-from .utils.vision import video2frames
+from .utils.vision import video2frames, frames2ndarray, ndarray2video
 
 # ---------------------------------------------------------------- #
 #                  Configuring Python Logger                       #
@@ -136,6 +136,42 @@ def vid2seq(src_sample, dst_sample, **kwargs):
 
 
 
+
+
+
+
+
+def seq2vid(src_sample, dst_sample, tmpl="{}", offset=0, fps=12, **kwargs):
+    """Image Sequence to Video
+    """
+    if __config__.__STRICT__:
+        ## Check Source Oprand
+        assert isinstance(src_sample, DataPoint), \
+            TypeError
+        assert src_sample.seq, \
+            "Source sample is not a image sequence"
+        ## Check Destination Oprand
+        assert isinstance(dst_sample, DataPoint), \
+            TypeError
+        assert not dst_sample.seq, \
+            "Destination sample is not a video"
+
+    src_frames = []
+    for i in range(src_sample.fcount):
+        frame_name = tmpl.format(i) + "." + src_sample.ext
+        frame_path = os.path.join(src_sample.path, frame_name)
+        src_frames.append(frame_path)
+    
+    varray = frames2ndarray(src_frames)
+
+    dst_vid = dst_sample.path
+    dst_dir = os.path.dirname(dst_vid)
+    os.makedirs(dst_dir, exist_ok=True)
+
+    ndarray2video(varray, dst_path=dst_vid)
+
+    ## currently, always return True
+    return True
 
 
 

@@ -42,6 +42,26 @@ def slice_videos(name, samples, dst_root, ext="jpg",
     print(successes)
 
 
+def aggregate_frames(name, samples, dst_root, ext="avi",
+                     worker_num=16, **kwargs):
+    """frames -> videos
+    """
+    manager = Manager(name="Aggregating Dataset [{}]".format(name),
+                      mapper=preprocess.seq2vid,
+                      **kwargs
+                      )
+    manager.hire(worker_num=worker_num)
+    tasks = []
+    for src_sample in samples:
+        dst_sample = src_sample.root_migrated(dst_root)
+        dst_sample = dst_sample.extension_migrated(ext=ext)
+        task_dict = {"src_sample":src_sample, "dst_sample":dst_sample}
+        task_dict.update(kwargs)
+        tasks.append(task_dict)
+    successes = manager.launch(tasks=tasks, enable_tqdm=True)
+    print(successes)
+
+
 def main(name):
     """
     """
@@ -50,11 +70,11 @@ def main(name):
     metaset = importlib.import_module(metaset)
 
     kwargs = {
-        "root" : metaset.AVI_DATA_PATH,
+        "root" : metaset.JPG_DATA_PATH,
         "layout" : metaset.__layout__,
         "lbls" : metaset.__LABELS__,
         "mod" : "RGB",
-        "ext" : "avi",
+        "ext" : "jpg",
     }
 
     if hasattr(metaset, "__ANNOTATIONS__"):
@@ -69,7 +89,8 @@ def main(name):
     samples = collect_datapoints(**kwargs)
 
     # transform_videos(name, samples, dst_root=metaset.AVI_DATA_PATH)
-    slice_videos(name, samples, dst_root=metaset.JPG_DATA_PATH)
+    # slice_videos(name, samples, dst_root=metaset.JPG_DATA_PATH)
+    aggregate_frames(name, samples, dst_root="/home/zheng/test_aggregation")
 
 if __name__ == "__main__":
     import  sys

@@ -128,10 +128,11 @@ class DataPoint(object):
         """
         Get a new DataPoint object with dataset root migrated to a new one.
         """
-        return DataPoint(root=new_root, rpath=self.rpath,
-                         name=self.name, mod=self.mod,
-                         ext=self.ext, label=self.label
-                         )
+        datapoint = copy.deepcopy(self)
+        datapoint.root = new_root
+        datapoint.path = os.path.join(datapoint.root,
+                                      datapoint.rpath)
+        return datapoint
 
 
     def extension_migrated(self, ext):
