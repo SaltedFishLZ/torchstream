@@ -19,6 +19,7 @@ RAW_DATA_PATH = os.path.join(USER_HOME, "Datasets", "Sth-sth", "Sth-sth-v1-raw")
 PRC_DATA_PATH = os.path.join(USER_HOME, "Datasets", "Sth-sth", "Sth-sth-v1-prc")
 
 if os.path.exists(LOCAL_DATASETS):
+    print("using local dataset for Sth-sth-v1-jpg")
     local_path = os.path.join(LOCAL_DATASETS, "Sth-sth", "Sth-sth-v1-jpg")
     JPG_DATA_PATH = local_path
     

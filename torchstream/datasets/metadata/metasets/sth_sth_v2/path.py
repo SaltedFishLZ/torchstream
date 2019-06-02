@@ -24,8 +24,10 @@ PRC_DATA_PATH = os.path.join(USER_HOME, "Datasets", "Sth-sth", "Sth-sth-v2-avi")
 
 if os.path.exists(LOCAL_DATASETS):
     local_path = os.path.join(LOCAL_DATASETS, "Sth-sth", "Sth-sth-v2-jpg")
-    JPG_DATA_PATH = local_path
+    if os.path.exists(local_path):
+        JPG_DATA_PATH = local_path
     
 if os.path.exists(LOCAL_DATASETS):
     local_path = os.path.join(LOCAL_DATASETS, "Sth-sth", "Sth-sth-v2-avi")
-    AVI_DATA_PATH = local_path
+    if os.path.exists(local_path):
+        AVI_DATA_PATH = local_path

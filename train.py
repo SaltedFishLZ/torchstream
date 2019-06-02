@@ -7,7 +7,7 @@ import torch
 from utils import Meter, accuracy
 
 
-def train(device, loader, model, criterion, optimizer, epoch, print_interval=20,
+def train(device, loader, model, criterion, optimizer, epoch, print_interval=1,
           **kwargs):
     
     batch_time = Meter()

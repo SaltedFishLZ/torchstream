@@ -61,7 +61,7 @@ class VideoDataset(torchdata.Dataset):
 
         """
         assert isinstance(root, str), TypeError
-        assert os.path.exists(root), "Root Path Not Exists"
+        assert os.path.exists(root), "Root Path {} Not Exists".format(root)
         assert isinstance(class_to_idx, dict), TypeError
         assert mod in __SUPPORTED_MODALITIES__, NotImplementedError
         assert ext in __SUPPORTED_MODALITIES__[mod], NotImplementedError
