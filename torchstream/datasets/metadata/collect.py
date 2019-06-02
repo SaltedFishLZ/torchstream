@@ -151,6 +151,7 @@ def collect_datapoints(root, layout, mod, ext, datapoint_filter=None, **kwargs):
     dir_path = os.path.dirname(root)
     rel_path = os.path.relpath(root, dir_path)
     cache_path = os.path.join(dir_path, ".cache")
+    os.makedirs(cache_path, exist_ok=True)
     cache_file = "{}.{}.{}.all{}.datapoints".format(rel_path, mod, ext, md5)
     cache_file = os.path.join(cache_path, cache_file)
     if (

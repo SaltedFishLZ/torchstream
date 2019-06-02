@@ -96,10 +96,9 @@ class TestsetFilter(DatasetFilter):
         self.testset = self.split_set
 
 class ValsetFilter(DatasetFilter):
-    """Wrapper: filter for validation set, the same as test set
+    """Wrapper: filter for validation set
     """
     def __init__(self):
-        # the same as test set
         super(ValsetFilter, self).__init__(split="val")
         self.valset = self.split_set
 

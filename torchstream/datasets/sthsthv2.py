@@ -20,7 +20,8 @@ class SomethingSomethingV2(VideoDataset):
         if train:
             datapoint_filter = sth_sth_v2.TrainsetFilter()
         else:
-            datapoint_filter = sth_sth_v2.TestsetFilter()
+            # here we use validation set
+            datapoint_filter = sth_sth_v2.ValsetFilter()
 
         super(SomethingSomethingV2, self).__init__(root=root, layout=layout,
                                                    annots=annots,

@@ -11,8 +11,8 @@ class JesterV1(VideoDataset):
         """
 
         mod = "RGB"
-        ext = "jpg"
-        root = jester_v1.JPG_DATA_PATH
+        ext = "avi"
+        root = jester_v1.AVI_DATA_PATH
         layout = jester_v1.__layout__
         class_to_idx = jester_v1.__LABELS__
         annots = jester_v1.__ANNOTATIONS__
@@ -20,7 +20,8 @@ class JesterV1(VideoDataset):
         if train:
             datapoint_filter = jester_v1.TrainsetFilter()
         else:
-            datapoint_filter = jester_v1.TestsetFilter()
+            # we use validation set to replace test set
+            datapoint_filter = jester_v1.ValsetFilter()
 
         super(JesterV1, self).__init__(root=root, layout=layout,
                                        annots=annots,

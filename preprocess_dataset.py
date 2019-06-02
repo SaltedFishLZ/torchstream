@@ -79,6 +79,8 @@ def main(name):
         "mod" : "RGB",
         "ext" : "jpg",
     }
+    if hasattr(metaset, "__ANNOTATIONS__"):
+        kwargs["annots"] = metaset.__ANNOTATIONS__
 
     samples = collect_datapoints(**kwargs)
 

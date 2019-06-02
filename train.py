@@ -7,7 +7,7 @@ import torch
 from utils import Meter, accuracy
 
 
-def train(device, loader, model, criterion, optimizer, epoch, print_interval=1,
+def train(device, loader, model, criterion, optimizer, epoch, print_interval=20,
           **kwargs):
     
     batch_time = Meter()
@@ -81,7 +81,7 @@ def validate(device, loader, model, criterion, print_interval=20, **kwargs):
         
             input = input.to(device)
             target = target.to(device)
-
+            
             # compute output
             output = model(input)
             loss = criterion(output, target)
