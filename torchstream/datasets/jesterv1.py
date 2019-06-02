@@ -1,7 +1,7 @@
 import importlib
 
 from .dataset import VideoDataset
-from metadata.metasets import jester_v1 as jester_v1
+from .metadata.metasets import jester_v1 as jester_v1
 
 class JesterV1(VideoDataset):
 
@@ -25,7 +25,7 @@ class JesterV1(VideoDataset):
         super(JesterV1, self).__init__(root=root, layout=layout,
                                        annots=annots,
                                        class_to_idx=class_to_idx,
-                                       mod=mod, ext=ext,
+                                       mod=mod, ext=ext, tmpl="{0:05d}", offset=1,
                                        datapoint_filter=datapoint_filter,
                                        transform=transform,
                                        target_transform=target_transform,

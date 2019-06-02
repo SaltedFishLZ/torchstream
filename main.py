@@ -14,7 +14,7 @@ import torch.optim
 from torch.nn.utils import clip_grad_norm_
 
 
-from torchstream.datasets import HMDB51, UCF101
+from torchstream.datasets import HMDB51, UCF101, JesterV1, SomethingSomethingV1, SomethingSomethingV2
 import torchstream.transforms.transform as streamtransform
 
 from models import TSN
@@ -63,7 +63,18 @@ def main(args):
         val_dataset = HMDB51(train=False, transform=val_transforms)
     elif dataset_config["name"] == "ucf101":
         train_dataset = UCF101(train=True, transform=train_transforms)
-        val_dataset = UCF101(train=False, transform=val_transforms)        
+        val_dataset = UCF101(train=False, transform=val_transforms)
+    elif dataset_config["name"] == "jester_v1":
+        train_dataset = JesterV1(train=True, transform=train_transforms)
+        val_dataset = JesterV1(train=False, transform=val_transforms)
+    elif dataset_config["name"] == "sth_sth_v1":
+        train_dataset = SomethingSomethingV1(train=True, transform=train_transforms)
+        val_dataset = SomethingSomethingV1(train=False, transform=val_transforms)
+    elif dataset_config["name"] == "sth_sth_v2":
+        train_dataset = SomethingSomethingV2(train=True, transform=train_transforms)
+        val_dataset = SomethingSomethingV2(train=False, transform=val_transforms)
+    else:
+        raise ValueError
 
     train_loader = torch.utils.data.DataLoader(
         train_dataset, 

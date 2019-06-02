@@ -11,7 +11,10 @@ def _get_snip_indices(t, s, mode):
     assert t > s, ValueError
 
     # interval (length of each segment) = floor(t/s)
-    interval = (t - s + 1) // s
+    # it is the original way
+    interval = t // s
+    if interval <= 0:
+        print("t={},s={}".format(t, s))
     offsets = []
     for i in range(s):
         offsets.append(i * interval)
@@ -22,7 +25,7 @@ def _get_snip_indices(t, s, mode):
         indices = list(indices)
         return sorted(indices)
     elif mode == "random":
-        indices = offsets + np.random.randint(interval, size=s)
+        indices = offsets + np.random.randint(low=0, high=interval, size=s)
         indices = list(indices)
         return sorted(indices)
     else:
@@ -42,6 +45,9 @@ def segment(vid, s, mode="center"):
 
     t, h, w, c = vid.shape
     
+    if t < s:
+        raise ValueError
+
     # short path
     if t == s:
         return vid

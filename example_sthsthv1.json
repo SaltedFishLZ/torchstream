@@ -1,0 +1,37 @@
+{
+    "dataset": {
+        "name": "sth_sth_v1"
+    },
+
+    "train_loader":{
+        "batch_size": 64,
+        "num_workers": 32,
+        "shuffle": true,
+        "pin_memory": true,
+        "drop_last": true
+    },
+
+    "test_loader":{
+        "batch_size": 64,
+        "num_workers": 32,
+        "shuffle": true,
+        "pin_memory": true,
+        "drop_last": true
+    },
+
+    "model": {
+        "name": "TSN",
+        "cls_num": 174,
+        "seg_num": 8,
+        "input_size": 224,
+        "base_model": "resnet50",
+        "dropout": 0.8,
+        "partial_bn": true,
+        "use_softmax": false
+    },
+
+    "optimizer": {
+        "network_defined": false
+    }
+
+}
