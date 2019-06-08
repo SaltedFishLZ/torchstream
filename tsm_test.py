@@ -1,6 +1,7 @@
 
 import os
 import time
+import copy
 import json
 import shutil
 
@@ -74,7 +75,7 @@ def main(args):
     checkpoint = torch.load(configs["checkpoint"])
     model_state_dict = checkpoint["state_dict"]
 
-    old_keys = model_state_dict.keys()
+    old_keys = copy.deepcopy(model_state_dict.keys())
     for key in old_keys:
         if "conv1.net" in key:
             val = model_state_dict[key]
@@ -85,7 +86,7 @@ def main(args):
             val = model_state_dict[key]
             del model_state_dict[key]
             new_key = key.replace('new_fc', 'fc')
-            model_state_dict[new_key] = val            
+            model_state_dict[new_key] = val
     model.load_state_dict(model_state_dict)
 
     # define loss function (criterion) and optimizer
