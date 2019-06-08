@@ -1,6 +1,6 @@
 {
     "dataset": {
-        "name": "hmdb51"
+        "name": "ucf101"
     },
 
     "train_loader":{
@@ -21,7 +21,7 @@
 
     "model": {
         "name": "TSM",
-        "cls_num": 51,
+        "cls_num": 101,
         "input_size": [8, 224, 224],
         "base_model": "resnet50",
         "dropout": 0.8,
@@ -33,5 +33,5 @@
         "network_defined": false
     },
 
-    "checkpoint": "/home/eecs/zhen/video-acc/tsm-key-frame/pretrained/batch32/hmdb51/TSM_hmdb51_RGB_resnet50_shift8_blockres_avg_segment8_e25.best.pth"
+    "checkpoint": "/home/eecs/zhen/video-acc/temporal-shift-module/pretrained/batch32/ucf101/TSM_ucf101_RGB_resnet50_shift8_blockres_avg_segment8_e25.best.pth"
 }
