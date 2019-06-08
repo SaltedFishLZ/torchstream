@@ -1,3 +1,5 @@
+from collections import OrderedDict
+
 import torchvision
 from torch import nn
 from torch.nn.init import normal, constant
@@ -63,8 +65,10 @@ class TSN(nn.Module):
             ## replace the classifier
             feature_dim = self.base_model.fc.in_features
             if self.dropout > 0:
-                new_fc = nn.Sequential(nn.Dropout(p=self.dropout),
-                                       nn.Linear(feature_dim, self.cls_num))
+                new_fc = nn.Sequential(OrderedDict([
+                    ("dropout", nn.Dropout(p=self.dropout)),
+                    ("fc", nn.Linear(feature_dim, self.cls_num))
+                    ]))
             else:
                 new_fc = nn.Linear(feature_dim, self.cls_num)
             self.base_model.fc = new_fc
@@ -94,7 +98,7 @@ class TSN(nn.Module):
     def forward(self, input):
 
         ## input shape checking
-        shape = input.size
+        shape = input.size()
         assert isinstance(shape, tuple), TypeError
         assert len(shape) == 5, ValueError
         N, C, T, H, W = shape        

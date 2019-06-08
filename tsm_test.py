@@ -28,6 +28,7 @@ def main(args):
     with open(args.config, "r") as json_config:
         configs = json.load(json_config)
         model_config = configs["model"]
+        model_config["input_size"] = tuple(model_config["input_size"])
 
     best_prec1 = 0
     cudnn.benchmark = True
@@ -75,7 +76,7 @@ def main(args):
     checkpoint = torch.load(configs["checkpoint"])
     model_state_dict = checkpoint["state_dict"]
 
-    old_keys = copy.deepcopy(model_state_dict.keys())
+    old_keys = list(model_state_dict.keys())
     for key in old_keys:
         if "conv1.net" in key:
             val = model_state_dict[key]
@@ -85,7 +86,7 @@ def main(args):
         if "new_fc" in key:
             val = model_state_dict[key]
             del model_state_dict[key]
-            new_key = key.replace('new_fc', 'fc')
+            new_key = key.replace('new_fc', 'base_model.fc.fc')
             model_state_dict[new_key] = val
     model.load_state_dict(model_state_dict)
 
