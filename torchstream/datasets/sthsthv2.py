@@ -16,6 +16,8 @@ class SomethingSomethingV2(VideoDataset):
         layout = sth_sth_v2.__layout__
         class_to_idx = sth_sth_v2.__LABELS__
         annots = sth_sth_v2.__ANNOTATIONS__
+        tmpl = sth_sth_v2.JPG_FILE_TMPL
+        offset = sth_sth_v2.JPG_IDX_OFFSET
 
         if train:
             datapoint_filter = sth_sth_v2.TrainsetFilter()
@@ -27,6 +29,7 @@ class SomethingSomethingV2(VideoDataset):
                                                    annots=annots,
                                                    class_to_idx=class_to_idx,
                                                    mod=mod, ext=ext,
+                                                   # tmpl=tmpl, offset=offset,
                                                    datapoint_filter=datapoint_filter,
                                                    transform=transform,
                                                    target_transform=target_transform,
