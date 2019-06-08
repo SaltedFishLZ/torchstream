@@ -9,17 +9,22 @@ from transforms.transforms import MultiScaleCrop
 
 class TSN(nn.Module):
     """
+    Args:
+        input_size (tuple): (T, H, W), shape of the input blob. channel == 3 only
     """
-    def __init__(self, cls_num, seg_num, input_size,
+    def __init__(self, cls_num, input_size,
                  base_model='resnet50', dropout=0.8, partial_bn=True,
                  use_softmax=False, **kwargs):
 
         super(TSN, self).__init__()
 
+        assert isinstance(input_size, (tuple, list)), TypeError
+        assert len(input_size) == 3, ValueError
+
         self.cls_num = cls_num
-        self.seg_num = seg_num
+
         self.input_size = input_size
-                
+
         self.dropout = dropout
         self.use_softmax = use_softmax
 
@@ -42,10 +47,10 @@ class TSN(nn.Module):
         format_string = self.__class__.__name__
         format_string += "\n\tbase model:    {}"
         format_string += "\n\tclass number:  {}"
-        format_string += "\n\t(T, C, H, W):  {}"
-        format_string += "\n\dropout ratio:  {}"
+        format_string += "\n\t(T, H, W):     {}"
+        format_string += "\n\tdropout ratio: {}"
         return format_string.format(self.base_model, self.cls_num,
-                                    self.seg_num, self.dropout)
+                                    self.input_size, self.dropout)
 
 
     def _prepare_base_model(self, base_model):
@@ -53,7 +58,7 @@ class TSN(nn.Module):
         """
         if 'resnet' in base_model or 'vgg' in base_model:
 
-            self.base_model = getattr(torchvision.models, base_model)(True)
+            self.base_model = getattr(torchvision.models, base_model)()
             
             ## replace the classifier
             feature_dim = self.base_model.fc.in_features
@@ -88,10 +93,16 @@ class TSN(nn.Module):
 
     def forward(self, input):
 
+        ## input shape checking
+        shape = input.size
+        assert isinstance(shape, tuple), TypeError
+        assert len(shape) == 5, ValueError
+        N, C, T, H, W = shape        
+        assert (T, H, W) == self.input_size, ValueError
+
         ## N C T H W -> N T C H W
         input = input.permute(0, 2, 1, 3, 4).contiguous()
         ## merge time to batch
-        N, T, C, H, W = input.size()
         input = input.view(N*T, C, H, W)
 
         base_out = self.base_model(input)
@@ -103,7 +114,7 @@ class TSN(nn.Module):
             base_out = self.softmax(base_out)
 
         ## reshape:
-        base_out = base_out.view((-1, self.seg_num) + base_out.size()[1:])
+        base_out = base_out.view((-1, T) + base_out.size()[1:])
         
         output = self.consensus(base_out)
         return output.squeeze(1)

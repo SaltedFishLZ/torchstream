@@ -22,8 +22,7 @@
     "model": {
         "name": "TSN",
         "cls_num": 51,
-        "seg_num": 8,
-        "input_size": 224,
+        "input_size": [8, 224, 224],
         "base_model": "resnet50",
         "dropout": 0.8,
         "partial_bn": true,
@@ -32,6 +31,7 @@
 
     "optimizer": {
         "network_defined": false
-    }
+    },
 
+    "checkpoint": "/home/eecs/zhen/video-acc/tsm-key-frame/pretrained/batch32/hmdb51/TSM_hmdb51_RGB_resnet50_shift8_blockres_avg_segment8_e25.best.pth"
 }
