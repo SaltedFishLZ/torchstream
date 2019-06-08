@@ -17,7 +17,7 @@ from torch.nn.utils import clip_grad_norm_
 from torchstream.datasets import HMDB51, UCF101, JesterV1, SomethingSomethingV1, SomethingSomethingV2
 import torchstream.transforms.transform as streamtransform
 
-from models import TSN
+from models import TSN, TSMNet
 from transforms.transforms import MultiScaleCrop, RandomSegment, CenterSegment
 from train import train, validate
 from opts import parser
@@ -31,6 +31,7 @@ def main(args):
     with open(args.config, "r") as json_config:
         configs = json.load(json_config)
         model_config = configs["model"]
+        model_config["input_size"] = tuple(model_config["input_size"])
 
     best_prec1 = 0
     cudnn.benchmark = True
@@ -90,7 +91,7 @@ def main(args):
         num_workers=args.workers, pin_memory=True)
 
 
-    model = TSN(**model_config)
+    model = TSMNet(**model_config)
     model.to(device)
     model = torch.nn.DataParallel(model, device_ids=[0, 1, 2, 3, 4, 5, 6, 7])
 

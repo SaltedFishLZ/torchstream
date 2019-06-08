@@ -25,7 +25,7 @@ class TSN(nn.Module):
 
         self.cls_num = cls_num
 
-        self.input_size = input_size
+        self.input_size = tuple(input_size)
 
         self.dropout = dropout
         self.use_softmax = use_softmax
@@ -99,7 +99,6 @@ class TSN(nn.Module):
 
         ## input shape checking
         shape = input.size()
-        assert isinstance(shape, tuple), TypeError
         assert len(shape) == 5, ValueError
         N, C, T, H, W = shape        
         assert (T, H, W) == self.input_size, ValueError
