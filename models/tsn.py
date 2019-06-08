@@ -60,7 +60,7 @@ class TSN(nn.Module):
         """
         if 'resnet' in base_model or 'vgg' in base_model:
 
-            self.base_model = getattr(torchvision.models, base_model)()
+            self.base_model = getattr(torchvision.models, base_model)(True)
             
             ## replace the classifier
             feature_dim = self.base_model.fc.in_features
@@ -100,13 +100,13 @@ class TSN(nn.Module):
         ## input shape checking
         shape = input.size()
         assert len(shape) == 5, ValueError
-        N, C, T, H, W = shape        
+        N, C, T, H, W = shape
         assert (T, H, W) == self.input_size, ValueError
 
         ## N C T H W -> N T C H W
         input = input.permute(0, 2, 1, 3, 4).contiguous()
         ## merge time to batch
-        input = input.view(N*T, C, H, W)
+        input = input.view(N * T, C, H, W)
 
         base_out = self.base_model(input)
 
