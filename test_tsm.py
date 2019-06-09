@@ -9,7 +9,7 @@ import torch.nn.parallel
 import torch.backends.cudnn as cudnn
 import torch.optim
 from torch.nn.utils import clip_grad_norm_
-
+import torchviz
 
 from torchstream.datasets import HMDB51, UCF101, JesterV1, SomethingSomethingV1, SomethingSomethingV2
 import torchstream.transforms.transform as streamtransform
@@ -92,13 +92,19 @@ def main(args):
     model.to(device)
     model = torch.nn.DataParallel(model, device_ids=[0, 1, 2, 3, 4, 5, 6, 7])
 
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
+    print(optimizer.state_dict)
+
+    # define loss function (criterion) and optimizer
+    criterion = torch.nn.CrossEntropyLoss().to(device)
+
 
     ## load checkpoint
     checkpoint = torch.load(configs["checkpoint"])
     model_state_dict = checkpoint["state_dict"]
+    optim_state_dict = checkpoint["optimizer"]
 
     old_keys = list(model_state_dict.keys())
-    print(old_keys)
     for key in old_keys:
         if "conv1.net" in key:
             val = model_state_dict[key]
@@ -113,14 +119,14 @@ def main(args):
     model.load_state_dict(model_state_dict)
     # torch.nn.init.xavier_uniform(model.module.base_model.fc.fc.weight.data)
     # torch.nn.init.xavier_uniform(model.module.base_model.fc.fc.bias.data)
+   
+    # print(optim_state_dict.keys())
+    # optimizer.load_state_dict(optim_state_dict)
 
-    optimizer = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
-
-
-    # define loss function (criterion) and optimizer
-    criterion = torch.nn.CrossEntropyLoss().to(device)
-
-
+    x = torch.zeros(1, 3, 8, 224, 224)
+    out = model(x)
+    torchviz.make_dot(out)
+    exit(0)
 
     for epoch in range(args.start_epoch, args.epochs):
         

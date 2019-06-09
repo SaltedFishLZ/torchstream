@@ -63,6 +63,7 @@ def train(device, loader, model, criterion, optimizer, epoch, print_interval=20,
                       lr=optimizer.param_groups[-1]['lr']
                       )
                   )
+        return(0)
 
 
 def validate(device, loader, model, criterion, print_interval=20, **kwargs):
