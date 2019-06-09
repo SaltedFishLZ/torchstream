@@ -89,12 +89,16 @@ def main(args):
 
 
     model = TSMNet(**model_config)
+    model.to(device)
+    model = torch.nn.DataParallel(model, device_ids=[0, 1, 2, 3, 4, 5, 6, 7])
+
 
     ## load checkpoint
     checkpoint = torch.load(configs["checkpoint"])
     model_state_dict = checkpoint["state_dict"]
 
     old_keys = list(model_state_dict.keys())
+    print(old_keys)
     for key in old_keys:
         if "conv1.net" in key:
             val = model_state_dict[key]
@@ -107,11 +111,8 @@ def main(args):
             new_key = key.replace('new_fc', 'base_model.fc.fc')
             model_state_dict[new_key] = val
     model.load_state_dict(model_state_dict)
-    torch.nn.init.xavier_uniform(model.base_model.fc.fc.weight.data)
-    torch.nn.init.xavier_uniform(model.base_model.fc.fc.bias.data)
-
-    model.to(device)
-    model = torch.nn.DataParallel(model, device_ids=[0, 1, 2, 3, 4, 5, 6, 7])
+    # torch.nn.init.xavier_uniform(model.module.base_model.fc.fc.weight.data)
+    # torch.nn.init.xavier_uniform(model.module.base_model.fc.fc.bias.data)
 
     optimizer = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
 
@@ -124,7 +125,7 @@ def main(args):
     for epoch in range(args.start_epoch, args.epochs):
         
         ## train for one epoch
-        train(device, train_loader, model, criterion, optimizer, epoch)
+        train(device, train_loader, model, criterion, optimizer, epoch, print_interval=1)
 
         ## evaluate on validation set
         prec1 = validate(device, val_loader, model, criterion, epoch)
