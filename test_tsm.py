@@ -9,7 +9,6 @@ import torch.nn.parallel
 import torch.backends.cudnn as cudnn
 import torch.optim
 from torch.nn.utils import clip_grad_norm_
-import torchviz
 
 from torchstream.datasets import HMDB51, UCF101, JesterV1, SomethingSomethingV1, SomethingSomethingV2
 import torchstream.transforms.transform as streamtransform
@@ -50,7 +49,6 @@ def main(args):
                                 CenterSegment(size=8),
                                 streamtransform.Resize(256),
                                 streamtransform.CenterCrop(224),
-                                streamtransform.RandomHorizontalFlip(),
                                 streamtransform.ToTensor(),
                                 streamtransform.VideoNormalize(mean=input_mean, std=input_std)
                                 ])
@@ -117,21 +115,12 @@ def main(args):
             new_key = key.replace('new_fc', 'base_model.fc.fc')
             model_state_dict[new_key] = val
     model.load_state_dict(model_state_dict)
-    # torch.nn.init.xavier_uniform(model.module.base_model.fc.fc.weight.data)
-    # torch.nn.init.xavier_uniform(model.module.base_model.fc.fc.bias.data)
-   
-    # print(optim_state_dict.keys())
-    # optimizer.load_state_dict(optim_state_dict)
 
-    x = torch.zeros(1, 3, 8, 224, 224)
-    out = model(x)
-    torchviz.make_dot(out)
-    exit(0)
 
     for epoch in range(args.start_epoch, args.epochs):
         
-        ## train for one epoch
-        train(device, train_loader, model, criterion, optimizer, epoch, print_interval=1)
+        # ## train for one epoch
+        # train(device, train_loader, model, criterion, optimizer, epoch, print_interval=1)
 
         ## evaluate on validation set
         prec1 = validate(device, val_loader, model, criterion, epoch)
