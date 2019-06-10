@@ -1,6 +1,6 @@
 {
     "dataset": {
-        "name": "sth_sth_v1"
+        "name": "sth_sth_v2"
     },
 
     "train_loader":{
@@ -31,6 +31,8 @@
 
     "optimizer": {
         "network_defined": false
-    }
+    },
+    
+    "checkpoint": "/home/eecs/zhen/video-acc/temporal-shift-module/pretrained/batch64/somethingv2/TSM_somethingv2_RGB_resnet50_shift8_blockres_avg_segment8_e100.best.pth"
 
 }

@@ -22,8 +22,7 @@
     "model": {
         "name": "TSN",
         "cls_num": 27,
-        "seg_num": 8,
-        "input_size": 224,
+        "input_size": [8, 224, 224],
         "base_model": "resnet50",
         "dropout": 0.5,
         "partial_bn": true,

@@ -1,11 +1,11 @@
 {
     "dataset": {
-        "name": "sth_sth_v1"
+        "name": "jester_v1"
     },
 
     "train_loader":{
         "batch_size": 64,
-        "num_workers": 64,
+        "num_workers": 32,
         "shuffle": true,
         "pin_memory": true,
         "drop_last": true
@@ -13,24 +13,26 @@
 
     "test_loader":{
         "batch_size": 64,
-        "num_workers": 64,
+        "num_workers": 32,
         "shuffle": true,
         "pin_memory": true,
         "drop_last": true
     },
 
     "model": {
-        "name": "TSN",
-        "cls_num": 174,
+        "name": "TSM",
+        "cls_num": 27,
         "input_size": [8, 224, 224],
         "base_model": "resnet50",
-        "dropout": 0.8,
+        "dropout": 0.5,
         "partial_bn": true,
         "use_softmax": false
     },
 
     "optimizer": {
         "network_defined": false
-    }
+    },
+
+    "checkpoint": "/home/eecs/zhen/video-acc/temporal-shift-module/pretrained/batch32/jester/TSM_jester_RGB_resnet50_shift8_blockres_avg_segment8_e100.best.pth"
 
 }
