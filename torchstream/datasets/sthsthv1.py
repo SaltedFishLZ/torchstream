@@ -11,8 +11,8 @@ class SomethingSomethingV1(VideoDataset):
         """
 
         mod = "RGB"
-        ext = "jpg"
-        root = sth_sth_v1.JPG_DATA_PATH
+        ext = "avi"
+        root = sth_sth_v1.AVI_DATA_PATH
         layout = sth_sth_v1.__layout__
         class_to_idx = sth_sth_v1.__LABELS__
         annots = sth_sth_v1.__ANNOTATIONS__
