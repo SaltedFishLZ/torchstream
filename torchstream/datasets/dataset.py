@@ -1,257 +1,212 @@
-# -*- coding: utf-8 -*-
+"""
+"""
 import os
 import sys
 import copy
+import pickle
 import logging
-import cProfile
-import importlib
+import hashlib
+import multiprocessing as mp
 
 import tqdm
-import torch
+import numpy as np
 import torch.utils.data as torchdata
 
+from . import __config__
+from .metadata import __SUPPORTED_MODALITIES__, __SUPPORTED_VIDEOS__, __SUPPORTED_IMAGES__
+from .metadata.collect import collect_datapoints
+from .imgseq import ImageSequence, _to_imgseq
+from .vidarr import VideoArray,_to_vidarr
+from .utils import filesys
 
-from .constant import \
-    __test__, __profile__, __strict__, __verbose__, __vverbose__, \
-    __supported_modalities__, __supported_modality_files__, \
-    __supported_video_files__, __supported_color_space__, \
-    __supported_dataset_styles__, __supported_datasets__
+FILE_PATH = os.path.realpath(__file__)
+DIR_PATH = os.path.dirname(FILE_PATH)
+CACHE_PATH = os.path.join(DIR_PATH, ".cache")
 
-from . import video, metadata, constant
+# ---------------------------------------------------------------- #
+#                  Configuring Python Logger                       #
+# ---------------------------------------------------------------- #
 
-__verbose__ = False
+LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+logging.basicConfig(format=LOG_FORMAT)
+logger = logging.getLogger(__name__)
+if __config__.__VERY_VERY_VERBOSE__:
+    logger.setLevel(logging.INFO)
+elif __config__.__VERY_VERBOSE__:
+    logger.setLevel(logging.WARNING)
+elif __config__.__VERBOSE__:
+    logger.setLevel(logging.ERROR)
+else:
+    logger.setLevel(logging.CRITICAL)
+
+# ------------------------------------------------------------------------- #
+#                   Main Classes (To Be Used outside)                       #
+# ------------------------------------------------------------------------- #
 
 ## dataset class for video recognition
-#  
 #  More details.
 class VideoDataset(torchdata.Dataset):
-    """
-    dataset class for video recognition
+    """dataset class for video recognition
+    Args
+        optional
+        filter: Sample filter
 
-    NOTE: TODO: Currently, This shall be an abstract base class.
-    It should never be used in deployment !!!
     """
-    ## Init
-    #  @param root str: root path of the dataset
-    #  @param name str: dataset name
-    #  @param split int: training/testing/validation split
-    #  @param modalities dict: input data format of each modality.
-    #  key - modality, value - file extension(s) for certain modality.
-    def __init__(self, root, name,
-                 split=constant.TRAINSET,
-                 modalities={'RGB': constant.IMGSEQ},
-                 *args, **kwargs
+    def __init__(self, root, layout, class_to_idx, mod, ext, datapoint_filter=None,
+                 transform=None, target_transform=None,
+                 **kwargs
                 ):
         """
-        @param root str: root path of the dataset
-        @param name str: dataset name
-        @param split int: training/testing/validation split
-        @param modalities dict: input data format of each modality.
-        key - modality, value - file extension(s) for certain modality.
-        """
-        # TODO: support multiple input data modalities
+        Args:
 
-        # santity check
-        assert os.path.exists(root), "Dataset path not exists"
-        assert name in __supported_datasets__, "Unsupported Dataset"
-        assert (1==len(modalities)), "Only support 1 data modality now"
-        for _mod in modalities:
-            assert _mod in __supported_modalities__, 'Unsupported Modality'
-            _ext = modalities[_mod]
-            assert _ext in __supported_modality_files__[_mod],\
-                ("Unspported input file type: {} for modality: {}".\
-                    format(_ext, _mod))
+        """
+        assert isinstance(root, str), TypeError
+        assert os.path.exists(root), "Root Path {} Not Exists".format(root)
+        assert isinstance(class_to_idx, dict), TypeError
+        assert mod in __SUPPORTED_MODALITIES__, NotImplementedError
+        assert ext in __SUPPORTED_MODALITIES__[mod], NotImplementedError
 
         self.root = root
-        self.name = name
-        self.style = __supported_datasets__[self.name]
-        self.dsetmod = importlib.import_module("vdataset.metasets.{}".format(self.name))
-        self.labels = self.dsetmod.__labels__
-        self.split = split
-        self.modalities = modalities
-        self.metadatas = dict()
+        self.layout = layout
+        self.class_to_idx = class_to_idx
+        self.datapoint_filter = datapoint_filter
+        self.mod = mod
+        self.ext = ext
+        self.seq = ext in __SUPPORTED_IMAGES__[mod]
+        self.transform = transform
+        self.target_transform = target_transform
         self.kwargs = kwargs
+        
+        ## collect datapoints
+        datapoints = collect_datapoints(root=root, layout=self.layout,
+                                        datapoint_filter=datapoint_filter,
+                                        mod=mod, ext=ext, **kwargs)
+        self.datapoints = datapoints
 
-        # filter to select metadata
-        if self.split != constant.ALLSET:
-            if self.split == constant.TRAINSET:
-                sample_filter = self.dsetmod.TrainsetFilter()
-            elif self.split == constant.VALSET:
-                sample_filter = self.dsetmod.ValsetFilter()
-            elif self.split == constant.TESTSET:
-                sample_filter = self.dsetmod.TestsetFilter()
-            else:
-                raise NotImplementedError
+        import time
+        p = mp.Pool(32)
+        st_time = time.time()
+        if self.seq:
+            # Cache Mechanism
+            # md5 = hashlib.md5(root.encode('utf-8')).hexdigest()
+            # cache_file = "{}.{}.all{}.imgseqs".format(mod, ext, md5)
+            # cache_file = os.path.join(CACHE_PATH, cache_file)
+            # if (os.path.exists(cache_file)
+            #         and os.path.isfile(cache_file)
+            #         # and filesys.touch_date(cache_file) > filesys.touch_date(FILE_PATH)
+            #         and filesys.touch_date(cache_file) > filesys.touch_date(root)
+            #     ):
+            #     warn_str = "[video dataset] find valid cache {}".\
+            #         format(cache_file)
+            #     logger.warning(warn_str)
+            #     with open(cache_file, "rb") as f:
+            #         allseqs = pickle.load(f)
+            # else:
+            #     ## re-generate all image sequences
+            #     allpoints = collect.collect_datapoints(root=root, layout=self.layout,
+            #                                            mod=mod, ext=ext, **kwargs)
+            #     allseqs = p.map(_to_imgseq, allpoints)
+                
+            #     ## dump to cache file
+            #     os.makedirs(CACHE_PATH, exist_ok=True)
+            #     with open(cache_file, "wb") as f:
+            #         pickle.dump(allseqs, f)                
+            self.samples = [] 
+            for datapoint in self.datapoints:
+                self.samples.append(_to_imgseq(datapoint, **kwargs))
         else:
-            sample_filter = None
-
-        for mod in self.modalities:
-            # collect metadata
-            ext = modalities[mod]
-            
-            collector = metadata.Collector(self.root, self.dsetmod,
-                                           mod=mod, ext=ext,
-                                           sfilter=sample_filter
-                                           )
-            sample_set = collector.collect_samples()
-            
-            # append results
-            self.metadatas[mod] = sample_set.get_samples()
+            self.samples = p.map(_to_vidarr, self.datapoints)
+        ed_time = time.time()
+        print("generating time", ed_time - st_time)
 
     def __len__(self):
-        return len(self.metadatas["RGB"])
+        return len(self.samples)
 
     def __getitem__(self, idx):
         """
         """
-        # TODO: fuse multiple modalities
-        # NOTE:
-        # currently, we intended to return a Numpy ndarray although it
+        # currently, we return a Numpy ndarray although it
         # may consume too much memory.
+        datapoint = self.datapoints[idx]
+        sample = self.samples[idx]
+        blob = np.array(sample)
+        cid = self.class_to_idx[datapoint.label]
 
-        for _modality in self.modalities:
-            ## get sample's metadata of a certain modality
-            _sample_metadata = (self.metadatas[_modality])[idx]
-            _ext = self.modalities[_modality]
-            _path = _sample_metadata.path
-            _cid = _sample_metadata.cid
-
-            ## Deal with image sequences
-            #  get all frames as a varray
-            if _ext == constant.IMGSEQ:
-                _ext = constant.IMGEXT
-                _seq = video.ImageSequence(_path, ext=_ext, **self.kwargs)
-                _blob = _seq.get_varray()
-            ## Deal with video files
-            #  get varray directly
-            else:
-                _blob = video.video2ndarray(_path)
+        if self.transform is not None:
+            blob = self.transform(blob)
+        if self.target_transform is not None:
+            cid = self.target_transform(cid)
 
         # return (a [T][H][W][C] ndarray, class id)
         # ndarray may need to be converted to [T][C][H][W] format in PyTorch
-        return(_blob, _cid)
+        return (blob, cid)
 
 
-
-class ClippedVideoDataset(VideoDataset):
-    """
-
-    """
-    def __init__(self, root, name, clip_len,
-                 split=constant.TRAINSET,
-                 modalities={'RGB': constant.IMGSEQ},
-                 *args, **kwargs
-                ):
-        super(ClippedVideoDataset, self).__init__(
-            root, name, split, modalities, args, **kwargs
-            )
-        self.clip_len = clip_len
-
-    def __getitem__(self, idx):
-        """
-        Only support .jpg image sequence
-        """
-        _sample_metadata = (self.metadatas["RGB"])[idx]
-        _ext = constant.IMGEXT
-        _path = _sample_metadata.path
-        _cid = _sample_metadata.cid
-        _seq = video.ClippedImageSequence(
-            _path, clip_len=self.clip_len, ext=_ext, **self.kwargs)
-        _blob = _seq.get_varray()
-        return(_blob, _cid)        
-
-
-class SegmentedVideoDataset(VideoDataset):
-    """
-
-    """
-    def __init__(self, root, name, seg_num,
-                 split=constant.TRAINSET,
-                 modalities={'RGB': constant.IMGSEQ},
-                 *args, **kwargs
-                ):
-        """
-        Only support jpg image sequence
-        """   
-        super(SegmentedVideoDataset, self).__init__(
-            root, name, split, modalities, args, **kwargs
-            )
-        self.seg_num = seg_num
-
-    def __getitem__(self, idx):
-        _sample_metadata = (self.metadatas["RGB"])[idx]
-        _ext = constant.IMGEXT
-        _path = _sample_metadata.path
-        _cid = _sample_metadata.cid
-        _seq = video.SegmentedImageSequence(
-            _path, seg_num=self.seg_num, ext=_ext, **self.kwargs)
-        _blob = _seq.get_varray()
-        return(_blob, _cid)    
-
-
-def test():
+def test(dataset, use_tqdm=True):
 
     test_components = {
-        'basic' : True,
-        '__len__' : True,
-        '__getitem__' : True
+        "basic" : True,
+        "__len__" : True,
+        "__getitem__" : True,
+        "dataloader" : True
     }
-    
-    test_configuration = {
-        'datasets'   : ["weizmann", ]
-    }
-
-    for DATASET in (test_configuration['datasets']):
-        print("Dataset - [{}]".format(DATASET))
-        if (test_components['basic']):
-
-            dset = importlib.import_module(
-                "vdataset.metasets.{}".format(DATASET))
-            allset = VideoDataset(
-                dset.RAW_DATA_PATH, DATASET,
-                modalities={'RGB': "avi"},
-                split=constant.ALLSET,
-                img_file_temp="{0:05d}",
-                img_idx_offset=1)
-            trainset = VideoDataset(
-                dset.RAW_DATA_PATH, DATASET,
-                clip_len=4,
-                modalities={'RGB': "avi"},
-                split=constant.TRAINSET)
-            testset = VideoDataset(
-                dset.RAW_DATA_PATH, DATASET,
-                clip_len=4,
-                modalities={'RGB': "avi"},
-                split=constant.TESTSET)
-
-            if (test_components['__len__']):
-                print("All samples number:")
-                print(allset.__len__())
-                print("Training Set samples number:")
-                print(trainset.__len__())
-                print("Testing Set samples number:")
-                print(testset.__len__())
-            
-                # if (test_components['__getitem__']):
-                #     # print(allset.__getitem__(allset.__len__()-1))
-                #     for _idx in tqdm.tqdm(range(allset.__len__())):
-                #         allset.__getitem__(_idx)
-                #     for _idx in tqdm.tqdm(range(trainset.__len__())):
-                #         trainset.__getitem__(_idx)
-                #     for _idx in tqdm.tqdm(range(testset.__len__())):
-                #         testset.__getitem__(_idx)                                            
-
-                if (test_components['__getitem__']):
-                    train_loader = torch.utils.data.DataLoader(
-                            trainset, batch_size=1, shuffle=True, 
-                            num_workers=1, pin_memory=True,
-                            drop_last=True)  # prevent something not % n_GPU
-                    for _i, (inputs, targets) in enumerate(train_loader):
-                        print(_i, inputs)
+    import importlib
 
 
+    print("Dataset - [{}]".format(dataset))
+    if (test_components["basic"]):
+        metaset = importlib.import_module(
+            "torchstream.datasets.metadata.metasets.{}".format(dataset))
+
+        kwargs = {
+            "root": metaset.JPG_DATA_PATH,
+            "layout": metaset.__layout__,
+            "class_to_idx": metaset.__LABELS__,
+            "mod": "RGB",
+            "ext": "jpg",
+        }
+
+        # if hasattr(metaset, "AVI_DATA_PATH"):
+        #     kwargs["root"] = metaset.AVI_DATA_PATH
+        #     kwargs["ext"] = "avi"
+
+        if hasattr(metaset, "__ANNOTATIONS__"):
+            kwargs["annots"] = metaset.__ANNOTATIONS__
+
+        if hasattr(metaset, "JPG_FILE_TMPL"):
+            kwargs["tmpl"] = metaset.JPG_FILE_TMPL
+
+        if hasattr(metaset, "JPG_IDX_OFFSET"):
+            kwargs["offset"] = metaset.JPG_IDX_OFFSET
+
+        testset = VideoDataset(datapoint_filter=metaset.TestsetFilter(),
+                               **kwargs)
+
+        if test_components["__len__"]:
+            # print("All samples number:")
+            # print(allset.__len__())
+            print("Testing samples number:")
+            print(testset.__len__())
+
+            if test_components["__getitem__"]:
+
+                irange = range(testset.__len__())
+                if use_tqdm:
+                    irange = tqdm.tqdm(irange)
+                for _i in irange:
+                    testset.__getitem__(_i)
+
+            if test_components["dataloader"]:
+                print("Testing torch dataloader")
+                train_loader = torchdata.DataLoader(
+                        testset, batch_size=1, shuffle=True,
+                        num_workers=8, pin_memory=True,
+                        drop_last=True)  # prevent something not % n_GPU
+                for _i, (inputs, _) in enumerate(train_loader):
+                    print(inputs.shape)
+                    
 
 if __name__ == "__main__":
-
-    if __test__:
-        test()
+    print(sys.argv)
+    for _i in range(1, len(sys.argv)):
+        test(sys.argv[_i])

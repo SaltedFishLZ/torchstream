@@ -2,19 +2,19 @@
 Runtime Configuration File For Package [vdataset.utils]
 """
 
-from ..__config__ import *
-
 __all__ = [
     "__STRICT__",
     "__VERBOSE__", "__VERY_VERBOSE__", "__VERY_VERY_VERBOSE__",
     "__TQDM__"
     ]
 
+from ..__config__ import *
+
 # overide global configuration
 __STRICT__ = True
-__VERBOSE__ = True
-__VERY_VERBOSE__ = True
-__VERY_VERY_VERBOSE__ = True
+__VERBOSE__ = False
+__VERY_VERBOSE__ = False
+__VERY_VERY_VERBOSE__ = False
 __TQDM__ = True             # enable tqdm
 
 def show_config():

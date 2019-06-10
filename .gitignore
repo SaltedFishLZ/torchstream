@@ -1,3 +1,15 @@
+# model file
+*.pth
+*.pth.tar
+
+# cache files
+.cahce/
+
+# project files
+log/
+pretrained/
+checkpoint/
+
 # ignore vs code files in main dev branches
 .vscode/
 */.vscode/

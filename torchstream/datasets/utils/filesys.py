@@ -43,3 +43,30 @@ def touch_date(path_to_file):
     Conservative touch date: the latest data of create/modification date
     """
     return max(creation_date(path_to_file), modification_date(path_to_file))
+
+
+
+
+# -------------------------------- #
+#          Testing Codes           #
+# -------------------------------- #
+
+def test_strip_extension():
+    PASSED = True
+
+    PATH = "~/torchstream/datasets/utils/test.avi"
+    REF = "~/torchstream/datasets/utils/test"
+    if strip_extension(PATH) != REF:
+        print("[test_strip_extension] Failed")
+
+    PATH = "~/torchstream/datasets/utils/test"
+    REF = "~/torchstream/datasets/utils/test"
+    if strip_extension(PATH) != REF:
+        print("[test_strip_extension] Failed")
+
+    if PASSED:
+        print("[test_strip_extension] Passed")
+
+
+if __name__ == "__main__":
+    test_strip_extension()
