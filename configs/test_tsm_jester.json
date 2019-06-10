@@ -33,6 +33,6 @@
         "network_defined": false
     },
 
-    "checkpoint": "/home/eecs/zhen/video-acc/temporal-shift-module/pretrained/batch32/jester/TSM_jester_RGB_resnet50_shift8_blockres_avg_segment8_e100.best.pth"
+    "checkpoint": "/home/eecs/zhen/video-acc/temporal-shift-module/pretrained/batch64/jester/TSM_jester_RGB_resnet50_shift8_blockres_avg_segment8_e100.best.pth"
 
 }
