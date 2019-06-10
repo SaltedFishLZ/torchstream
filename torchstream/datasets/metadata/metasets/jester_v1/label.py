@@ -72,7 +72,7 @@ __LABELS__ = sorted(list(__SAMPLES_PER_LABEL__.keys()))
 # generating label-cid mapping
 # map "Doing other things" cid 0
 CIDS = list(range(len(__LABELS__)))
-CIDS = CIDS[1:len(CIDS)] + [0]
+# CIDS = CIDS[1:len(CIDS)] + [0]
 __LABELS__ = dict(zip(__LABELS__, CIDS))
 
 # add UNKNOWN LABEL
