@@ -113,4 +113,3 @@ def validate(device, loader, model, criterion, print_interval=20, **kwargs):
     print(output)
 
     return top1.avg
-    

@@ -11,10 +11,9 @@ import torch.optim
 from torch.nn.utils import clip_grad_norm_
 
 from torchstream.datasets import HMDB51, UCF101, JesterV1, SomethingSomethingV1, SomethingSomethingV2
-import torchstream.transforms.transform as streamtransform
+import torchstream.transforms as transforms
+from torchstream.models import TSM
 
-from models import TSN, TSMNet
-from transforms.transforms import MultiScaleCrop, RandomSegment, CenterSegment
 from train import train, validate
 from opts import parser
 from utils import save_checkpoint
@@ -37,20 +36,20 @@ def main(args):
     input_mean = [0.485, 0.456, 0.406]
     input_std = [0.229, 0.224, 0.225]
 
-    train_transforms = streamtransform.Compose([
-                                RandomSegment(size=8),
-                                MultiScaleCrop(224, [1, .875, .75, .66]),
-                                streamtransform.RandomHorizontalFlip(),
-                                streamtransform.ToTensor(),
-                                streamtransform.VideoNormalize(mean=input_mean, std=input_std)
+    train_transforms = transforms.Compose([
+                                transforms.RandomSegment(size=8),
+                                transforms.MultiScaleCrop(224, [1, .875, .75, .66]),
+                                transforms.RandomHorizontalFlip(),
+                                transforms.ToTensor(),
+                                transforms.Normalize(mean=input_mean, std=input_std)
                                 ])
 
-    val_transforms = streamtransform.Compose([
-                                CenterSegment(size=8),
-                                streamtransform.Resize(256),
-                                streamtransform.CenterCrop(224),
-                                streamtransform.ToTensor(),
-                                streamtransform.VideoNormalize(mean=input_mean, std=input_std)
+    val_transforms = transforms.Compose([
+                                transforms.CenterSegment(size=8),
+                                transforms.Resize(256),
+                                transforms.CenterCrop(224),
+                                transforms.ToTensor(),
+                                transforms.Normalize(mean=input_mean, std=input_std)
                                 ])
 
     dataset_config = configs["dataset"]
@@ -86,7 +85,7 @@ def main(args):
         num_workers=args.workers, pin_memory=True)
 
 
-    model = TSMNet(**model_config)
+    model = TSM(**model_config)
     model.to(device)
     model = torch.nn.DataParallel(model, device_ids=[0, 1, 2, 3, 4, 5, 6, 7])
 

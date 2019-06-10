@@ -4,11 +4,9 @@ import torch
 import torchvision
 import torch.nn as nn
 
-from ops.shift import TemporalShift
-from ops.pool import TemporalPool
-
 from .tsn import TSN
-
+from torchstream.ops import Consensus, Identity, TemporalShift, TemporalPool
+from torchstream.transforms import *
 
 
 def make_temporal_shift(net, seg_num, fold_div=8,
@@ -83,7 +81,7 @@ def make_temporal_pool(net, seg_num):
 
 
 
-class TSMNet(TSN):
+class TSM(TSN):
 
     def __init__(self, cls_num, input_size,
                  base_model='resnet50', dropout=0.8, partial_bn=True,
@@ -93,7 +91,7 @@ class TSMNet(TSN):
                  **kwargs
                 ):
 
-        super(TSMNet, self).__init__(
+        super(TSM, self).__init__(
             cls_num=cls_num, input_size=input_size,
             base_model=base_model, dropout=dropout, partial_bn=partial_bn,
             use_softmax=use_softmax,
@@ -128,5 +126,5 @@ class TSMNet(TSN):
 
 
 if __name__ == "__main__":
-    net = TSMNet(cls_num=101, input_size=(8,224,224))
+    net = TSM(cls_num=101, input_size=(8,224,224))
     print(net.state_dict().keys())

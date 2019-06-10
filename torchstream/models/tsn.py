@@ -4,10 +4,9 @@ import torchvision
 from torch import nn
 from torch.nn.init import normal, constant
 
-from torchstream.transforms.transform import *
+from torchstream.ops import Consensus, Identity
+from torchstream.transforms import *
 
-from ops import Consensus, Identity
-from transforms.transforms import MultiScaleCrop
 
 class TSN(nn.Module):
     """
