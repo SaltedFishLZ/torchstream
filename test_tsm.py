@@ -87,7 +87,7 @@ def main(args):
 
     model = TSM(**model_config)
     model.to(device)
-    model = torch.nn.DataParallel(model, device_ids=[0, 1, 2, 3, 4, 5, 6, 7])
+    model = torch.nn.DataParallel(model, device_ids=[0, 1, 2, 3])
 
     optimizer = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
     print(optimizer.state_dict)
