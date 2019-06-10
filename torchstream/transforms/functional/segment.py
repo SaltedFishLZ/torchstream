@@ -11,7 +11,10 @@ def _get_snip_indices(t, s, mode):
     assert t > s, ValueError
 
     # interval (length of each segment) = floor(t/s)
-    interval = (t - s + 1) // s
+    # it is the original way
+    interval = t // s
+    if interval <= 0:
+        print("t={},s={}".format(t, s))
     offsets = []
     for i in range(s):
         offsets.append(i * interval)
@@ -22,7 +25,7 @@ def _get_snip_indices(t, s, mode):
         indices = list(indices)
         return sorted(indices)
     elif mode == "random":
-        indices = offsets + np.random.randint(interval, size=s)
+        indices = offsets + np.random.randint(low=0, high=interval, size=s)
         indices = list(indices)
         return sorted(indices)
     else:
@@ -41,13 +44,21 @@ def segment(vid, s, mode="center"):
     assert isinstance(s, int), TypeError
 
     t, h, w, c = vid.shape
-    
+
     # short path
     if t == s:
         return vid
-    
-    vout = np.empty((s, h, w, c))
 
+    ## needs to be padded (zero padding)
+    if t < s:
+        pad_widths = ((0, s-t), (0, 0), (0, 0), (0, 0))
+        constant_values=((0, 0), (0, 0), (0, 0), (0, 0))
+        return np.pad(vid, pad_widths,
+                      mode="constant",
+                      constant_values=constant_values)
+
+    ## NOTE: must use uint8
+    vout = np.empty((s, h, w, c), dtype=np.uint8)
     snip_indices = _get_snip_indices(t, s, mode=mode)
     for idx in range(len(snip_indices)):
         vout[idx] = vid[snip_indices[idx]]

@@ -360,6 +360,27 @@ def ndarray2frames(varray, dst_path, cin="RGB", cout="BGR", **kwargs):
     return(True, cnt)
 
 
+def ndarray2video(varray, dst_path, cin="RGB", cout="BGR", fps=12, **kwargs):
+    """Write a 4d array to a video file
+    """
+    t, h, w, c = varray.shape
+    assert c == 3, NotImplementedError("Only accept color video now")
+
+    writer = cv2.VideoWriter(dst_path,
+                             cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'),
+                             fps, (w ,h))
+
+    success = True
+    for i in range(t):
+        farray = varray[i, :, :, :]
+        farray = convert_farray_color(farray, cin, cout)
+        writer.write(farray)
+
+    ret = writer.release()
+    ## always successful
+    return True
+
+
 def frame2ndarray(frame, cin="BGR", cout="RGB"):
     """
     Read 1 frame and get a farray
@@ -455,6 +476,11 @@ def test_functions(test_configuration):
             cin=test_configuration['varray_color'],
             cout=test_configuration['frames_color'])
     print('Dumping frames from varray finished, {} frames'.format(f_n))
+
+    ## video array to video
+    ndarray2video(varray, 
+        os.path.join(DIR_PATH, "test_ndarray2video.avi")
+        )
 
 
 def test_cleanup():
