@@ -14,7 +14,7 @@ def resize(varray, size, interpolation=cv2.INTER_LINEAR):
     t, h, w, c = varray.shape
     _shape = (t, size[0], size[1], c)
     
-    result = np.empty(_shape, np.dtype("float32"))
+    result = np.empty(_shape, dtype=np.uint8)
     for _i in range(t):
         farray = varray[_i, :, :, :]
         farray = cv2.resize(farray, dsize=(size[1], size[0]),

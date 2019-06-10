@@ -46,7 +46,7 @@ def segment(vid, s, mode="center"):
     if t == s:
         return vid
     
-    vout = np.empty((s, h, w, c))
+    vout = np.empty((s, h, w, c), dtype=np.uint8)
 
     snip_indices = _get_snip_indices(t, s, mode=mode)
     for idx in range(len(snip_indices)):
