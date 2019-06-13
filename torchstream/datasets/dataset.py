@@ -81,43 +81,15 @@ class VideoDataset(torchdata.Dataset):
         datapoints = collect_datapoints(root=root, layout=self.layout,
                                         datapoint_filter=datapoint_filter,
                                         mod=mod, ext=ext, **kwargs)
-        self.datapoints = datapoints
+        self.datapoints = sorted(datapoints)
 
-        import time
         p = mp.Pool(32)
-        st_time = time.time()
         if self.seq:
-            # Cache Mechanism
-            # md5 = hashlib.md5(root.encode('utf-8')).hexdigest()
-            # cache_file = "{}.{}.all{}.imgseqs".format(mod, ext, md5)
-            # cache_file = os.path.join(CACHE_PATH, cache_file)
-            # if (os.path.exists(cache_file)
-            #         and os.path.isfile(cache_file)
-            #         # and filesys.touch_date(cache_file) > filesys.touch_date(FILE_PATH)
-            #         and filesys.touch_date(cache_file) > filesys.touch_date(root)
-            #     ):
-            #     warn_str = "[video dataset] find valid cache {}".\
-            #         format(cache_file)
-            #     logger.warning(warn_str)
-            #     with open(cache_file, "rb") as f:
-            #         allseqs = pickle.load(f)
-            # else:
-            #     ## re-generate all image sequences
-            #     allpoints = collect.collect_datapoints(root=root, layout=self.layout,
-            #                                            mod=mod, ext=ext, **kwargs)
-            #     allseqs = p.map(_to_imgseq, allpoints)
-                
-            #     ## dump to cache file
-            #     os.makedirs(CACHE_PATH, exist_ok=True)
-            #     with open(cache_file, "wb") as f:
-            #         pickle.dump(allseqs, f)                
-            self.samples = [] 
-            for datapoint in self.datapoints:
-                self.samples.append(_to_imgseq(datapoint, **kwargs))
+            self.samples = p.map(_to_vidarr, self.datapoints)
         else:
             self.samples = p.map(_to_vidarr, self.datapoints)
-        ed_time = time.time()
-        print("generating time", ed_time - st_time)
+
+
 
     def __len__(self):
         return len(self.samples)
