@@ -9,8 +9,14 @@ import torch
 import cfgs
 import utils
 
-from validate import validate
 
+
+def test(device, loader, model, criterion, 
+         log_str=None, log_interval=20, **kwargs):
+    from train import validate, val_log_str
+    if log_str is None:
+        log_str = val_log_str
+    validate(device, loader, model, criterion, log_str, log_interval, **kwargs)
 
 
 def main(args):
@@ -33,11 +39,14 @@ def main(args):
 
     model = cfgs.config2model(configs["model"])
     model.to(device)
+
     # Add DataParallel Wrapper
     if args.gpus is not None:
         model = torch.nn.DataParallel(model, device_ids=args.gpus)
     else:
         model = torch.nn.DataParallel(model)
+    
+    # load model
     checkpoint = torch.load(args.weights)
     model_state_dict = checkpoint["model_state_dict"]
     model.load_state_dict(model_state_dict)
@@ -47,7 +56,7 @@ def main(args):
     criterion.to(device)
 
 
-    validate(device, test_loader, model, criterion)
+    test(device, test_loader, model, criterion)
 
 
 if __name__ == "__main__":
