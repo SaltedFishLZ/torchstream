@@ -8,7 +8,6 @@ import argparse
 
 import torch
 
-import opts
 import cfgs
 import utils
 
@@ -68,6 +67,6 @@ if __name__ == "__main__":
                         help="path to configuration file")
     parser.add_argument('--gpus', nargs='+', type=int, default=None)
     
-    args = opts.parser.parse_args()
+    args = parser.parse_args()
 
     main(args)

@@ -8,12 +8,12 @@ import torch
 import utils
 from validate import validate, val_log_str
 
-train_log_str = "Epoch: [{:3d}][{:4d}/{:4d}], lr: {lr:.5f}\t" + \
-                "BatchTime {batch_time.val:5.3f} ({batch_time.avg:5.3f})\t" + \
-                "DataTime {data_time.val:5.3f} ({data_time.avg:5.3f})\t" + \
-                "Loss {loss.val:5.3f} ({loss.avg:5.3f})\t" + \
-                "Prec@1 {top1.val:5.3f} ({top1.avg:5.3f})\t" + \
-                "Prec@5 {top5.val:5.3f} ({top5.avg:5.3f})"
+train_log_str = "Epoch: [{:3d}][{:4d}/{:4d}], lr: {lr:5.5f}\t" + \
+        "BatchTime {:6.2f} ({:6.2f})\t" + \
+        "DataTime {:6.2f} ({:6.2f})\t" + \
+        "Loss {:5.3f} ({:5.3f})\t" + \
+                "Prec@1 {:5.3f} ({:5.3f})\t" + \
+                "Prec@5 {:5.3f} ({:5.3f})"
 
 def train_epoch(device, loader, model, criterion, optimizer, epoch,
                 log_str, log_interval=20, **kwargs):
@@ -62,8 +62,11 @@ def train_epoch(device, loader, model, criterion, optimizer, epoch,
 
         if i % log_interval == 0:
             print(log_str.format(epoch, i, len(loader),
-                                 batch_time=batch_time, data_time=data_time,
-                                 loss=losses, top1=top1, top5=top5, 
+                                 batch_time.val, batch_time.avg,
+                                 data_time.val, data_time.avg,
+                                 losses.val, losses.avg,
+                                 top1.val, top1.avg,
+                                 top5.val, top1.avg, 
                                  lr=optimizer.param_groups[-1]['lr']))
 
 
