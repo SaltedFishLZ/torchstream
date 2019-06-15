@@ -11,10 +11,10 @@ import utils
 
 
 test_log_str = "Testing:[{:4d}/{:4d}]  " + \
-               "BatchTime:{batch_time.val:6.2f}({batch_time.avg:6.2f})  " + \
-               "DataTime:{data_time.val:6.2f}({data_time.avg:6.2f})  " + \
-               "Loss:{loss_meter.val:7.3f}({loss_meter.avg:7.3f}) " + \
-               "Prec@1:{top1_meter.val:7.3f}({top1_meter.avg:7.3f}) " + \
+               "BatchTime:{batch_time.val:6.2f}({batch_time.avg:6.2f}),  " + \
+               "DataTime:{data_time.val:6.2f}({data_time.avg:6.2f}),  " + \
+               "Loss:{loss_meter.val:7.3f}({loss_meter.avg:7.3f}),  " + \
+               "Prec@1:{top1_meter.val:7.3f}({top1_meter.avg:7.3f}),  " + \
                "Prec@5:{top5_meter.val:7.3f}({top5_meter.avg:7.3f})"
 
 def test(device, loader, model, criterion, 
