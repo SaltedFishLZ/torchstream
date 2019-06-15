@@ -9,11 +9,11 @@ import utils
 from validate import validate, val_log_str
 
 train_log_str = "Epoch: [{:3d}][{:4d}/{:4d}], lr: {lr:.5f}\t" + \
-                "BatchTime {batch_time.val:.3f} ({batch_time.avg:.3f})\t" + \
-                "DataTime {data_time.val:.3f} ({data_time.avg:.3f})\t" + \
-                "Loss {loss.val:.4f} ({loss.avg:.4f})\t" + \
-                "Prec@1 {top1.val:.3f} ({top1.avg:.3f})\t" + \
-                "Prec@5 {top5.val:.3f} ({top5.avg:.3f})"
+                "BatchTime {batch_time.val:5.3f} ({batch_time.avg:5.3f})\t" + \
+                "DataTime {data_time.val:5.3f} ({data_time.avg:5.3f})\t" + \
+                "Loss {loss.val:5.3f} ({loss.avg:5.3f})\t" + \
+                "Prec@1 {top1.val:5.3f} ({top1.avg:5.3f})\t" + \
+                "Prec@5 {top5.val:5.3f} ({top5.avg:5.3f})"
 
 def train_epoch(device, loader, model, criterion, optimizer, epoch,
                 log_str, log_interval=20, **kwargs):

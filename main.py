@@ -4,6 +4,7 @@ import os
 import time
 import json
 import shutil
+import argparse
 
 import torch
 
@@ -30,14 +31,12 @@ def main(args):
     device = torch.device("cuda:0")
 
 
-
-
     train_dataset = cfgs.config2dataset(configs["train_dataset"])
     val_dataset = cfgs.config2dataset(configs["val_dataset"])
 
     configs["train_loader"]["dataset"] = train_dataset
     train_loader = cfgs.config2dataloader(configs["train_loader"])
-    
+
     configs["val_loader"]["dataset"] = val_dataset
     val_loader = cfgs.config2dataloader(configs["val_loader"])
 
@@ -62,6 +61,13 @@ def main(args):
 
 
 if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser(description="PyTorch Video Recognition Template")
+    # configuration file
+    parser.add_argument("config", type=str,
+                        help="path to configuration file")
+    parser.add_argument('--gpus', nargs='+', type=int, default=None)
+    
     args = opts.parser.parse_args()
 
     main(args)
