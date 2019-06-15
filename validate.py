@@ -55,7 +55,9 @@ def validate(device, loader, model, criterion,
                 print(log_str.format(i, len(loader),
                                      batch_time=batch_time,
                                      data_time=data_time,
-                                     loss_meter=loss_meter, top1_meter=top1_meter, top5_meter=top5_meter))
+                                     loss_meter=loss_meter,
+                                     top1_meter=top1_meter,
+                                     top5_meter=top5_meter))
 
 
     print("Validating Results:\n" + \

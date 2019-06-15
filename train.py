@@ -65,7 +65,9 @@ def train_epoch(device, loader, model, criterion, optimizer, epoch,
             print(log_str.format(epoch, i, len(loader),
                                  batch_time=batch_time,
                                  data_time=data_time,
-                                 loss=loss_meter, top1_meter=top1_meter, top5_meter=top5_meter,
+                                 loss_meter=loss_meter,
+                                 top1_meter=top1_meter,
+                                 top5_meter=top5_meter,
                                  lr=optimizer.param_groups[-1]['lr']))
 
 
