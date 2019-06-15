@@ -11,7 +11,7 @@ import opts
 import cfgs
 import utils
 
-train_log_str = "Epoch: [{:03d}][{:04d}/{:04d}], lr: {lr:.5f}\t" + \
+train_log_str = "Epoch: [{:3d}][{:4d}/{:4d}], lr: {lr:.5f}\t" + \
                 "Calc(s) {batch_time.val:.3f} ({batch_time.avg:.3f})\t" + \
                 "Data(s) {data_time.val:.3f} ({data_time.avg:.3f})\t" + \
                 "Loss {loss.val:.4f} ({loss.avg:.4f})\t" + \
@@ -50,9 +50,9 @@ def train_epoch(device, loader, model, criterion, optimizer, epoch,
         prec5 = accuracy[5]
 
         ## update statistics
-        losses.update(loss.item(), input.size(0))
-        top1.update(prec1.item(), input.size(0))
-        top5.update(prec5.item(), input.size(0))
+        losses.update(loss, input.size(0))
+        top1.update(prec1, input.size(0))
+        top5.update(prec5, input.size(0))
 
         ## backward
         optimizer.zero_grad()
@@ -70,7 +70,7 @@ def train_epoch(device, loader, model, criterion, optimizer, epoch,
                                  lr=optimizer.param_groups[-1]['lr']))
 
 
-val_log_str = "Test: [{:04d}/{:04d}]\t" + \
+val_log_str = "Test: [{:4d}/{:4d}]\t" + \
               "Calc(s) {batch_time.val:.3f} ({batch_time.avg:.3f})\t" + \
               "Data(s) {data_time.val:.3f} ({data_time.avg:.3f})\t" + \
               "Loss {loss.val:.4f} ({loss.avg:.4f})\t" + \
@@ -108,9 +108,9 @@ def validate(device, loader, model, criterion,
             prec1 = accuracy[1]
             prec5 = accuracy[5]
 
-            losses.update(loss.item(), input.size(0))
-            top1.update(prec1.item(), input.size(0))
-            top5.update(prec5.item(), input.size(0))
+            losses.update(loss, input.size(0))
+            top1.update(prec1, input.size(0))
+            top5.update(prec5, input.size(0))
 
             # measure elapsed time
             batch_time.update(time.time() - end)
@@ -150,13 +150,14 @@ def main(args):
     train_dataset = cfgs.config2dataset(configs["train_dataset"])
     val_dataset = cfgs.config2dataset(configs["val_dataset"])
 
-    train_loader = cfgs.config2dataloader(dataset=train_dataset,
-                                          **configs["train_loader"])
-    val_loader = cfgs.config2dataloader(dataset=val_dataset,
-                                        **configs["val_loader"])
+    configs["train_loader"]["dataset"] = train_dataset
+    train_loader = cfgs.config2dataloader(configs["train_loader"])
+    
+    configs["val_loader"]["dataset"] = val_dataset
+    val_loader = cfgs.config2dataloader(configs["val_loader"])
 
-    configs["model"]["input_size"] = tuple(configs["model"]["input_size"])
-    model = cfgs.config2model(**configs["model"])
+    configs["model"]["argv"]["input_size"] = tuple(configs["model"]["argv"]["input_size"])
+    model = cfgs.config2model(configs["model"])
     model.to(device)
     # Add DataParallel Wrapper
     if args.gpus is not None:

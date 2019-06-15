@@ -42,24 +42,34 @@ def config2dataset(cfg):
     assert "transforms" in cfg["argv"], NotImplementedError
     transforms = []
     for _t_dict in cfg["argv"]["transforms"]:
-        transform_package = importlib.import_module(_t_dict["package"])
+        package = "torchstream.transforms"
+        if "package" in _t_dict:
+            package = _t_dict["package"]
+        transform_package = importlib.import_module(package)
         transform_class = getattr(transform_package, _t_dict["name"])
-        _t = transform_class(**_t_dict["argv"])
+        if "argv" in _t_dict:
+            argv = _t_dict["argv"]
+            _t = transform_class(**argv)
+            transforms.append(_t)
+        else:
+            _t = transform_class()
+            transforms.append(_t)
     transform = torchstream.transforms.Compose(transforms)
-    del cfg["transforms"]
+    # print(transform)
+    del cfg["argv"]["transforms"]
 
     dataset = dataset_class(**cfg["argv"], transform=transform)
 
     return dataset
 
 
-def config2dataloader(dataset, cfg):
+def config2dataloader(cfg):
     """Configuration -> DataLoader
     Args:
         dataset (PyTorch Dataset)
         cfg (dict): dataloader configuration
     """
-    dataloader = torch.utils.data.DataLoader(dataset, **cfg)
+    dataloader = torch.utils.data.DataLoader(**cfg)
     return dataloader
 
 
@@ -108,7 +118,7 @@ def config2optimizer(cfg):
 
     argv = {}
     if "argv" in cfg:
-        argv = cfg[argv]
+        argv = cfg["argv"]
 
     optimizer = optimizer_class(**argv)
     return optimizer

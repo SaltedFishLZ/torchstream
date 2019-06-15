@@ -1,6 +1,6 @@
 {
     "train_dataset": {
-        "name": "hmdb51",
+        "name": "HMDB51",
         "argv": {
             "train": true,
             "transforms": [
@@ -8,7 +8,19 @@
                     "package": "torchstream.transforms",
                     "name": "CenterSegment",
                     "argv": {
-                        "size": 32
+                        "size": 8
+                    }      
+                },
+                {
+                    "name": "Resize",
+                    "argv": {
+                        "size": [256, 256]
+                    }      
+                },
+                {
+                    "name": "CenterCrop",
+                    "argv": {
+                        "size": [224, 224]
                     }      
                 },
                 {
@@ -28,35 +40,47 @@
     },
 
     "val_dataset": {
-        "name": "hmdb51",
+        "name": "HMDB51",
         "argv": {
             "train": false,
             "transforms": [
-            {
-                "package": "torchstream.transforms",
-                "name": "CenterSegment",
-                "argv": {
-                    "size": 32
-                }      
-            },
-            {
-                "package": "torchstream.transforms",
-                "name": "ToTensor"  
-            },
-            {
-                "package": "torchstream.transforms",
-                "name": "Normalize" ,
-                "argv": {
-                    "mean": [0.485, 0.456, 0.406],
-                    "std": [0.229, 0.224, 0.225]
+                {
+                    "package": "torchstream.transforms",
+                    "name": "CenterSegment",
+                    "argv": {
+                        "size": 8
+                    }      
+                },
+                {
+                    "name": "Resize",
+                    "argv": {
+                        "size": [256, 256]
+                    }      
+                },
+                {
+                    "name": "CenterCrop",
+                    "argv": {
+                        "size": [224, 224]
+                    }      
+                },
+                {
+                    "package": "torchstream.transforms",
+                    "name": "ToTensor"  
+                },
+                {
+                    "package": "torchstream.transforms",
+                    "name": "Normalize" ,
+                    "argv": {
+                        "mean": [0.485, 0.456, 0.406],
+                        "std": [0.229, 0.224, 0.225]
+                    }
                 }
-            }
             ]
         }
     },
 
     "train_loader":{
-        "batch_size": 64,
+        "batch_size": 32,
         "num_workers": 32,
         "shuffle": true,
         "pin_memory": true,
