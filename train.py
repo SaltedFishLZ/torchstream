@@ -6,7 +6,7 @@ import time
 import torch
 
 import utils
-from validate import validate, val_log_str
+from validate import validate
 
 train_log_str = "Epoch: [{:3d}][{:4d}/{:4d}], lr: {lr:5.5f}\t" + \
                 "BatchTime {batch_time.val:6.2f} ({batch_time.avg:6.2f})\t" + \
@@ -17,7 +17,7 @@ train_log_str = "Epoch: [{:3d}][{:4d}/{:4d}], lr: {lr:5.5f}\t" + \
 
 
 def train_epoch(device, loader, model, criterion, optimizer, epoch,
-                log_str, log_interval=20, **kwargs):
+                log_str=train_log_str, log_interval=20, **kwargs):
 
     batch_time = utils.Meter()
     data_time = utils.Meter()
@@ -102,12 +102,11 @@ def train(device, train_loader, val_loader,
         ## train for one epoch
         train_epoch(device=device, loader=train_loader, model=model,
                     criterion=criterion, optimizer=optimizer,
-                    epoch=epoch, log_str=train_log_str)
+                    epoch=epoch)
 
         ## evaluate on validation set
         prec1 = validate(device=device, loader=val_loader, model=model,
-                         criterion=criterion, epoch=epoch,
-                         log_str=val_log_str)
+                         criterion=criterion, epoch=epoch)
 
         # remember best prec@1 
         is_best = prec1 > best_prec1

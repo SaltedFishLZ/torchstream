@@ -14,7 +14,7 @@ val_log_str = "Validation: [{:4d}/{:4d}]\t" + \
               "Prec@5 {top5_meter.val:6.3f} ({top5_meter.avg:6.3f})"
 
 def validate(device, loader, model, criterion,
-             log_str, log_interval=20, **kwargs):
+             log_str=val_log_str, log_interval=20, **kwargs):
     
     batch_time = utils.Meter()
     data_time = utils.Meter()

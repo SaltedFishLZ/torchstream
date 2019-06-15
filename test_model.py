@@ -42,15 +42,12 @@ def main(args):
     model_state_dict = checkpoint["model_state_dict"]
     model.load_state_dict(model_state_dict)
 
-    configs["optimizer"]["argv"]["params"] = model.parameters()
-    optimizer = cfgs.config2optimizer(configs["optimizer"])
 
     criterion = cfgs.config2criterion(configs["criterion"])
     criterion.to(device)
 
 
-    validate(device, test_loader,
-          model, criterion, optimizer, **(configs["test"]))
+    validate(device, test_loader, model, criterion)
 
 
 if __name__ == "__main__":
