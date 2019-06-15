@@ -124,11 +124,11 @@
         "epochs": 20,
         "resume": {
             "dir_path": "checkpoints",
-            "pth_name": "template_model_best.pth.tar"
+            "pth_name": "template.best.pth"
         },
         "backup": {
             "dir_path": "checkpoints",
-            "pth_name": "test"
+            "pth_name": "template"
         }
     }
 

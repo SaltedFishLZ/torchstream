@@ -3,9 +3,8 @@ import subprocess, shutil
 
 import torch
 
-def save_checkpoint(state, is_best, path, prefix, filename='checkpoint.pth.tar'):
-    prefix_save = os.path.join(path, prefix)
-    name = prefix_save + '_' + filename
-    torch.save(state, name)
+def save_checkpoint(state, is_best, dir_path, pth_name="model"):
+    file_path = os.path.join(dir_path, pth_name)
+    torch.save(state, file_path + ".pth")
     if is_best:
-        shutil.copyfile(name, prefix_save + '_model_best.pth.tar')
+        shutil.copyfile(name, file_path + ".best.pth")

@@ -87,8 +87,8 @@ def train(device, train_loader, val_loader,
         best_prec1 = checkpoint["best_prec1"]
         start_epoch = checkpoint["epoch"]
         print("Resume from epoch [{}], best prec1 [{}]".format(start_epoch, best_prec1))
-        optimizer.load_stat_dict(checkpoint["optimizer_state_dict"])
-        optimizer.load_stat_dict(checkpoint["optimizer_state_dict"])
+        optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
+        model.load_state_dict(checkpoint["model_state_dict"])
 
     backup_config = None
     if "backup" in kwargs:
@@ -112,9 +112,9 @@ def train(device, train_loader, val_loader,
 
         # save checkpoint
         if backup_config is not None:
-            ckpt_dir = backup_config["dir_path"]
+            dir_path = backup_config["dir_path"]
             pth_name = backup_config["pth_name"]
-            os.makedirs(ckpt_dir, exist_ok=True)
+            os.makedirs(dir_path, exist_ok=True)
             utils.save_checkpoint(state={
                                     "epoch": epoch,
                                     "model_state_dict": model.state_dict(),
@@ -122,5 +122,5 @@ def train(device, train_loader, val_loader,
                                     "best_prec1": best_prec1
                                     },
                                 is_best=is_best,
-                                path=ckpt_dir,
-                                prefix=pth_name)
+                                dir_path=dir_path,
+                                pth_name=pth_name)
