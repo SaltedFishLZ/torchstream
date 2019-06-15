@@ -9,18 +9,19 @@ import utils
 from validate import validate, val_log_str
 
 train_log_str = "Epoch: [{:3d}][{:4d}/{:4d}], lr: {lr:5.5f}\t" + \
-        "BatchTime {:6.2f} ({:6.2f})\t" + \
-        "DataTime {:6.2f} ({:6.2f})\t" + \
-        "Loss {:5.3f} ({:5.3f})\t" + \
-                "Prec@1 {:5.3f} ({:5.3f})\t" + \
-                "Prec@5 {:5.3f} ({:5.3f})"
+                "BatchTime {batch_time.val:6.2f} ({batch_time.avg:6.2f})\t" + \
+                "DataTime {data_time.val:6.2f} ({data_time.avg:6.2f})\t" + \
+                "Loss {loss.val:6.3f} ({loss.avg:6.3f})\t" + \
+                "Prec@1 {top1.val:6.3f} ({top1.avg:6.3f})\t" + \
+                "Prec@5 {top5.val:6.3f} ({top5.avg:6.3f})"
+
 
 def train_epoch(device, loader, model, criterion, optimizer, epoch,
                 log_str, log_interval=20, **kwargs):
 
     batch_time = utils.Meter()
     data_time = utils.Meter()
-    losses = utils.Meter()
+    loss = utils.Meter()
     top1 = utils.Meter()
     top5 = utils.Meter()
 
@@ -47,7 +48,7 @@ def train_epoch(device, loader, model, criterion, optimizer, epoch,
         prec5 = accuracy[5]
 
         ## update statistics
-        losses.update(loss, input.size(0))
+        loss.update(loss, input.size(0))
         top1.update(prec1, input.size(0))
         top5.update(prec5, input.size(0))
 
@@ -62,11 +63,9 @@ def train_epoch(device, loader, model, criterion, optimizer, epoch,
 
         if i % log_interval == 0:
             print(log_str.format(epoch, i, len(loader),
-                                 batch_time.val, batch_time.avg,
-                                 data_time.val, data_time.avg,
-                                 losses.val, losses.avg,
-                                 top1.val, top1.avg,
-                                 top5.val, top1.avg, 
+                                 batch_time=batch_time,
+                                 data_time=data_time,
+                                 loss=loss, top1=top1, top5=top5,
                                  lr=optimizer.param_groups[-1]['lr']))
 
 
