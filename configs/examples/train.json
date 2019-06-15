@@ -123,8 +123,8 @@
     "train": {
         "epochs": 20,
         "resume": {
-            "dir_path": "$HOME/video-acc/pretrained",
-            "pth_name": "TSM_hmdb51_RGB_resnet50_shift8_blockres_avg_segment8_e25.best"
+            "dir_path": "checkpoints",
+            "pth_name": "template_model_best.pth.tar"
         },
         "backup": {
             "dir_path": "checkpoints",
