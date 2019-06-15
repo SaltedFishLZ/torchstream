@@ -11,9 +11,9 @@ from validate import validate, val_log_str
 train_log_str = "Epoch: [{:3d}][{:4d}/{:4d}], lr: {lr:5.5f}\t" + \
                 "BatchTime {batch_time.val:6.2f} ({batch_time.avg:6.2f})\t" + \
                 "DataTime {data_time.val:6.2f} ({data_time.avg:6.2f})\t" + \
-                "Loss {loss.val:6.3f} ({loss.avg:6.3f})\t" + \
-                "Prec@1 {top1.val:6.3f} ({top1.avg:6.3f})\t" + \
-                "Prec@5 {top5.val:6.3f} ({top5.avg:6.3f})"
+                "Loss {loss_meter.val:6.3f} ({loss_meter.avg:6.3f})\t" + \
+                "Prec@1 {top1_meter.val:6.3f} ({top1_meter.avg:6.3f})\t" + \
+                "Prec@5 {top5_meter.val:6.3f} ({top5_meter.avg:6.3f})"
 
 
 def train_epoch(device, loader, model, criterion, optimizer, epoch,
@@ -21,9 +21,9 @@ def train_epoch(device, loader, model, criterion, optimizer, epoch,
 
     batch_time = utils.Meter()
     data_time = utils.Meter()
-    loss = utils.Meter()
-    top1 = utils.Meter()
-    top5 = utils.Meter()
+    loss_meter = utils.Meter()
+    top1_meter = utils.Meter()
+    top5_meter = utils.Meter()
 
     metric = utils.ClassifyAccuracy(topk=(1, 5))
 
@@ -48,9 +48,9 @@ def train_epoch(device, loader, model, criterion, optimizer, epoch,
         prec5 = accuracy[5]
 
         ## update statistics
-        loss.update(loss, input.size(0))
-        top1.update(prec1, input.size(0))
-        top5.update(prec5, input.size(0))
+        loss_meter.update(loss, input.size(0))
+        top1_meter.update(prec1, input.size(0))
+        top5_meter.update(prec5, input.size(0))
 
         ## backward
         optimizer.zero_grad()
@@ -65,7 +65,7 @@ def train_epoch(device, loader, model, criterion, optimizer, epoch,
             print(log_str.format(epoch, i, len(loader),
                                  batch_time=batch_time,
                                  data_time=data_time,
-                                 loss=loss, top1=top1, top5=top5,
+                                 loss=loss_meter, top1_meter=top1_meter, top5_meter=top5_meter,
                                  lr=optimizer.param_groups[-1]['lr']))
 
 
