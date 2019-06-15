@@ -31,6 +31,10 @@ def test_mc(device, loader, model, criterion, chances=20,
 
         for c in range(chances):
             
+            print("#" * 40)
+            print("[{:5d}] Chances".format(c))
+            print("#" * 40)
+
             batch_time = utils.Meter()
             data_time = utils.Meter()
             loss_meter = utils.Meter()
@@ -87,9 +91,8 @@ def test_mc(device, loader, model, criterion, chances=20,
             multichance_accuracy = mc_acc(all_output, all_target)
             mc_top1 = multichance_accuracy[1]
             mc_top5 = multichance_accuracy[5]
-            print("[{:5d}] Chances:\n" + \
-                "Prec@1 {:5.3f} Prec@5 {:5.3f}"
-                .format(c, mc_top1, mc_top5))
+            print("All Chances:\nPrec@1 {:5.3f} Prec@5 {:5.3f}"
+                  .format(mc_top1, mc_top5))
 
 def main(args):
 
