@@ -7,12 +7,12 @@ import torch
 import utils
 
 
-val_log_str = "Validation: [{:4d}/{:4d}]\t" + \
-              "BatchTime {batch_time.val:6.2f} ({batch_time.avg:6.2f})\t" + \
-              "DataTime {data_time.val:6.2f} ({data_time.avg:6.2f})\t" + \
-              "Loss {loss_meter.val:6.3f} ({loss_meter.avg:6.3f})\t" + \
-              "Prec@1 {top1_meter.val:6.3f} ({top1_meter.avg:6.3f})\t" + \
-              "Prec@5 {top5_meter.val:6.3f} ({top5_meter.avg:6.3f})"
+val_log_str = "Validation:[{:4d}/{:4d}]  " + \
+              "BatchTime:{batch_time.val:6.2f}({batch_time.avg:6.2f})  " + \
+              "DataTime:{data_time.val:6.2f}({data_time.avg:6.2f})  " + \
+              "Loss:{loss_meter.val:7.3f}({loss_meter.avg:7.3f}) " + \
+              "Prec@1:{top1_meter.val:7.3f}({top1_meter.avg:7.3f}) " + \
+              "Prec@5:{top5_meter.val:7.3f}({top5_meter.avg:7.3f})"
 
 def validate(device, loader, model, criterion,
              log_str=val_log_str, log_interval=20, **kwargs):
@@ -67,12 +67,12 @@ def validate(device, loader, model, criterion,
 
     return top1_meter.avg
 
-train_log_str = "Epoch: [{:3d}][{:4d}/{:4d}], lr: {lr:5.5f}\t" + \
-                "BatchTime {batch_time.val:6.2f} ({batch_time.avg:6.2f})\t" + \
-                "DataTime {data_time.val:6.2f} ({data_time.avg:6.2f})\t" + \
-                "Loss {loss_meter.val:6.3f} ({loss_meter.avg:6.3f})\t" + \
-                "Prec@1 {top1_meter.val:6.3f} ({top1_meter.avg:6.3f})\t" + \
-                "Prec@5 {top5_meter.val:6.3f} ({top5_meter.avg:6.3f})"
+train_log_str = "Epoch:[{:3d}][{:4d}/{:4d}], lr:{lr:5.5f}  " + \
+                "BatchTime:{batch_time.val:6.2f}({batch_time.avg:6.2f})  " + \
+                "DataTime:{data_time.val:6.2f}({data_time.avg:6.2f})  " + \
+                "Loss:{loss_meter.val:7.3f}({loss_meter.avg:7.3f}) " + \
+                "Prec@1:{top1_meter.val:7.3f}({top1_meter.avg:7.3f}) " + \
+                "Prec@5:{top5_meter.val:7.3f}({top5_meter.avg:7.3f})"
 
 
 def train_epoch(device, loader, model, criterion, optimizer, epoch,
