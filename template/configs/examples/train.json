@@ -122,10 +122,6 @@
 
     "train": {
         "epochs": 20,
-        "resume": {
-            "dir_path": "checkpoints",
-            "pth_name": "template.best.pth"
-        },
         "backup": {
             "dir_path": "checkpoints",
             "pth_name": "template"

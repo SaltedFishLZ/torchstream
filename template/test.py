@@ -53,7 +53,7 @@ def main(args):
     # load model
     checkpoint = torch.load(args.weights)
     model_state_dict = checkpoint["model_state_dict"]
-    model.load_state_dict(model_state_dict)
+    model.module.load_state_dict(model_state_dict)
 
 
     criterion = cfgs.config2criterion(configs["criterion"])
