@@ -61,7 +61,7 @@ def validate(device, loader, model, criterion,
                                      top5_meter=top5_meter))
 
 
-    print("Validating Results:\n" + \
+    print("Results:\n" + \
           "Prec@1 {top1_meter.avg:5.3f} Prec@5 {top5_meter.avg:5.3f} Loss {loss_meter.avg:5.3f}"
           .format(top1_meter=top1_meter, top5_meter=top5_meter, loss_meter=loss_meter))
 
