@@ -12,8 +12,6 @@ import cfgs
 import utils
 
 from train import train
-from validate import validate, val_log_str
-
 
 
 def main(args):
