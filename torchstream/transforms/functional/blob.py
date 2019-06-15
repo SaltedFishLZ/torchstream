@@ -17,6 +17,7 @@ def _is_varray(x):
     return(
         isinstance(x, np.ndarray)
         and (x.ndim == 4)
+        and (x.dtype == np.uint8)
     )
 
 def to_tensor(varray):

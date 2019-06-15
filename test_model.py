@@ -1,5 +1,3 @@
-"""
-"""
 import os
 import time
 import json
@@ -11,8 +9,7 @@ import torch
 import cfgs
 import utils
 
-from train import train
-from validate import validate, val_log_str
+from validate import validate
 
 
 
@@ -26,18 +23,13 @@ def main(args):
         configs["gpus"] = args.gpus
     else:
         configs["gpus"] = list(range(torch.cuda.device_count()))
-    configs["train"]["start_epoch"] = 0
     device = torch.device("cuda:0")
 
+    test_dataset = cfgs.config2dataset(configs["test_dataset"])
 
-    train_dataset = cfgs.config2dataset(configs["train_dataset"])
-    val_dataset = cfgs.config2dataset(configs["val_dataset"])
 
-    configs["train_loader"]["dataset"] = train_dataset
-    train_loader = cfgs.config2dataloader(configs["train_loader"])
-
-    configs["val_loader"]["dataset"] = val_dataset
-    val_loader = cfgs.config2dataloader(configs["val_loader"])
+    configs["test_loader"]["dataset"] = test_dataset
+    test_loader = cfgs.config2dataloader(configs["test_loader"])
 
     model = cfgs.config2model(configs["model"])
     model.to(device)
@@ -46,6 +38,9 @@ def main(args):
         model = torch.nn.DataParallel(model, device_ids=args.gpus)
     else:
         model = torch.nn.DataParallel(model)
+    checkpoint = torch.load(args.weights)
+    model_state_dict = checkpoint["model_state_dict"]
+    model.load_state_dict(model_state_dict)
 
     configs["optimizer"]["argv"]["params"] = model.parameters()
     optimizer = cfgs.config2optimizer(configs["optimizer"])
@@ -54,8 +49,8 @@ def main(args):
     criterion.to(device)
 
 
-    train(device, train_loader, val_loader,
-          model, criterion, optimizer, **(configs["train"]))
+    validate(device, test_loader,
+          model, criterion, optimizer, **(configs["test"]))
 
 
 if __name__ == "__main__":
@@ -64,7 +59,8 @@ if __name__ == "__main__":
     # configuration file
     parser.add_argument("config", type=str,
                         help="path to configuration file")
-    parser.add_argument('--gpus', nargs='+', type=int, default=None)
+    parser.add_argument("--weights", type=str, default=None)
+    parser.add_argument("--gpus", nargs='+', type=int, default=None)
     
     args = parser.parse_args()
 
