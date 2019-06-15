@@ -12,8 +12,6 @@ import cfgs
 import utils
 
 from train import train
-from validate import validate, val_log_str
-
 
 
 def main(args):
@@ -39,7 +37,6 @@ def main(args):
     configs["val_loader"]["dataset"] = val_dataset
     val_loader = cfgs.config2dataloader(configs["val_loader"])
 
-    configs["model"]["argv"]["input_size"] = tuple(configs["model"]["argv"]["input_size"])
     model = cfgs.config2model(configs["model"])
     model.to(device)
     # Add DataParallel Wrapper
