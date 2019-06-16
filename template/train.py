@@ -196,9 +196,14 @@ def main(args):
 
     model = torch.nn.DataParallel(model, device_ids=configs["gpus"])
 
-
-    configs["optimizer"]["argv"]["params"] = model.parameters()
+    if configs["optimizer"]["argv"]["params"] == "model_specified":
+        print("Use Model Specified Training Policies")
+        configs["optimizer"]["argv"]["params"] = model.get_optim_policies()
+    else:
+        configs["optimizer"]["argv"]["params"] = model.parameters()
     optimizer = cfgs.config2optimizer(configs["optimizer"])
+
+    lr_scheduler = cfgs.config2lrscheduler(optimizer, configs["lr_scheduler"])
 
     criterion = cfgs.config2criterion(configs["criterion"])
     criterion.to(device)
@@ -215,14 +220,24 @@ def main(args):
         checkpoint = utils.load_checkpoint(**resume_config)
 
         best_prec1 = checkpoint["best_prec1"]
-        start_epoch = checkpoint["epoch"]
+        start_epoch = checkpoint["epoch"] + 1
         model_state_dict = checkpoint["model_state_dict"]
         optimizer_state_dict = checkpoint["optimizer_state_dict"]       
 
         optimizer.load_state_dict(optimizer_state_dict)
         model.load_state_dict(model_state_dict)
         print("Resume from epoch [{}], best prec1 [{}]".format(start_epoch, best_prec1))
+    elif "finetune" in configs["train"]:
+        finetune_config = configs["train"]["finetune"]
+        checkpoint = utils.load_checkpoint(**finetune_config)
 
+        model_state_dict = checkpoint["model_state_dict"]
+        for key in model_state_dict.state_dict():
+            if "fc" in key:
+                ## use FC from new network
+                print("Replacing ", key)
+                model_state_dict[key] = model.state_dict()[key]
+        model.load_state_dict(model_state_dict)
 
 
     # -------------------------------------------------------- #
@@ -248,6 +263,8 @@ def main(args):
         is_best = prec1 > best_prec1
         best_prec1 = max(prec1, best_prec1) 
         print("Best Prec@1: %.3f\n" % (best_prec1))
+
+        lr_scheduler.step()
 
         # save checkpoint
         if backup_config is not None:

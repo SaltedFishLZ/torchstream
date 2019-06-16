@@ -107,7 +107,7 @@ class MultiScaleCrop(object):
     """Randomly apply 1 of multiple scales crop
     """
     def __init__(self, output_size,
-                 scales=[1, .875, .75, .66],
+                 scales=[1, 0.875, 0.75, 0.66],
                  max_distort=1,
                  more_fix_crop=True,
                  interpolation=cv2.INTER_LINEAR,

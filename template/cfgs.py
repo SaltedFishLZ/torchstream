@@ -132,3 +132,22 @@ def config2optimizer(cfg):
 
     optimizer = optimizer_class(**argv)
     return optimizer
+
+
+def config2lrscheduler(optimizer, cfg):
+    """
+    """
+    package = "torch.optim.lr_scheduler"
+    if "package" in cfg:
+        package = cfg["package"]
+
+    lr_scheduler_package = importlib.import_module(package)
+    lr_scheduler_class = getattr(lr_scheduler_package, cfg["name"])
+
+    argv = {}
+    if "argv" in cfg:
+        argv = cfg["argv"]
+
+    lr_scheduler = lr_scheduler_class(optimizer, **argv)
+    return lr_scheduler
+    
