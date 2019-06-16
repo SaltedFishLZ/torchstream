@@ -5,6 +5,7 @@ import shutil
 import argparse
 
 import torch
+import torchstream
 
 import cfgs
 import utils
@@ -33,28 +34,42 @@ def main(args):
         configs["gpus"] = args.gpus
     else:
         configs["gpus"] = list(range(torch.cuda.device_count()))
+    configs["train"]["start_epoch"] = 0
+
     device = torch.device("cuda:0")
 
+
+    # -------------------------------------------------------- #
+    #          Construct Datasets & Dataloaders                #
+    # -------------------------------------------------------- #
+
+    test_transforms = []
+    for _t in configs["test_transforms"]:
+        test_transforms.append(cfgs.config2transform(_t))
+    test_transforms = torchstream.transforms.Compose(
+        transforms=test_transforms
+        )
+
+    configs["test_dataset"]["argv"]["transform"] = test_transforms
     test_dataset = cfgs.config2dataset(configs["test_dataset"])
-
-
+    
     configs["test_loader"]["dataset"] = test_dataset
     test_loader = cfgs.config2dataloader(configs["test_loader"])
+
+
+    # -------------------------------------------------------- #
+    #          Construct Network & Load Weights                #
+    # -------------------------------------------------------- #
 
     model = cfgs.config2model(configs["model"])
     model.to(device)
 
-    # Add DataParallel Wrapper
-    if args.gpus is not None:
-        model = torch.nn.DataParallel(model, device_ids=args.gpus)
-    else:
-        model = torch.nn.DataParallel(model)
-    
+    model = torch.nn.DataParallel(model, device_ids=configs["gpus"])
+
     # load model
     checkpoint = torch.load(args.weights)
     model_state_dict = checkpoint["model_state_dict"]
-    model.module.load_state_dict(model_state_dict)
-
+    model.load_state_dict(model_state_dict)
 
     criterion = cfgs.config2criterion(configs["criterion"])
     criterion.to(device)

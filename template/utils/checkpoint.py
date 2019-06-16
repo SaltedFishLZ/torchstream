@@ -3,8 +3,22 @@ import subprocess, shutil
 
 import torch
 
-def save_checkpoint(state, is_best, dir_path, pth_name="model"):
-    file_path = os.path.join(dir_path, pth_name)
-    torch.save(state, file_path + ".pth")
+def save_checkpoint(checkpoint, dir_path="checkpoints", pth_name="model",
+                    is_best=False, **kwargs):
+    os.makedirs(dir_path, exist_ok=True)
+    ckpt_path = os.path.join(dir_path, pth_name)
+    ckpt_path = os.path.realpath(ckpt_path)
+    ckpt_path = os.path.expandvars(ckpt_path)
+    ckpt_path = os.path.expanduser(ckpt_path)
+    torch.save(checkpoint, ckpt_path + ".pth")
     if is_best:
-        shutil.copyfile(file_path + ".pth", file_path + ".best.pth")
+        shutil.copyfile(ckpt_path + ".pth", ckpt_path + ".best.pth")
+
+def load_checkpoint(dir_path="checkpoints", pth_name="model",
+                    **kwargs):
+    ckpt_path = os.path.join(dir_path, pth_name + ".pth")
+    ckpt_path = os.path.realpath(ckpt_path)
+    ckpt_path = os.path.expandvars(ckpt_path)
+    ckpt_path = os.path.expanduser(ckpt_path)
+    checkpoint = torch.load(ckpt_path)
+    return checkpoint

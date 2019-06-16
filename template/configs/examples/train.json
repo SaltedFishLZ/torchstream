@@ -1,81 +1,83 @@
 {
+    "train_transforms": [
+        {
+            "package": "torchstream.transforms",
+            "name": "CenterSegment",
+            "argv": {
+                "size": 8
+            }      
+        },
+        {
+            "name": "Resize",
+            "argv": {
+                "size": [256, 256]
+            }      
+        },
+        {
+            "name": "CenterCrop",
+            "argv": {
+                "size": [224, 224]
+            }      
+        },
+        {
+            "package": "torchstream.transforms",
+            "name": "ToTensor"  
+        },
+        {
+            "package": "torchstream.transforms",
+            "name": "Normalize" ,
+            "argv": {
+                "mean": [0.485, 0.456, 0.406],
+                "std": [0.229, 0.224, 0.225]
+            }
+        }
+    ],
+
     "train_dataset": {
         "name": "HMDB51",
         "argv": {
-            "train": true,
-            "transforms": [
-                {
-                    "package": "torchstream.transforms",
-                    "name": "CenterSegment",
-                    "argv": {
-                        "size": 8
-                    }      
-                },
-                {
-                    "name": "Resize",
-                    "argv": {
-                        "size": [256, 256]
-                    }      
-                },
-                {
-                    "name": "CenterCrop",
-                    "argv": {
-                        "size": [224, 224]
-                    }      
-                },
-                {
-                    "package": "torchstream.transforms",
-                    "name": "ToTensor"  
-                },
-                {
-                    "package": "torchstream.transforms",
-                    "name": "Normalize" ,
-                    "argv": {
-                        "mean": [0.485, 0.456, 0.406],
-                        "std": [0.229, 0.224, 0.225]
-                    }
-                }
-            ]
+            "train": true
         }
     },
+
+    "val_transforms": [
+        {
+            "package": "torchstream.transforms",
+            "name": "CenterSegment",
+            "argv": {
+                "size": 8
+            }      
+        },
+        {
+            "name": "Resize",
+            "argv": {
+                "size": [256, 256]
+            }      
+        },
+        {
+            "name": "CenterCrop",
+            "argv": {
+                "size": [224, 224]
+            }      
+        },
+        {
+            "package": "torchstream.transforms",
+            "name": "ToTensor"  
+        },
+        {
+            "package": "torchstream.transforms",
+            "name": "Normalize" ,
+            "argv": {
+                "mean": [0.485, 0.456, 0.406],
+                "std": [0.229, 0.224, 0.225]
+            }
+        }
+    ],
 
     "val_dataset": {
         "name": "HMDB51",
         "argv": {
-            "train": false,
-            "transforms": [
-                {
-                    "package": "torchstream.transforms",
-                    "name": "CenterSegment",
-                    "argv": {
-                        "size": 8
-                    }      
-                },
-                {
-                    "name": "Resize",
-                    "argv": {
-                        "size": [256, 256]
-                    }      
-                },
-                {
-                    "name": "CenterCrop",
-                    "argv": {
-                        "size": [224, 224]
-                    }      
-                },
-                {
-                    "package": "torchstream.transforms",
-                    "name": "ToTensor"  
-                },
-                {
-                    "package": "torchstream.transforms",
-                    "name": "Normalize" ,
-                    "argv": {
-                        "mean": [0.485, 0.456, 0.406],
-                        "std": [0.229, 0.224, 0.225]
-                    }
-                }
-            ]
+            "train": false
         }
     },
 
