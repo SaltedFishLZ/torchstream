@@ -60,7 +60,7 @@ class TSN(nn.Module):
         if 'resnet' in base_model or 'vgg' in base_model:
 
             self.base_model = getattr(torchvision.models, base_model)(True)
-            
+
             ## replace the classifier
             feature_dim = self.base_model.fc.in_features
             if self.dropout > 0:
@@ -117,7 +117,7 @@ class TSN(nn.Module):
 
         ## reshape:
         base_out = base_out.view((-1, T) + base_out.size()[1:])
-        
+
         output = self.consensus(base_out)
         return output.squeeze(1)
 
