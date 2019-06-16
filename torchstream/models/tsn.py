@@ -132,7 +132,8 @@ class TSN(nn.Module):
         else:
             raise ValueError
 
-    def get_optim_policies(self):
+    def get_optim_policies(self, fc_lr5=False):
+        
         first_conv_weight = []
         first_conv_bias = []
         normal_weight = []
@@ -157,15 +158,15 @@ class TSN(nn.Module):
                     normal_weight.append(ps[0])
                     if len(ps) == 2:
                         normal_bias.append(ps[1])
-                        
+
             elif isinstance(m, nn.Linear):
                 ps = list(m.parameters())
-                if self.fc_lr5:
+                if fc_lr5:
                     lr5_weight.append(ps[0])
                 else:
                     normal_weight.append(ps[0])
                 if len(ps) == 2:
-                    if self.fc_lr5:
+                    if fc_lr5:
                         lr10_bias.append(ps[1])
                     else:
                         normal_bias.append(ps[1])

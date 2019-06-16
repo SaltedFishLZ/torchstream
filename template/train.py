@@ -198,7 +198,7 @@ def main(args):
 
     if configs["optimizer"]["argv"]["params"] == "model_specified":
         print("Use Model Specified Training Policies")
-        configs["optimizer"]["argv"]["params"] = model.get_optim_policies()
+        configs["optimizer"]["argv"]["params"] = model.module.get_optim_policies()
     else:
         configs["optimizer"]["argv"]["params"] = model.parameters()
     optimizer = cfgs.config2optimizer(configs["optimizer"])
