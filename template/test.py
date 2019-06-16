@@ -33,8 +33,7 @@ def main(args):
     if args.gpus is not None:
         configs["gpus"] = args.gpus
     else:
-        configs["gpus"] = list(range(torch.cuda.device_count()))
-    configs["train"]["start_epoch"] = 0
+        configs["gpus"] = list(range(torch.cuda.device_count())) 
 
     device = torch.device("cuda:0")
 
