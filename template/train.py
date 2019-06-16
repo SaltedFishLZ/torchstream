@@ -225,8 +225,9 @@ def main(args):
         optimizer_state_dict = checkpoint["optimizer_state_dict"]
         lr_scheduler_state_dict = checkpoint["lr_scheduler_state_dict"]
 
-        optimizer.load_state_dict(optimizer_state_dict)
         model.load_state_dict(model_state_dict)
+        optimizer.load_state_dict(optimizer_state_dict)
+        lr_scheduler.load_state_dict(lr_scheduler_state_dict)
         print("Resume from epoch [{}], best prec1 [{}]".format(start_epoch, best_prec1))
 
     elif "finetune" in configs["train"]:
