@@ -12,12 +12,29 @@ def resize(varray, size, interpolation=cv2.INTER_LINEAR):
         raise TypeError('varray should be ndarray. Got {}'.format(varray))
     
     t, h, w, c = varray.shape
-    _shape = (t, size[0], size[1], c)
     
+    oh = None
+    ow = None
+    if isinstance(size, int):
+        ## short path
+        if (w <= h and w == size) or (h <= w and h == size):
+            return varray 
+        if w < h:
+            ow = size
+            oh = int(size * h / w)
+        else:
+            oh = size
+            ow = int(size * w / h)
+    elif isinstance(size, tuple):
+        oh, ow = size
+    else:
+        raise TypeError
+
+    _shape = (t, oh, ow, c)
     result = np.empty(_shape, dtype=np.uint8)
     for _i in range(t):
         farray = varray[_i, :, :, :]
-        farray = cv2.resize(farray, dsize=(size[1], size[0]),
+        farray = cv2.resize(farray, dsize=(oh, ow),
                             interpolation=interpolation)
         result[_i, :, :, :] = farray
     return result
