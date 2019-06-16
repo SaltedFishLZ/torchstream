@@ -10,7 +10,7 @@
         {
             "name": "Resize",
             "argv": {
-                "size": [256, 256]
+                "size": 256
             }      
         },
         {
