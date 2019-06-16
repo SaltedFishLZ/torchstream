@@ -23,6 +23,26 @@ import torch
 
 import torchstream
 
+def config2transform(cfg):
+    """
+    """
+    package = "torchstream.transforms"
+    if "package" in cfg:
+        package = cfg["package"]
+    
+    transform_package = importlib.import_module(package)
+    transform_class = getattr(transform_package, cfg["name"])
+
+    transform = None
+    if "argv" in cfg:
+        argv = cfg["argv"]
+        transform = transform_class(**argv)
+    else:
+        transform = transform_class()
+
+    return transform
+
+
 def config2dataset(cfg):
     """Configuration -> Dataset
     Args:
@@ -36,29 +56,12 @@ def config2dataset(cfg):
     dataset_package = importlib.import_module(package)
     dataset_class = getattr(dataset_package, cfg["name"])
 
-    transform = None
-
-    ## currently, we directly parse a linear list of transforms
-    assert "transforms" in cfg["argv"], NotImplementedError
-    transforms = []
-    for _t_dict in cfg["argv"]["transforms"]:
-        package = "torchstream.transforms"
-        if "package" in _t_dict:
-            package = _t_dict["package"]
-        transform_package = importlib.import_module(package)
-        transform_class = getattr(transform_package, _t_dict["name"])
-        if "argv" in _t_dict:
-            argv = _t_dict["argv"]
-            _t = transform_class(**argv)
-            transforms.append(_t)
-        else:
-            _t = transform_class()
-            transforms.append(_t)
-    transform = torchstream.transforms.Compose(transforms)
-    # print(transform)
-    del cfg["argv"]["transforms"]
-
-    dataset = dataset_class(**cfg["argv"], transform=transform)
+    dataset = None
+    if "argv" in cfg:
+        argv = cfg["argv"]
+        dataset = dataset_class(**argv)
+    else:
+        dataset = dataset_class()
 
     return dataset
 
@@ -80,7 +83,14 @@ def config2model(cfg):
     """
     model_package = importlib.import_module(cfg["package"])
     model_class = getattr(model_package, cfg["name"])
-    model = model_class(**cfg["argv"])
+
+    model = None
+    if "argv" in cfg:
+        argv = cfg["argv"]
+        model = model_class(**argv)
+    else:
+        model = model_class()
+
     return model
 
 
@@ -122,3 +132,22 @@ def config2optimizer(cfg):
 
     optimizer = optimizer_class(**argv)
     return optimizer
+
+
+def config2lrscheduler(optimizer, cfg):
+    """
+    """
+    package = "torch.optim.lr_scheduler"
+    if "package" in cfg:
+        package = cfg["package"]
+
+    lr_scheduler_package = importlib.import_module(package)
+    lr_scheduler_class = getattr(lr_scheduler_package, cfg["name"])
+
+    argv = {}
+    if "argv" in cfg:
+        argv = cfg["argv"]
+
+    lr_scheduler = lr_scheduler_class(optimizer, **argv)
+    return lr_scheduler
+    

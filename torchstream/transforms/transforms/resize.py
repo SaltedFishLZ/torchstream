@@ -2,6 +2,14 @@
 """
 import numbers
 import cv2
+import sys
+import collections
+if sys.version_info < (3, 3):
+    Sequence = collections.Sequence
+    Iterable = collections.Iterable
+else:
+    Sequence = collections.abc.Sequence
+    Iterable = collections.abc.Iterable
 
 from .. import functional as F
 
@@ -17,9 +25,11 @@ class Resize(object):
         - interpolation
         """
         if isinstance(size, numbers.Number):
-            self.size = (int(size), int(size))
+            self.size = int(size)
+        elif (isinstance(size, Iterable) and len(size) == 2):
+            self.size = tuple(size)
         else:
-            self.size = size
+            raise TypeError
         self.interpolation = interpolation
 
     def __call__(self, vid):
