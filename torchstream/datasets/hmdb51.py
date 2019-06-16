@@ -20,7 +20,6 @@ class HMDB51(VideoDataset):
             datapoint_filter = hmdb51.TrainsetFilter()
         else:
             datapoint_filter = hmdb51.TestsetFilter()
-        print(datapoint_filter)
         super(HMDB51, self).__init__(root=root, layout=layout,
                                      class_to_idx=class_to_idx,
                                      mod=mod, ext=ext,

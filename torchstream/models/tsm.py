@@ -23,7 +23,6 @@ def make_temporal_shift(net, seg_num, fold_div=8,
     print('=> seg_num per stage: {}'.format(seg_num_list))
 
     if isinstance(net, torchvision.models.ResNet):
-        
         ## insert a temporal shift moduel before the block
         if place == 'block':
 
@@ -40,7 +39,7 @@ def make_temporal_shift(net, seg_num, fold_div=8,
             net.layer2 = make_block_temporal(net.layer2, seg_num_list[1])
             net.layer3 = make_block_temporal(net.layer3, seg_num_list[2])
             net.layer4 = make_block_temporal(net.layer4, seg_num_list[3])
-        ## 
+        ##
         elif 'blockres' in place:
             n_round = 1
             if len(list(net.layer3.children())) >= 23:
@@ -65,7 +64,7 @@ def make_temporal_shift(net, seg_num, fold_div=8,
         ## unknown place
         else:
             raise NotImplementedError(place)
-    
+
     else:
         raise NotImplementedError("Backbone netowrk {}".format(net))
 
@@ -122,7 +121,7 @@ class TSM(TSN):
         return format_string.format(self.base_model, self.cls_num,
                                     self.input_size, self.dropout,
                                     self.shift_place, self.fold_div)
-    
+
 
 
 if __name__ == "__main__":
