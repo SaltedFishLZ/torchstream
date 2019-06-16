@@ -4,8 +4,6 @@ import glob
 import tqdm
 import torch
 
-import utils
-
 def transform_tsm_weight(state_dict):
 
     model_state_dict = state_dict["state_dict"]
@@ -13,7 +11,7 @@ def transform_tsm_weight(state_dict):
     old_keys = list(model_state_dict.keys())
     for key in old_keys:
         val = model_state_dict[key]
-        new_key = key.replace("module.", "")
+        new_key = key
         if "conv1.net" in new_key:
             new_key = new_key.replace('conv1.net', 'conv1.conv')
         if "new_fc" in new_key:
