@@ -232,7 +232,7 @@ def main(args):
         checkpoint = utils.load_checkpoint(**finetune_config)
 
         model_state_dict = checkpoint["model_state_dict"]
-        for key in model_state_dict.state_dict():
+        for key in model_state_dict:
             if "fc" in key:
                 ## use FC from new network
                 print("Replacing ", key)

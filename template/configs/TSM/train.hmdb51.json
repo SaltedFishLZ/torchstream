@@ -79,8 +79,8 @@
     },
 
     "train_loader":{
-        "batch_size": 32,
-        "num_workers": 32,
+        "batch_size": 64,
+        "num_workers": 64,
         "shuffle": true,
         "pin_memory": true,
         "drop_last": true
@@ -88,7 +88,7 @@
 
     "val_loader":{
         "batch_size": 64,
-        "num_workers": 32,
+        "num_workers": 64,
         "shuffle": false,
         "pin_memory": true,
         "drop_last": false
@@ -96,7 +96,7 @@
 
     "model": {
         "package": "torchstream.models",
-        "name": "TSN",
+        "name": "TSM",
         "argv": {
             "cls_num": 51,
             "input_size": [8, 224, 224],
@@ -134,8 +134,8 @@
             "pth_name": "TSM_hmdb51_rgb_s8_e20"
         },
         "finetune": {
-            "dir_path": "checkpoints/TSM/batch64/hmdb51",
-            "pth_name": "TSM_hmdb51_RGB_resnet50_shift8_blockres_avg_segment8_e25.best"            
+            "dir_path": "checkpoints/TSM/tonylin/kinetics/",
+            "pth_name": "TSM_kinetics_RGB_resnet50_shift8_blockres_avg_segment8_e50"
         }
     }
 
