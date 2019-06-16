@@ -4,21 +4,21 @@
             "name": "RandomSegment",
             "argv": {
                 "size": 8
-            }      
+            }
         },
         {
             "name": "MultiScaleCrop",
             "argv": {
                 "output_size": [224, 224],
                 "scales": [1, 0.875, 0.75, 0.66]
-            }      
+            }
         },
         {
-            "name": "RandomHorizontalFlip"     
+            "name": "RandomHorizontalFlip"
         },
         {
             "package": "torchstream.transforms",
-            "name": "ToTensor"  
+            "name": "ToTensor"
         },
         {
             "package": "torchstream.transforms",
@@ -43,19 +43,19 @@
             "name": "CenterSegment",
             "argv": {
                 "size": 8
-            }      
+            }
         },
         {
             "name": "Resize",
             "argv": {
                 "size": 256
-            }      
+            }
         },
         {
             "name": "CenterCrop",
             "argv": {
                 "size": [224, 224]
-            }      
+            }
         },
         {
             "package": "torchstream.transforms",
@@ -128,10 +128,10 @@
     },
 
     "train": {
-        "epochs": 20,
+        "epochs": 50,
         "backup": {
             "dir_path": "checkpoints/TSM/hmdb51",
-            "pth_name": "TSM_hmdb51_rgb_s8_e20"
+            "pth_name": "TSM_hmdb51_rgb_s8_e50"
         },
         "finetune": {
             "dir_path": "checkpoints/TSM/tonylin/kinetics/",

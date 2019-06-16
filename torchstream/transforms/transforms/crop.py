@@ -23,7 +23,7 @@ class CenterCrop(object):
             self.size = (int(size), int(size))
         else:
             self.size = size
-    
+
     def __call__(self, varray):
         return F.center_crop(varray, self.size)
 

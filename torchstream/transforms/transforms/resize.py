@@ -3,6 +3,7 @@
 import numbers
 import cv2
 import sys
+import collections
 if sys.version_info < (3, 3):
     Sequence = collections.Sequence
     Iterable = collections.Iterable

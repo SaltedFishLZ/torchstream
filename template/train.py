@@ -222,11 +222,13 @@ def main(args):
         best_prec1 = checkpoint["best_prec1"]
         start_epoch = checkpoint["epoch"] + 1
         model_state_dict = checkpoint["model_state_dict"]
-        optimizer_state_dict = checkpoint["optimizer_state_dict"]       
+        optimizer_state_dict = checkpoint["optimizer_state_dict"]
+        lr_scheduler_state_dict = checkpoint["lr_scheduler_state_dict"]
 
         optimizer.load_state_dict(optimizer_state_dict)
         model.load_state_dict(model_state_dict)
         print("Resume from epoch [{}], best prec1 [{}]".format(start_epoch, best_prec1))
+
     elif "finetune" in configs["train"]:
         finetune_config = configs["train"]["finetune"]
         checkpoint = utils.load_checkpoint(**finetune_config)
@@ -274,6 +276,7 @@ def main(args):
                 "epoch": epoch,
                 "model_state_dict": model.state_dict(),
                 "optimizer_state_dict": optimizer.state_dict(),
+                "lr_scheduler_state_dict": lr_scheduler.state_dict(),
                 "best_prec1": best_prec1
                 }
             utils.save_checkpoint(checkpoint=checkpoint,
