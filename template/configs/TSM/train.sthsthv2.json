@@ -28,7 +28,7 @@
     ],
 
     "train_dataset": {
-        "name": "JesterV1",
+        "name": "SomethingSomethingV2",
         "argv": {
             "train": true
         }
@@ -69,7 +69,7 @@
     ],
 
     "val_dataset": {
-        "name": "JesterV1",
+        "name": "SomethingSomethingV2",
         "argv": {
             "train": false
         }
@@ -95,7 +95,7 @@
         "package": "torchstream.models",
         "name": "TSM",
         "argv": {
-            "cls_num": 27,
+            "cls_num": 174,
             "input_size": [8, 224, 224],
             "base_model": "resnet50",
             "dropout": 0.8,
@@ -127,12 +127,12 @@
     "train": {
         "epochs": 50,
         "backup": {
-            "dir_path": "checkpoints/TSM/jester_v1",
-            "pth_name": "TSM_jester_v1_rgb_s8_e50"
+            "dir_path": "checkpoints/TSM/sthsth_v2",
+            "pth_name": "TSM_sthsth_v2_rgb_s8_e50"
         },
         "finetune": {
-            "dir_path": "checkpoints/TSM/tonylin/kinetics/",
-            "pth_name": "TSM_kinetics_RGB_resnet50_shift8_blockres_avg_segment8_e50"
+            "dir_path": "checkpoints/TSM/batch64/somethingv2",
+            "pth_name": "TSM_somethingv2_RGB_resnet50_shift8_blockres_avg_segment8_e100.best"
         }
     }
 
