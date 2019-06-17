@@ -1,7 +1,7 @@
 {
     "test_transforms": [
         {
-            "name": "RandomSegment",
+            "name": "CenterSegment",
             "argv": {
                 "size": 12
             }

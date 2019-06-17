@@ -158,12 +158,13 @@ def main(args):
     checkpoint = torch.load(args.weights)
     model_state_dict = checkpoint["model_state_dict"]
     model.load_state_dict(model_state_dict)
+    print("Model Best Prec1: ", checkpoint["best_prec1"])
 
     criterion = cfgs.config2criterion(configs["criterion"])
     criterion.to(device)
 
 
-    result = test_mc(device, test_loader, model, criterion)
+    result = test_mc(device, test_loader, model, criterion, args.chances)
     with open(args.output, "wb") as fout:
         pickle.dump(result, fout)
 
@@ -174,6 +175,7 @@ if __name__ == "__main__":
     parser.add_argument("config", type=str,
                         help="path to configuration file")
     parser.add_argument("--weights", type=str, default=None)
+    parser.add_argument("--chances", type=int, default=20)
     parser.add_argument("--output", type=str, default=None)
     parser.add_argument("--gpus", nargs='+', type=int, default=None)
     

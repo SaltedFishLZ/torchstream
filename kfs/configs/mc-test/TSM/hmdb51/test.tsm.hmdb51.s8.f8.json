@@ -3,7 +3,7 @@
         {
             "name": "CenterSegment",
             "argv": {
-                "size": 28
+                "size": 8
             }
         },
         {
