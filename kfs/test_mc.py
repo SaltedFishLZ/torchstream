@@ -181,6 +181,6 @@ if __name__ == "__main__":
     
     args = parser.parse_args()
 
-    assert args.outputs is not None, ValueError("Must Specify Output File")
+    assert args.output is not None, ValueError("Must Specify Output File")
 
     main(args)
