@@ -1,6 +1,7 @@
 import os
 import time
 import json
+import pickle
 import shutil
 import argparse
 
@@ -26,7 +27,16 @@ def test_mc(device, loader, model, criterion, chances=20,
 
     model.eval()
 
-    
+    result = {
+            "multi-chance": {
+                "top1": [],
+                "top5": []
+            },
+            "single-chance": {
+                "top1": [],
+                "top5": []
+            }
+        }
 
     with torch.no_grad():
 
@@ -89,11 +99,19 @@ def test_mc(device, loader, model, criterion, chances=20,
                 "Prec@1 {top1_meter.avg:5.3f} Prec@5 {top5_meter.avg:5.3f}"
                 .format(top1_meter=top1_meter, top5_meter=top5_meter))
 
+            result["single-chance"]["top1"].append(top1_meter.avg)
+            result["single-chance"]["top5"].append(top5_meter.avg)
+
             multichance_accuracy = mc_acc(all_output, all_target)
             mc_top1 = multichance_accuracy[1]
             mc_top5 = multichance_accuracy[5]
             print("All Chances:\nPrec@1 {:5.3f} Prec@5 {:5.3f}"
                   .format(mc_top1, mc_top5))
+
+            result["multi-chance"]["top1"].append(mc_top1)
+            result["multi-chance"]["top5"].append(mc_top5)
+
+    return result
 
 def main(args):
 
@@ -145,8 +163,9 @@ def main(args):
     criterion.to(device)
 
 
-    test_mc(device, test_loader, model, criterion)
-
+    result = test_mc(device, test_loader, model, criterion)
+    with open(args.output, "wb") as fout:
+        pickle.dump(result, fout)
 
 if __name__ == "__main__":
 
@@ -155,6 +174,7 @@ if __name__ == "__main__":
     parser.add_argument("config", type=str,
                         help="path to configuration file")
     parser.add_argument("--weights", type=str, default=None)
+    parser.add_argument("--output", type=str, default=None)
     parser.add_argument("--gpus", nargs='+', type=int, default=None)
     
     args = parser.parse_args()
