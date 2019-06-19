@@ -129,8 +129,10 @@ def train(device, loader, model, criterion, optimizer, epoch,
 
         for obj in gc.get_objects():
             try:
-                if torch.is_tensor(obj) or (hasattr(obj, "data") and torch.is_tensor(obj.data)):
+                if torch.is_tensor(obj):
                     print(type(obj), obj.size())
+                # if (hasattr(obj, "data") and torch.is_tensor(obj.data)):
+                #     print(type(obj), obj.size())
             except:
                 pass
 
@@ -254,7 +256,7 @@ def main(args):
         ## train for one epoch
         train(device=device, loader=train_loader, model=model,
               criterion=criterion, optimizer=optimizer,
-              epoch=epoch)
+              epoch=epoch, log_interval=1)
 
         ## evaluate on validation set
         prec1 = validate(device=device, loader=val_loader, model=model,

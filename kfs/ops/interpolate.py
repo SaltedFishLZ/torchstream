@@ -32,8 +32,8 @@ class TemporalInterpolationFunction(torch.autograd.Function):
             ur[n, :, :, :, :] = u[n, tr[n], :, :, :]
 
         ctx.Ti = Ti
-        ctx.tl = tl
-        ctx.tr = tr
+        # ctx.tl = tl
+        # ctx.tr = tr
         ctx.ul = ul
         ctx.ur = ur
         ctx.alpha = alpha
@@ -53,8 +53,8 @@ class TemporalInterpolationFunction(torch.autograd.Function):
         assert len(grad_output.size()) == 5, ValueError
 
         Ti = ctx.Ti
-        tl = ctx.tl
-        tr = ctx.tr
+        # tl = ctx.tl
+        # tr = ctx.tr
         ul = ctx.ul
         ur = ctx.ur
 
