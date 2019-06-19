@@ -25,8 +25,8 @@ class TemporalInterpolationFunction(torch.autograd.Function):
         tr = tl + 1
         alpha = t * (Ti - 1) - tl.float()
 
-        ul = torch.empty(N, To, C, H, W, device=u.device)
-        ur = torch.empty(N, To, C, H, W, device=u.device)
+        ul = torch.zeros(N, To, C, H, W, device=u.device)
+        ur = torch.zeros(N, To, C, H, W, device=u.device)
         for n in range(N):
             ul[n, :, :, :, :] = u[n, tl[n], :, :, :]
             ur[n, :, :, :, :] = u[n, tr[n], :, :, :]
@@ -36,7 +36,7 @@ class TemporalInterpolationFunction(torch.autograd.Function):
         # ctx.tr = tr
         ctx.ul = ul
         ctx.ur = ur
-        ctx.alpha = alpha
+        # ctx.alpha = alpha
 
         # expand alpha to [N][To][C][H][W]
         alpha_e = alpha.unsqueeze(-1).unsqueeze(-1).unsqueeze(-1)\
