@@ -31,71 +31,62 @@ class KFS(nn.Module):
         self.fc2.weight.data.fill_(0.0)
         self.fc2.bias.data.fill_(0.0)
 
-        # self.interpolate = TemporalInterpolationModule()
-
-    # def __repr__(self):
-    #     string = self.__class__.__name__ + "\n"
-    #     string += "\n"
-    #     return string
-
     def forward(self, x):
         
-        x = self.pool(x)
+        out = self.pool(x)
 
-        x = self.conv1(x)
-        x = self.bn1(x)
-        x = self.relu(x)
-        x = self.pool(x)
+        out = self.conv1(out)
+        out = self.bn1(out)
+        out = self.relu(out)
+        out = self.pool(out)
 
-        x = self.conv2(x)
-        x = self.bn2(x)
-        x = self.relu(x)
-        x = self.pool(x)
+        out = self.conv2(out)
+        out = self.bn2(out)
+        out = self.relu(out)
+        out = self.pool(out)
 
-        x = self.conv3(x)
-        x = self.bn3(x)
-        x = self.relu(x)
-        x = self.pool(x)
+        out = self.conv3(out)
+        out = self.bn3(out)
+        out = self.relu(out)
+        out = self.pool(out)
     
-        x = self.avgpool(x)
+        out = self.avgpool(out)
 
         
-        x = x.view(x.size(0), -1)
+        out = out.view(out.size(0), -1)
         
+        out = self.fc1(out)
+        out = self.relu(out)
 
-        
+        out = self.fc2(out)
 
-        x = self.fc1(x)
-        x = self.relu(x)
-
-        
-
-        x = self.fc2(x)
-
-        return x
+        return out
 
 
 class Wrapper(nn.Module):
     def __init__(self):
         super(Wrapper, self).__init__()
 
-        self.basenet = TSM(cls_num = 127, input_size=[8, 224, 224])
-        self.kfsnet = KFS(output_size = 8)
+        self.classifier = TSM(cls_num = 127, input_size=[8, 224, 224])
+        self.selector = KFS(output_size = 8)
         self.interpolate = TemporalInterpolationModule()
 
+    def freeze_classifier(self):
+        for p in self.classifier.parameters():
+            p.requires_grad_(False)
+
+
     def forward(self, x):
-        print(x.size())
-        index = self.kfsnet(x)
+
+        index = self.selector(x)
         
-        x = x.permute(0, 2, 1, 3, 4).contiguous()
-        
-        x = self.interpolate(x, index)
-        
-        x = x.permute(0, 2, 1, 3, 4).contiguous()
-        
-        print(x.size())
-        
-        x = self.basenet(x)
+        out = x.permute(0, 2, 1, 3, 4).contiguous()
+        out = self.interpolate(out, index)
+        out = out.permute(0, 2, 1, 3, 4).contiguous()
+
+        out = self.classifier(out)
+
+        return out
 
 
 if __name__ == "__main__":
