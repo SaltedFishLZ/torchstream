@@ -1,7 +1,7 @@
 {
     "train_transforms": [
         {
-            "name": "RandomSegment",
+            "name": "CenterSegment",
             "argv": {
                 "size": 24
             }
