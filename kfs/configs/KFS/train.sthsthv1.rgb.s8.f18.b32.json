@@ -116,7 +116,7 @@
         "epochs": 20,
         "backup": {
             "dir_path": "checkpoints/KFS/sthsthv1",
-            "pth_name": "KFS.sthsthv1.rgb.s8.f24.e20"
+            "pth_name": "KFS.sthsthv1.rgb.s8.f18.e20"
         },
         "classifier": {
             "pretrained": {
