@@ -33,10 +33,10 @@ class KFS(nn.Module):
 
         # self.interpolate = TemporalInterpolationModule()
 
-    def __repr__(self):
-        string = self.__class__.__name__ + "\n"
-        string += "\n"
-        return string
+    # def __repr__(self):
+    #     string = self.__class__.__name__ + "\n"
+    #     string += "\n"
+    #     return string
 
     def forward(self, x):
         
@@ -105,4 +105,9 @@ if __name__ == "__main__":
     print(index)
 
     wrapper = Wrapper()
+    print(list(wrapper.modules()))
+    print(len(list(wrapper.basenet.parameters())))
+    for p in wrapper.basenet.base_model.bn1.parameters():
+        print(p.size())
+
     x = wrapper(input)
