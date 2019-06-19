@@ -3,7 +3,7 @@
         {
             "name": "RandomSegment",
             "argv": {
-                "size": 18
+                "size": 24
             }
         },
         {
@@ -39,7 +39,7 @@
             "package": "torchstream.transforms",
             "name": "CenterSegment",
             "argv": {
-                "size": 18
+                "size": 24
             }
         },
         {
@@ -76,7 +76,7 @@
     },
 
     "train_loader":{
-        "batch_size": 16,
+        "batch_size": 32,
         "num_workers": 64,
         "shuffle": false,
         "pin_memory": true,

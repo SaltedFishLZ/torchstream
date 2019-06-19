@@ -127,17 +127,6 @@ def train(device, loader, model, criterion, optimizer, epoch,
         batch_time.update(time.time() - end)
         end = time.time()
 
-        # torch.cuda.empty_cache()
-
-        # for obj in gc.get_objects():
-        #     try:
-        #         if torch.is_tensor(obj):
-        #             print(type(obj), obj.size())
-        #         # if (hasattr(obj, "data") and torch.is_tensor(obj.data)):
-        #         #     print(type(obj), obj.size())
-        #     except:
-        #         pass
-
         if i % log_interval == 0:
             print(log_str.format(epoch, i, len(loader),
                                  batch_time=batch_time,
@@ -243,7 +232,6 @@ def main(args):
     lr_scheduler = cfgs.config2lrscheduler(optimizer, configs["lr_scheduler"])
 
 
-
     # -------------------------------------------------------- #
     #                       Main Loop                          #
     # -------------------------------------------------------- #
@@ -258,6 +246,7 @@ def main(args):
         train(device=device, loader=train_loader, model=model,
               criterion=criterion, optimizer=optimizer,
               epoch=epoch, log_interval=1)
+        lr_scheduler.step()
 
         ## evaluate on validation set
         prec1 = validate(device=device, loader=val_loader, model=model,
@@ -267,8 +256,6 @@ def main(args):
         is_best = prec1 > best_prec1
         best_prec1 = max(prec1, best_prec1) 
         print("Best Prec@1: %.3f\n" % (best_prec1))
-
-        lr_scheduler.step()
 
         # save checkpoint
         if backup_config is not None:

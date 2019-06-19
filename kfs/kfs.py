@@ -97,8 +97,8 @@ if __name__ == "__main__":
 
     wrapper = Wrapper()
     print(list(wrapper.modules()))
-    print(len(list(wrapper.basenet.parameters())))
-    for p in wrapper.basenet.base_model.bn1.parameters():
+    print(len(list(wrapper.classifier.parameters())))
+    for p in wrapper.classifier.base_model.bn1.parameters():
         print(p.size())
 
     x = wrapper(input)
