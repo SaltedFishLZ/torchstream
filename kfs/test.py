@@ -66,10 +66,10 @@ def main(args):
     checkpoint = torch.load(args.weights)
     model_state_dict = checkpoint["model_state_dict"]
     old_keys = list(model_state_dict.keys())
-    for key in old_keys:
-        new_key = key.replace("module.", "")
-        val = model_state_dict[key]
-        del model_state_dict[key]
+    for old_key in old_keys:
+        new_key = old_key.replace("module.", "")
+        val = model_state_dict[old_key]
+        del model_state_dict[old_key]
         model_state_dict[new_key] = val
     model.classifier.load_state_dict(model_state_dict)
 
