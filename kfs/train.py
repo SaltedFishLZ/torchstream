@@ -47,13 +47,13 @@ def validate(device, loader, model, criterion,
             output = model(input)
             loss = criterion(output, target)
 
-            accuracy = metric(output.data, target)
-            prec1 = accuracy[1]
-            prec5 = accuracy[5]
+            # accuracy = metric(output.data, target)
+            # prec1 = accuracy[1]
+            # prec5 = accuracy[5]
 
             loss_meter.update(loss, input.size(0))
-            top1_meter.update(prec1, input.size(0))
-            top5_meter.update(prec5, input.size(0))
+            # top1_meter.update(prec1, input.size(0))
+            # top5_meter.update(prec5, input.size(0))
 
             # measure elapsed time
             batch_time.update(time.time() - end)
@@ -127,14 +127,16 @@ def train(device, loader, model, criterion, optimizer, epoch,
         batch_time.update(time.time() - end)
         end = time.time()
 
-        for obj in gc.get_objects():
-            try:
-                if torch.is_tensor(obj):
-                    print(type(obj), obj.size())
-                # if (hasattr(obj, "data") and torch.is_tensor(obj.data)):
-                #     print(type(obj), obj.size())
-            except:
-                pass
+        # torch.cuda.empty_cache()
+
+        # for obj in gc.get_objects():
+        #     try:
+        #         if torch.is_tensor(obj):
+        #             print(type(obj), obj.size())
+        #         # if (hasattr(obj, "data") and torch.is_tensor(obj.data)):
+        #         #     print(type(obj), obj.size())
+        #     except:
+        #         pass
 
         if i % log_interval == 0:
             print(log_str.format(epoch, i, len(loader),
@@ -207,11 +209,6 @@ def main(args):
 
     model = torch.nn.DataParallel(model, device_ids=configs["gpus"])
 
-    configs["optimizer"]["argv"]["params"] = model.parameters()
-    optimizer = cfgs.config2optimizer(configs["optimizer"])
-
-    lr_scheduler = cfgs.config2lrscheduler(optimizer, configs["lr_scheduler"])
-
     criterion = cfgs.config2criterion(configs["criterion"])
     criterion.to(device)
 
@@ -238,9 +235,13 @@ def main(args):
             if classifier_config["freeze"]:
                 # modify training parameters & freeze classifier
                 model.module.freeze_classifier()
-                del optimizer
-                configs["optimizer"]["argv"]["params"] = model.parameters()
-                optimizer = cfgs.config2optimizer(configs["optimizer"])
+
+
+    configs["optimizer"]["argv"]["params"] = model.parameters()
+    optimizer = cfgs.config2optimizer(configs["optimizer"])
+
+    lr_scheduler = cfgs.config2lrscheduler(optimizer, configs["lr_scheduler"])
+
 
 
     # -------------------------------------------------------- #
