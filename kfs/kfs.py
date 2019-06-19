@@ -59,16 +59,16 @@ class KFS(nn.Module):
     
         x = self.avgpool(x)
 
-        print(x.size())
+        
         x = x.view(x.size(0), -1)
-        print(x.size())
+        
 
-        print("before FC1")
+        
 
         x = self.fc1(x)
         x = self.relu(x)
 
-        print("before FC2")
+        
 
         x = self.fc2(x)
 
@@ -84,10 +84,17 @@ class Wrapper(nn.Module):
         self.interpolate = TemporalInterpolationModule()
 
     def forward(self, x):
+        print(x.size())
         index = self.kfsnet(x)
+        
         x = x.permute(0, 2, 1, 3, 4).contiguous()
+        
         x = self.interpolate(x, index)
+        
         x = x.permute(0, 2, 1, 3, 4).contiguous()
+        
+        print(x.size())
+        
         x = self.basenet(x)
 
 
