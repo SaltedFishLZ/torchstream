@@ -47,13 +47,13 @@ def validate(device, loader, model, criterion,
             output = model(input)
             loss = criterion(output, target)
 
-            # accuracy = metric(output.data, target)
-            # prec1 = accuracy[1]
-            # prec5 = accuracy[5]
+            accuracy = metric(output.data, target)
+            prec1 = accuracy[1]
+            prec5 = accuracy[5]
 
             loss_meter.update(loss, input.size(0))
-            # top1_meter.update(prec1, input.size(0))
-            # top5_meter.update(prec5, input.size(0))
+            top1_meter.update(prec1, input.size(0))
+            top5_meter.update(prec5, input.size(0))
 
             # measure elapsed time
             batch_time.update(time.time() - end)
@@ -104,8 +104,6 @@ def train(device, loader, model, criterion, optimizer, epoch,
         ## measure extra data loading time
         data_time.update(time.time() - end)
         
-        if i < 380:
-            continue
         ## forward
         output = model(input)
         loss = criterion(output, target)
@@ -248,6 +246,7 @@ def main(args):
         train(device=device, loader=train_loader, model=model,
               criterion=criterion, optimizer=optimizer,
               epoch=epoch)
+
         lr_scheduler.step()
 
         ## evaluate on validation set

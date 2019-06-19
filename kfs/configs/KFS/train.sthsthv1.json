@@ -78,9 +78,9 @@
     "train_loader":{
         "batch_size": 32,
         "num_workers": 64,
-        "shuffle": false,
+        "shuffle": true,
         "pin_memory": true,
-        "drop_last": false
+        "drop_last": true
     },
 
     "val_loader":{
