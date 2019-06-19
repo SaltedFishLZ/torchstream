@@ -1,6 +1,7 @@
 """
 """
 import os
+import gc
 import time
 import json
 import argparse
@@ -125,6 +126,13 @@ def train(device, loader, model, criterion, optimizer, epoch,
         ## measure elapsed time on GPU
         batch_time.update(time.time() - end)
         end = time.time()
+
+        for obj in gc.get_objects():
+            try:
+                if torch.is_tensor(obj) or (hasattr(obj, "data") and torch.is_tensor(obj.data)):
+                    print(type(obj), obj.size())
+            except:
+                pass
 
         if i % log_interval == 0:
             print(log_str.format(epoch, i, len(loader),
