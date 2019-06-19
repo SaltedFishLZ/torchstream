@@ -3,7 +3,7 @@
         {
             "name": "RandomSegment",
             "argv": {
-                "size": 8
+                "size": 18
             }
         },
         {
@@ -39,7 +39,7 @@
             "package": "torchstream.transforms",
             "name": "CenterSegment",
             "argv": {
-                "size": 8
+                "size": 18
             }
         },
         {
@@ -76,11 +76,11 @@
     },
 
     "train_loader":{
-        "batch_size": 64,
+        "batch_size": 16,
         "num_workers": 64,
-        "shuffle": true,
+        "shuffle": false,
         "pin_memory": true,
-        "drop_last": true
+        "drop_last": false
     },
 
     "val_loader":{
@@ -120,7 +120,7 @@
         },
         "classifier": {
             "pretrained": {
-                "dir_path": "../template/checkpoints/TSM/sthsth_v1",
+                "dir_path": "../template/checkpoints/TSM/sthsthv1",
                 "pth_name": "TSM.sthsthv1.rgb.s8.e50.best"
             },
             "freeze": true

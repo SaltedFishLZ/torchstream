@@ -168,7 +168,7 @@ def main(args):
 
     configs["train_dataset"]["argv"]["transform"] = train_transform
     train_dataset = cfgs.config2dataset(configs["train_dataset"])
-    
+
     configs["train_loader"]["dataset"] = train_dataset
     train_loader = cfgs.config2dataloader(configs["train_loader"])
 
@@ -214,7 +214,7 @@ def main(args):
     if "classifier" in configs["train"]:
         classifier_config = configs["train"]["classifier"]
         if "pretrained" in classifier_config:
-            checkpoint = utils.load_checkpoint(**classifier_config)
+            checkpoint = utils.load_checkpoint(**(classifier_config["pretrained"]))
             # load state_dict
             classifier_state_dict = checkpoint["model_state_dict"]
             old_keys = list(classifier_state_dict.keys())
@@ -223,11 +223,12 @@ def main(args):
                 val = classifier_state_dict[old_key]
                 del classifier_state_dict[old_key]
                 classifier_state_dict[new_key] = val
-            model.classifier.load_state_dict(classifier_state_dict)
+            model.module.classifier.load_state_dict(classifier_state_dict)
         if "freeze" in classifier_config:
             if classifier_config["freeze"]:
                 # modify training parameters & freeze classifier
-                model.freeze_classifier()
+                model.module.freeze_classifier()
+                del optimizer
                 configs["optimizer"]["argv"]["params"] = model.parameters()
                 optimizer = cfgs.config2optimizer(configs["optimizer"])
 

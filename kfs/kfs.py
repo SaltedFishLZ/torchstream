@@ -67,8 +67,8 @@ class Wrapper(nn.Module):
     def __init__(self):
         super(Wrapper, self).__init__()
 
-        self.classifier = TSM(cls_num = 127, input_size=[8, 224, 224])
-        self.selector = KFS(output_size = 8)
+        self.classifier = TSM(cls_num=174, input_size=[8, 224, 224])
+        self.selector = KFS(output_size=8)
         self.interpolate = TemporalInterpolationModule()
 
     def freeze_classifier(self):
@@ -79,7 +79,7 @@ class Wrapper(nn.Module):
     def forward(self, x):
 
         index = self.selector(x)
-        
+
         out = x.permute(0, 2, 1, 3, 4).contiguous()
         out = self.interpolate(out, index)
         out = out.permute(0, 2, 1, 3, 4).contiguous()
