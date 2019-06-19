@@ -103,7 +103,9 @@ def train(device, loader, model, criterion, optimizer, epoch,
 
         ## measure extra data loading time
         data_time.update(time.time() - end)
-
+        
+        if i < 380:
+            continue
         ## forward
         output = model(input)
         loss = criterion(output, target)
@@ -245,7 +247,7 @@ def main(args):
         ## train for one epoch
         train(device=device, loader=train_loader, model=model,
               criterion=criterion, optimizer=optimizer,
-              epoch=epoch, log_interval=1)
+              epoch=epoch)
         lr_scheduler.step()
 
         ## evaluate on validation set

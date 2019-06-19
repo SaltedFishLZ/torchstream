@@ -8,7 +8,7 @@ def output2pred(output, maxk):
         return: (LongTensor): [maxk][N], prediction tensor
     """
     # pred [N][MaxK] -> [MaxK][N]
-    _, pred = output.topk(maxk, dim=1)
+    _, pred = output.data.topk(maxk, dim=1)
     pred = pred.permute(1, 0)
     return pred
 
@@ -52,7 +52,7 @@ class ClassifyAccuracy(object):
 
         res = {}
         for k in self.topk:
-            acc_topk = float(corrects[k-1].sum()) / N * 100.0
+            acc_topk = float(corrects[k-1].float().sum().item()) / N * 100.0
             res[k] = acc_topk
         return res
 
@@ -94,6 +94,6 @@ class MultiChanceClassifyAccuracy(object):
 
         res = {}
         for k in self.topk:
-            acc_topk = float(corrects[k-1].sum()) / N * 100.0
+            acc_topk = float(corrects[k-1].float().sum().item()) / N * 100.0
             res[k] = acc_topk
         return res
