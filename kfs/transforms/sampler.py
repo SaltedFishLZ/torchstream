@@ -46,7 +46,11 @@ class RandomFrameSampler(FrameSampler):
 
     def get_indices(self, vid):
         t = vid.shape[0]
-        idx = random.sample(range(t), self.size)    # sample without replacement
+        candidates = list(range(t))
+        # padding
+        while len(candidates) < self.size:
+            candidates.append(candidates[-1])
+        idx = random.sample(candidates, self.size)    # sample without replacement
         if not self.shuffle:
             idx.sort()
         return idx

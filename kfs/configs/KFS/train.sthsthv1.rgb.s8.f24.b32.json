@@ -113,10 +113,10 @@
     },
 
     "train": {
-        "epochs": 50,
+        "epochs": 20,
         "backup": {
-            "dir_path": "checkpoints/TSM/sthsthv1",
-            "pth_name": "TSM.sthsthv1.rgb.s8.e50"
+            "dir_path": "checkpoints/KFS/sthsthv1",
+            "pth_name": "KFS.sthsthv1.rgb.s8.f24.e20"
         },
         "classifier": {
             "pretrained": {
