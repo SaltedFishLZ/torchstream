@@ -84,7 +84,7 @@
     },
 
     "val_loader":{
-        "batch_size": 64,
+        "batch_size": 32,
         "num_workers": 64,
         "shuffle": false,
         "pin_memory": true,
@@ -115,6 +115,10 @@
     "train": {
         "epochs": 20,
         "backup": {
+            "dir_path": "checkpoints/KFS/sthsthv1",
+            "pth_name": "KFS.sthsthv1.rgb.s8.f18.e20"
+        },
+        "resume": {
             "dir_path": "checkpoints/KFS/sthsthv1",
             "pth_name": "KFS.sthsthv1.rgb.s8.f18.e20"
         },

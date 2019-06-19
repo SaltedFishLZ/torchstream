@@ -198,6 +198,11 @@ def main(args):
 
     model = torch.nn.DataParallel(model, device_ids=configs["gpus"])
 
+    configs["optimizer"]["argv"]["params"] = model.parameters()
+    optimizer = cfgs.config2optimizer(configs["optimizer"])
+
+    lr_scheduler = cfgs.config2lrscheduler(optimizer, configs["lr_scheduler"])
+
     criterion = cfgs.config2criterion(configs["criterion"])
     criterion.to(device)
 
@@ -207,7 +212,22 @@ def main(args):
     #            Resume / Finetune from Checkpoint             #
     # -------------------------------------------------------- #
 
-    if "classifier" in configs["train"]:
+    if "resume" in configs["train"]:
+        resume_config = configs["train"]["resume"]
+        checkpoint = utils.load_checkpoint(**resume_config)
+
+        best_prec1 = checkpoint["best_prec1"]
+        configs["train"]["start_epoch"] = start_epoch = checkpoint["epoch"] + 1
+        model_state_dict = checkpoint["model_state_dict"]
+        optimizer_state_dict = checkpoint["optimizer_state_dict"]
+        lr_scheduler_state_dict = checkpoint["lr_scheduler_state_dict"]
+
+        model.load_state_dict(model_state_dict)
+        optimizer.load_state_dict(optimizer_state_dict)
+        lr_scheduler.load_state_dict(lr_scheduler_state_dict)
+        print("Resume from epoch [{}], best prec1 [{}]".format(start_epoch - 1, best_prec1))
+
+    elif "classifier" in configs["train"]:
         classifier_config = configs["train"]["classifier"]
         if "pretrained" in classifier_config:
             checkpoint = utils.load_checkpoint(**(classifier_config["pretrained"]))
@@ -222,14 +242,16 @@ def main(args):
             model.module.classifier.load_state_dict(classifier_state_dict)
         if "freeze" in classifier_config:
             if classifier_config["freeze"]:
-                # modify training parameters & freeze classifier
+                #  freeze classifier
                 model.module.freeze_classifier()
+                # modify training parameters
+                del optimizer
+                configs["optimizer"]["argv"]["params"] = model.parameters()
+                optimizer = cfgs.config2optimizer(configs["optimizer"])
+                del lr_scheduler
+                lr_scheduler = cfgs.config2lrscheduler(optimizer, configs["lr_scheduler"])
 
 
-    configs["optimizer"]["argv"]["params"] = model.parameters()
-    optimizer = cfgs.config2optimizer(configs["optimizer"])
-
-    lr_scheduler = cfgs.config2lrscheduler(optimizer, configs["lr_scheduler"])
 
 
     # -------------------------------------------------------- #
