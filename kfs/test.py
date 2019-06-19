@@ -51,7 +51,7 @@ def main(args):
 
     configs["test_dataset"]["argv"]["transform"] = test_transforms
     test_dataset = cfgs.config2dataset(configs["test_dataset"])
-    
+
     configs["test_loader"]["dataset"] = test_dataset
     test_loader = cfgs.config2dataloader(configs["test_loader"])
 
@@ -65,16 +65,16 @@ def main(args):
     # load model
     checkpoint = torch.load(args.weights)
     model_state_dict = checkpoint["model_state_dict"]
-    for key in model_state_dict:
+    old_keys = list(model_state_dict.keys())
+    for key in old_keys:
         new_key = key.replace("module.", "")
         val = model_state_dict[key]
         del model_state_dict[key]
         model_state_dict[new_key] = val
     model.classifier.load_state_dict(model_state_dict)
-    
+
     model.to(device)
     model = torch.nn.DataParallel(model, device_ids=configs["gpus"])
-
 
 
     criterion = cfgs.config2criterion(configs["criterion"])
@@ -92,7 +92,7 @@ if __name__ == "__main__":
                         help="path to configuration file")
     parser.add_argument("--weights", type=str, default=None)
     parser.add_argument("--gpus", nargs='+', type=int, default=None)
-    
+
     args = parser.parse_args()
 
     main(args)
