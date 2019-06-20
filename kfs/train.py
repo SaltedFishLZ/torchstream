@@ -103,20 +103,21 @@ def train(device, loader, model, criterion, optimizer, epoch,
 
         ## measure extra data loading time
         data_time.update(time.time() - end)
-        
+
         ## forward
         output = model(input)
         loss = criterion(output, target)
 
-        ## calculate accuracy
-        accuracy = metric(output.data, target)
-        prec1 = accuracy[1]
-        prec5 = accuracy[5]
+        print(output.size(), target.size())
+        # ## calculate accuracy
+        # accuracy = metric(output.data, target)
+        # prec1 = accuracy[1]
+        # prec5 = accuracy[5]
 
         ## update statistics
         loss_meter.update(loss, input.size(0))
-        top1_meter.update(prec1, input.size(0))
-        top5_meter.update(prec5, input.size(0))
+        # top1_meter.update(prec1, input.size(0))
+        # top5_meter.update(prec5, input.size(0))
 
         ## backward
         optimizer.zero_grad()
@@ -193,7 +194,7 @@ def main(args):
     #             Construct Network & Optimizer                #
     # -------------------------------------------------------- #
 
-    model = kfs.Wrapper(**configs["models"]["argv"])
+    model = kfs.Wrapper(**configs["model"]["argv"])
     model.to(device)
 
     model = torch.nn.DataParallel(model, device_ids=configs["gpus"])
@@ -215,17 +216,20 @@ def main(args):
     if "resume" in configs["train"]:
         resume_config = configs["train"]["resume"]
         checkpoint = utils.load_checkpoint(**resume_config)
+        
+        if checkpoint is not None:
+            best_prec1 = checkpoint["best_prec1"]
+            configs["train"]["start_epoch"] = start_epoch = checkpoint["epoch"] + 1
+            model_state_dict = checkpoint["model_state_dict"]
+            optimizer_state_dict = checkpoint["optimizer_state_dict"]
+            lr_scheduler_state_dict = checkpoint["lr_scheduler_state_dict"]
 
-        best_prec1 = checkpoint["best_prec1"]
-        configs["train"]["start_epoch"] = start_epoch = checkpoint["epoch"] + 1
-        model_state_dict = checkpoint["model_state_dict"]
-        optimizer_state_dict = checkpoint["optimizer_state_dict"]
-        lr_scheduler_state_dict = checkpoint["lr_scheduler_state_dict"]
-
-        model.load_state_dict(model_state_dict)
-        optimizer.load_state_dict(optimizer_state_dict)
-        lr_scheduler.load_state_dict(lr_scheduler_state_dict)
-        print("Resume from epoch [{}], best prec1 [{}]".format(start_epoch - 1, best_prec1))
+            model.load_state_dict(model_state_dict)
+            optimizer.load_state_dict(optimizer_state_dict)
+            lr_scheduler.load_state_dict(lr_scheduler_state_dict)
+            print("Resume from epoch [{}], best prec1 [{}]".format(start_epoch - 1, best_prec1))
+        else:
+            print("failed to load checkpoint")
 
     if "classifier" in configs["train"]:
         classifier_config = configs["train"]["classifier"]
@@ -242,14 +246,12 @@ def main(args):
             model.module.classifier.load_state_dict(classifier_state_dict)
         if "freeze" in classifier_config:
             if classifier_config["freeze"]:
+                print("Freezing Classifier...")
                 #  freeze classifier
                 model.module.freeze_classifier()
-                # modify training parameters
-                del optimizer
-                configs["optimizer"]["argv"]["params"] = model.parameters()
-                optimizer = cfgs.config2optimizer(configs["optimizer"])
-                del lr_scheduler
-                lr_scheduler = cfgs.config2lrscheduler(optimizer, configs["lr_scheduler"])
+                for m in model.module.classifier.modules():
+                    if m.training:
+                        print(m)
 
     # -------------------------------------------------------- #
     #                       Echo Config                        #

@@ -19,7 +19,7 @@ class KFS(nn.Module):
 
         self.conv1 = nn.Conv3d(in_channels=3, out_channels=64,
                                kernel_size=(5, 5, 5), padding=(2, 0, 0),
-                               stride=(1, 2, 2))
+                               stride=(1, 3, 3))
         self.bn1 = nn.BatchNorm3d(num_features=64)
 
         self.conv2 = nn.Conv3d(in_channels=64, out_channels=128,
@@ -50,22 +50,19 @@ class KFS(nn.Module):
         out = self.conv1(out)
         out = self.bn1(out)
         out = self.relu(out)
-        out = self.pool(out)
+        out = self.maxpool(out)
 
         out = self.conv2(out)
         out = self.bn2(out)
         out = self.relu(out)
-        out = self.pool(out)
 
         out = self.conv3(out)
         out = self.bn3(out)
         out = self.relu(out)
-        out = self.pool(out)
 
         out = self.conv4(out)
         out = self.bn4(out)
         out = self.relu(out)
-        out = self.pool(out)
 
         out = self.avgpool(out)
 

@@ -21,8 +21,8 @@ def classify_corrects(pred, target):
         return (ByteTensor): [K][N] bit mask, indicates topk hits or not
     """
     maxk = pred.size(0)
-    # target [N] -> [1][N]
-    corrects = pred.eq(target.view(1, -1).expand_as(pred))
+    # target [N] -> [1][N] -> [MaxK][N]
+    corrects = pred.eq(target.unsqueeze(dim=0).expand_as(pred))
     for k in range(1, maxk):
         corrects[k] = corrects[k - 1] | corrects[k]
     return corrects
@@ -47,7 +47,7 @@ class ClassifyAccuracy(object):
         N, M = output.size()
         assert (N,) == tuple(target.size()), ValueError("Incorrect target shape")
 
-        pred = output2pred(output, self.maxk)
+        pred = output2pred(output.detach(), self.maxk)
         corrects = classify_corrects(pred, target)
 
         res = {}
@@ -84,7 +84,7 @@ class MultiChanceClassifyAccuracy(object):
         N, M = output.size()
         assert (N,) == tuple(target.size()), ValueError("Incorrect target shape")
 
-        pred = output2pred(output, self.maxk)
+        pred = output2pred(output.detach(), self.maxk)
         corrects = classify_corrects(pred, target)
 
         if self.corrects is not None:
