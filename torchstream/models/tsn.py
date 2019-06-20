@@ -63,13 +63,11 @@ class TSN(nn.Module):
 
             ## replace the classifier
             feature_dim = self.base_model.fc.in_features
-            if self.dropout > 0:
-                new_fc = nn.Sequential(OrderedDict([
-                    ("dropout", nn.Dropout(p=self.dropout)),
-                    ("fc", nn.Linear(feature_dim, self.cls_num))
-                    ]))
-            else:
-                new_fc = nn.Linear(feature_dim, self.cls_num)
+            new_fc = nn.Sequential(OrderedDict([
+                ("dropout", nn.Dropout(p=self.dropout)),
+                ("fc", nn.Linear(feature_dim, self.cls_num))
+                ]))
+
             self.base_model.fc = new_fc
         else:
             raise ValueError('Unknown base model: {}'.format(base_model))
