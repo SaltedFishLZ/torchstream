@@ -76,7 +76,7 @@
     },
 
     "train_loader":{
-        "batch_size": 32,
+        "batch_size": 8,
         "num_workers": 64,
         "shuffle": false,
         "pin_memory": true,

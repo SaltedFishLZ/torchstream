@@ -22,6 +22,12 @@ class TemporalInterpolationFunction(torch.autograd.Function):
         # tl, tr, alpha: [N][To]
         tl = torch.floor(t * (Ti - 1)).long()
         tr = tl + 1
+
+        if not (tr < Ti).prod().item():
+            print(t)
+            print(tr)
+            raise ValueError
+
         alpha = t * (Ti - 1) - tl.float()
 
         # ul: left endpoint

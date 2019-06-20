@@ -100,6 +100,8 @@ def train(device, loader, model, criterion, optimizer, epoch,
     for i, (input, target) in enumerate(loader):        
         input = input.to(device)
         target = target.to(device)
+        
+        print(((target < 174) & (target >= 0)).prod())
 
         ## measure extra data loading time
         data_time.update(time.time() - end)
@@ -249,9 +251,9 @@ def main(args):
                 print("Freezing Classifier...")
                 #  freeze classifier
                 model.module.freeze_classifier()
-                for m in model.module.classifier.modules():
-                    if m.training:
-                        print(m)
+                # for m in model.module.classifier.modules():
+                #     if m.training:
+                #         print(m)
 
     # -------------------------------------------------------- #
     #                       Echo Config                        #
