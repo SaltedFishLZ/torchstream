@@ -22,11 +22,7 @@ class TemporalInterpolationFunction(torch.autograd.Function):
         # tl, tr, alpha: [N][To]
         tl = torch.floor(t * (Ti - 1)).long()
         tr = tl + 1
-
-        # if not (tr < Ti).prod().item():
-        #     print(t)
-        #     print(tr)
-        #     raise ValueError
+        tr = torch.where(tr < Ti, tr, (Ti - 1) * torch.ones_like(tr))
 
         alpha = t * (Ti - 1) - tl.float()
 
@@ -36,10 +32,7 @@ class TemporalInterpolationFunction(torch.autograd.Function):
         ur = torch.zeros(N, To, C, H, W, device=u.device, requires_grad=False)
         for n in range(N):
             ul[n, :, :, :, :] = u[n, tl[n], :, :, :]
-            if tr[n] < Ti:
-                ur[n, :, :, :, :] = u[n, tr[n], :, :, :]
-            else:
-                ur[n, :, :, :, :] = u[n, tr[Ti - 1], :, :, :]
+            ur[n, :, :, :, :] = u[n, tr[n], :, :, :]
 
         # save for backward
         ctx.Ti = Ti

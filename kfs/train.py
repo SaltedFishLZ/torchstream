@@ -100,8 +100,9 @@ def train(device, loader, model, criterion, optimizer, epoch,
     for i, (input, target) in enumerate(loader):        
         input = input.to(device)
         target = target.to(device)
-        
-        print(((target < 174) & (target >= 0)).prod())
+
+        # DEBUG
+        # print(((target < 174) & (target >= 0)).prod())
 
         ## measure extra data loading time
         data_time.update(time.time() - end)
@@ -110,16 +111,18 @@ def train(device, loader, model, criterion, optimizer, epoch,
         output = model(input)
         loss = criterion(output, target)
 
-        print(output.size(), target.size())
-        # ## calculate accuracy
-        # accuracy = metric(output.data, target)
-        # prec1 = accuracy[1]
-        # prec5 = accuracy[5]
+        # DEBUG
+        ## print(output.size(), target.size())
+
+        ## calculate accuracy
+        accuracy = metric(output.data, target)
+        prec1 = accuracy[1]
+        prec5 = accuracy[5]
 
         ## update statistics
         loss_meter.update(loss, input.size(0))
-        # top1_meter.update(prec1, input.size(0))
-        # top5_meter.update(prec5, input.size(0))
+        top1_meter.update(prec1, input.size(0))
+        top5_meter.update(prec5, input.size(0))
 
         ## backward
         optimizer.zero_grad()
@@ -218,7 +221,7 @@ def main(args):
     if "resume" in configs["train"]:
         resume_config = configs["train"]["resume"]
         checkpoint = utils.load_checkpoint(**resume_config)
-        
+
         if checkpoint is not None:
             best_prec1 = checkpoint["best_prec1"]
             configs["train"]["start_epoch"] = start_epoch = checkpoint["epoch"] + 1

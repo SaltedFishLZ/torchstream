@@ -87,6 +87,7 @@ class Wrapper(nn.Module):
         self.classifier = TSM(cls_num=cls_num, input_size=[8, 224, 224], dropout=0.0)
 
     def freeze_classifier(self):
+        self.classifier.eval()
         for p in self.classifier.parameters():
             p.requires_grad_(False)
 
