@@ -193,7 +193,7 @@ def main(args):
     #             Construct Network & Optimizer                #
     # -------------------------------------------------------- #
 
-    model = kfs.Wrapper()
+    model = kfs.Wrapper(**configs["models"]["argv"])
     model.to(device)
 
     model = torch.nn.DataParallel(model, device_ids=configs["gpus"])
@@ -227,7 +227,7 @@ def main(args):
         lr_scheduler.load_state_dict(lr_scheduler_state_dict)
         print("Resume from epoch [{}], best prec1 [{}]".format(start_epoch - 1, best_prec1))
 
-    elif "classifier" in configs["train"]:
+    if "classifier" in configs["train"]:
         classifier_config = configs["train"]["classifier"]
         if "pretrained" in classifier_config:
             checkpoint = utils.load_checkpoint(**(classifier_config["pretrained"]))
@@ -251,7 +251,11 @@ def main(args):
                 del lr_scheduler
                 lr_scheduler = cfgs.config2lrscheduler(optimizer, configs["lr_scheduler"])
 
-
+    # -------------------------------------------------------- #
+    #                       Echo Config                        #
+    # -------------------------------------------------------- #
+    print(optimizer)
+    print(lr_scheduler)
 
 
     # -------------------------------------------------------- #

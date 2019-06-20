@@ -1,9 +1,9 @@
 {
     "train_transforms": [
         {
-            "name": "RandomSegment",
+            "name": "CenterSegment",
             "argv": {
-                "size": 18
+                "size": 16
             }
         },
         {
@@ -39,7 +39,7 @@
             "package": "torchstream.transforms",
             "name": "CenterSegment",
             "argv": {
-                "size": 18
+                "size": 16
             }
         },
         {
@@ -91,6 +91,14 @@
         "drop_last": false
     },
 
+    "model": {
+        "package": "kfs",
+        "name": "Wrapper",
+        "argv": {
+            "cls_num": 174,
+            "input_size": [8, 224, 224]
+        }
+    },
 
     "criterion": {
         "name": "CrossEntropyLoss"
@@ -100,7 +108,7 @@
         "name": "SGD",
         "argv": {
             "params": "model_specified",
-            "lr": 0.001,
+            "lr": 0.01,
             "momentum": 0.9
         }
     },
@@ -116,11 +124,11 @@
         "epochs": 20,
         "backup": {
             "dir_path": "checkpoints/KFS/sthsthv1",
-            "pth_name": "KFS.sthsthv1.rgb.s8.f18.e20"
+            "pth_name": "KFS.sthsthv1.rgb.s8.f16.e20"
         },
         "resume": {
             "dir_path": "checkpoints/KFS/sthsthv1",
-            "pth_name": "KFS.sthsthv1.rgb.s8.f18.e20"
+            "pth_name": "KFS.sthsthv1.rgb.s8.f16.e20"
         },
         "classifier": {
             "pretrained": {
