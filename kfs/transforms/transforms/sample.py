@@ -4,6 +4,7 @@ import numpy as np
 import torchstream.transforms.functional as F
 from torchstream.transforms.functional.blob import _is_varray
 
+
 class FrameSampler(object):
     """
     """
@@ -50,7 +51,8 @@ class RandomFrameSampler(FrameSampler):
         # padding
         while len(candidates) < self.size:
             candidates.append(candidates[-1])
-        idx = random.sample(candidates, self.size)    # sample without replacement
+        # sample without replacement
+        idx = random.sample(candidates, self.size)
         if not self.shuffle:
             idx.sort()
         return idx
