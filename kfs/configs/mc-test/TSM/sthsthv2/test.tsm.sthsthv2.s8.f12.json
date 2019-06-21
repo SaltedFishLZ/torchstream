@@ -23,7 +23,7 @@
             "name": "CenterCrop",
             "argv": {
                 "size": [224, 224]
-            }      
+            }
         },
         {
             "package": "torchstream.transforms",
@@ -48,7 +48,7 @@
 
     "test_loader":{
         "batch_size": 64,
-        "num_workers": 32,
+        "num_workers": 64,
         "shuffle": false,
         "pin_memory": true,
         "drop_last": false
