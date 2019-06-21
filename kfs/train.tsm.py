@@ -214,17 +214,20 @@ def main(args):
         resume_config = configs["train"]["resume"]
         checkpoint = utils.load_checkpoint(**resume_config)
 
-        best_prec1 = checkpoint["best_prec1"]
-        configs["train"]["start_epoch"] = start_epoch = checkpoint["epoch"] + 1
-        model_state_dict = checkpoint["model_state_dict"]
-        optimizer_state_dict = checkpoint["optimizer_state_dict"]
-        lr_scheduler_state_dict = checkpoint["lr_scheduler_state_dict"]
+        if checkpoint is not None:
+            best_prec1 = checkpoint["best_prec1"]
+            configs["train"]["start_epoch"] = start_epoch = checkpoint["epoch"] + 1
+            model_state_dict = checkpoint["model_state_dict"]
+            optimizer_state_dict = checkpoint["optimizer_state_dict"]
+            lr_scheduler_state_dict = checkpoint["lr_scheduler_state_dict"]
 
-        model.load_state_dict(model_state_dict)
-        optimizer.load_state_dict(optimizer_state_dict)
-        lr_scheduler.load_state_dict(lr_scheduler_state_dict)
-        print("Resume from epoch [{}], best prec1 [{}]".
-              format(start_epoch - 1, best_prec1))
+            model.load_state_dict(model_state_dict)
+            optimizer.load_state_dict(optimizer_state_dict)
+            lr_scheduler.load_state_dict(lr_scheduler_state_dict)
+            print("Resume from epoch [{}], best prec1 [{}]".
+                  format(start_epoch - 1, best_prec1))
+        else:
+            print("failed to load checkpoint")
 
     elif "finetune" in configs["train"]:
         finetune_config = configs["train"]["finetune"]
