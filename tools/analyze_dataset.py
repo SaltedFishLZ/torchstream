@@ -46,7 +46,7 @@ def len_hist(name, samples, worker_num=80, **kwargs):
     print("Min Len", min(lens))
     print("Max Len", max(lens))
     
-    nphist = np.histogram(lens, bins=10)
+    nphist = np.histogram(lens, bins=20)
     print("Numpy Hist")
     print("Density", nphist[0])
     print("Bins", nphist[1])
