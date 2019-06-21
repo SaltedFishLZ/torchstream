@@ -22,8 +22,8 @@ def fps_hist(name, samples, worker_num=80, **kwargs):
 
     manager = Manager(name="Get FPS Hist [{}]".format(name),
                       mapper=analysis.sample_fps,
-                      retries=10,
-                      **kwargs
+                      # retries=10,
+                      # **kwargs
                       )
     manager.hire(worker_num=worker_num)
 
@@ -31,22 +31,24 @@ def fps_hist(name, samples, worker_num=80, **kwargs):
     tasks = []
     for _sample in samples:
         tasks.append({"sample": _sample})
-    
+
     print("Lanuching Jobs")
     fpses = manager.launch(tasks=tasks, enable_tqdm=True)
-    
+
     for _fps in fpses:
         if isinstance(_fps, int):
             print("[{}]".format(_fps))
     print("Min FPS", min(fpses))
     print("Max FPS", max(fpses))
-    
+
     nphist = np.histogram(fpses, bins=20)
     print("Numpy Hist")
     print("Density", nphist[0])
     print("Bins", nphist[1])
 
     plt.hist(fpses, density=True, bins=20)
+
+    os.makedirs(ANALY_PATH, exist_ok=True)
     plt.savefig(os.path.join(ANALY_PATH, name + ".fps.dist.density.pdf"),
                 bbox_inches="tight")
 

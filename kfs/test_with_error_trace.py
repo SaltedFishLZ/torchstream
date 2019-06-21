@@ -6,6 +6,8 @@ import argparse
 
 import torch
 import torchstream
+import numpy as np
+import matplotlib.pyplot as plt
 
 import cfgs
 import utils
@@ -141,11 +143,20 @@ def main(args):
     criterion.to(device)
 
     top5_error_datapoints = test(device, test_loader, model, criterion)
+    lens = []
     print("Top-5 Error Num", len(top5_error_datapoints))
     for _i in top5_error_datapoints:
-        print(test_dataset.datapoints[_i])
-        print("Video Shape", test_dataset[_i].shape)
+        # print(test_dataset.datapoints[_i])
+        # print("Video Shape", np.array(test_dataset.samples[_i]).shape)
+        lens.append(np.array(test_dataset.samples[_i]).shape[0])
 
+    nphist = np.histogram(lens, bins=20)
+    print("NumPy Hist")
+    print("Density\n", nphist[0])
+    print("Bins\n", nphist[1])
+
+    plt.hist(lens, density=True, bins=20)
+    plt.show()
 
 if __name__ == "__main__":
 

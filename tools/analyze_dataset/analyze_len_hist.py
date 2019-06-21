@@ -30,8 +30,8 @@ def len_hist(name, samples, worker_num=80, bins=20, **kwargs):
     manager = Manager(name="Get Length Hist [{}]".format(name),
                       mapper=analysis.sample_len,
                       reducer=filter_len,
-                      retries=10,
-                      max=500,
+                      # retries=10,
+                      # max=500,
                       **kwargs
                       )
     manager.hire(worker_num=worker_num)
@@ -53,6 +53,8 @@ def len_hist(name, samples, worker_num=80, bins=20, **kwargs):
     print("Bins", nphist[1])
 
     plt.hist(lens, density=True, bins=bins)
+
+    os.makedirs(ANALY_PATH, exist_ok=True)
     plt.savefig(os.path.join(ANALY_PATH, name + ".len.dist.density.pdf"),
                 bbox_inches="tight")
 
@@ -90,7 +92,7 @@ def main(name):
     print("Collecting Datapoints")
     samples = collect_datapoints(**kwargs)
 
-    len_hist(name, samples, **kwargs)
+    len_hist(name, samples)
 
 if __name__ == "__main__":
     print(sys.argv)
