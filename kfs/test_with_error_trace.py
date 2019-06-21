@@ -85,8 +85,8 @@ def test(device, loader, model, criterion,
           "Prec@1 {top1_meter.avg:5.3f} Prec@5 {top5_meter.avg:5.3f} Loss {loss_meter.avg:5.3f}"
           .format(top1_meter=top1_meter, top5_meter=top5_meter, loss_meter=loss_meter))
 
-    print("Top-1 Error List")
-    print(top1_error_datapoints)
+    print("Top-5 Error List")
+    print(top5_error_datapoints)
 
     return top1_meter.avg
 
