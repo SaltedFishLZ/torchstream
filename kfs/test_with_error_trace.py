@@ -85,10 +85,10 @@ def test(device, loader, model, criterion,
           "Prec@1 {top1_meter.avg:5.3f} Prec@5 {top5_meter.avg:5.3f} Loss {loss_meter.avg:5.3f}"
           .format(top1_meter=top1_meter, top5_meter=top5_meter, loss_meter=loss_meter))
 
-    print("Top-5 Error List")
-    print(top5_error_datapoints)
+    # print("Top-5 Error List")
+    # print(top5_error_datapoints)
 
-    return top1_meter.avg
+    return top5_error_datapoints
 
 
 def main(args):
@@ -140,7 +140,10 @@ def main(args):
     criterion = cfgs.config2criterion(configs["criterion"])
     criterion.to(device)
 
-    test(device, test_loader, model, criterion)
+    top5_error_datapoints = test(device, test_loader, model, criterion)
+    print("Top-5 Error Num", len(top5_error_datapoints))
+    for _i in top5_error_datapoints:
+        print(test_dataset.datapoints[_i])
 
 
 if __name__ == "__main__":
