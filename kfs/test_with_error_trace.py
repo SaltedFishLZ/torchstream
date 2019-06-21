@@ -144,6 +144,7 @@ def main(args):
     print("Top-5 Error Num", len(top5_error_datapoints))
     for _i in top5_error_datapoints:
         print(test_dataset.datapoints[_i])
+        print("Video Shape", test_dataset[_i].shape)
 
 
 if __name__ == "__main__":
