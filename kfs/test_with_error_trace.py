@@ -20,8 +20,75 @@ test_log_str = "Testing:[{:4d}/{:4d}]  " + \
 
 def test(device, loader, model, criterion, 
          log_str=test_log_str, log_interval=20, **kwargs):
-    from train import validate
-    validate(device, loader, model, criterion, log_str, log_interval, **kwargs)
+
+    datapoint_num = 0
+    # top1 error datapoint list
+    top1_error_datapoints = []
+    # top5 error datapoint list    
+    top5_error_datapoints = []
+
+    batch_time = utils.Meter()
+    data_time = utils.Meter()
+    loss_meter = utils.Meter()
+    top1_meter = utils.Meter()
+    top5_meter = utils.Meter()
+
+    metric = utils.ClassifyAccuracy(topk=(1, 5))
+
+    model.eval()
+
+    end = time.time()
+
+    with torch.no_grad():
+        for i, (input, target) in enumerate(loader):
+            input = input.to(device)
+            target = target.to(device)
+
+            ## measure extra data loading time
+            data_time.update(time.time() - end)
+
+            output = model(input)
+            loss = criterion(output, target)
+
+            ## get predicts directly
+            predict = utils.output2pred(output.data, maxk=5)
+            correct = utils.classify_corrects(predict, target)
+            for n in range(correct.size(1)):
+                if correct[0][n].item() == 0:
+                    top1_error_datapoints.append(datapoint_num + n)
+                if correct[1][n].item() == 0:
+                    top5_error_datapoints.append(datapoint_num + n)
+            datapoint_num += correct.size(1)
+
+            accuracy = metric(output.data, target)
+            prec1 = accuracy[1]
+            prec5 = accuracy[5]
+
+            loss_meter.update(loss, input.size(0))
+            top1_meter.update(prec1, input.size(0))
+            top5_meter.update(prec5, input.size(0))
+
+            # measure elapsed time
+            batch_time.update(time.time() - end)
+            end = time.time()
+
+            if i % log_interval == 0:
+                print(log_str.format(i, len(loader),
+                                     batch_time=batch_time,
+                                     data_time=data_time,
+                                     loss_meter=loss_meter,
+                                     top1_meter=top1_meter,
+                                     top5_meter=top5_meter))
+
+
+    print("Results:\n" + \
+          "Prec@1 {top1_meter.avg:5.3f} Prec@5 {top5_meter.avg:5.3f} Loss {loss_meter.avg:5.3f}"
+          .format(top1_meter=top1_meter, top5_meter=top5_meter, loss_meter=loss_meter))
+
+    print("Top-1 Error List")
+    print(top1_error_datapoints)
+
+    return top1_meter.avg
 
 
 def main(args):

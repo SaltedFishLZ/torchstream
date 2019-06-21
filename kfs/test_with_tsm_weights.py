@@ -60,18 +60,26 @@ def main(args):
     #          Construct Network & Load Weights                #
     # -------------------------------------------------------- #
 
-    model = cfgs.config2model(configs["model"])
-    model.to(device)
+    model = kfs.Wrapper(**configs["model"]["argv"])
 
-    model = torch.nn.DataParallel(model, device_ids=configs["gpus"])
-
-    # load model
+    # load TSM model
     checkpoint = torch.load(args.weights)
     model_state_dict = checkpoint["model_state_dict"]
-    model.load_state_dict(model_state_dict)
+    old_keys = list(model_state_dict.keys())
+    for old_key in old_keys:
+        new_key = old_key.replace("module.", "")
+        val = model_state_dict[old_key]
+        del model_state_dict[old_key]
+        model_state_dict[new_key] = val
+    model.classifier.load_state_dict(model_state_dict)
+
+    model.to(device)
+    model = torch.nn.DataParallel(model, device_ids=configs["gpus"])
+
 
     criterion = cfgs.config2criterion(configs["criterion"])
     criterion.to(device)
+
 
     test(device, test_loader, model, criterion)
 
