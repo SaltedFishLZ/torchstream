@@ -27,8 +27,8 @@ def norm_params(name, samples, worker_num=80, **kwargs):
     manager = Manager(name="Get Means [{}]".format(name),
                       mapper=analysis.sample_sum,
                       reducer=lambda results: [np.sum(results, axis=0)],
-                      retries=10,
-                      **kwargs
+                      # retries=10,
+                      # **kwargs
                       )
     manager.hire(worker_num=worker_num)
     print("Assembling Tasks")
@@ -49,8 +49,8 @@ def norm_params(name, samples, worker_num=80, **kwargs):
     manager = Manager(name="Get RSSes [{}]".format(name),
                       mapper=analysis.sample_rss,
                       reducer=lambda results: [np.sum(results, axis=0)],
-                      retries=10,
-                      **kwargs
+                      # retries=10,
+                      # **kwargs
                       )
     manager.hire(worker_num=worker_num)
     print("Assembling Tasks")

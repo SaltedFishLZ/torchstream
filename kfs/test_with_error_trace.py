@@ -90,7 +90,7 @@ def test(device, loader, model, criterion,
     # print("Top-5 Error List")
     # print(top5_error_datapoints)
 
-    return top5_error_datapoints
+    return top1_error_datapoints
 
 
 def main(args):
@@ -146,17 +146,17 @@ def main(args):
     lens = []
     print("Top-5 Error Num", len(top5_error_datapoints))
     for _i in top5_error_datapoints:
-        # print(test_dataset.datapoints[_i])
-        # print("Video Shape", np.array(test_dataset.samples[_i]).shape)
-        lens.append(np.array(test_dataset.samples[_i]).shape[0])
+        print(test_dataset.datapoints[_i])
+        print("Video Shape", np.array(test_dataset.samples[_i]).shape)
+        # lens.append(np.array(test_dataset.samples[_i]).shape[0])
 
-    nphist = np.histogram(lens, bins=20)
-    print("NumPy Hist")
-    print("Density\n", nphist[0])
-    print("Bins\n", nphist[1])
+    # nphist = np.histogram(lens, bins=20)
+    # print("NumPy Hist")
+    # print("Density\n", nphist[0])
+    # print("Bins\n", nphist[1])
 
-    plt.hist(lens, density=True, bins=20)
-    plt.show()
+    # plt.hist(lens, density=True, bins=20)
+    # plt.show()
 
 if __name__ == "__main__":
 
