@@ -80,7 +80,7 @@ def fps_hist(name, samples, worker_num=80, **kwargs):
     print("Min FPS", min(fpses))
     print("Max FPS", max(fpses))
     
-    nphist = np.histogram(fpses, bins=10)
+    nphist = np.histogram(fpses, bins=20)
     print("Numpy Hist")
     print("Density", nphist[0])
     print("Bins", nphist[1])
