@@ -138,9 +138,9 @@ def test(dataset, use_tqdm=True):
             "ext": "jpg",
         }
 
-        # if hasattr(metaset, "AVI_DATA_PATH"):
-        #     kwargs["root"] = metaset.AVI_DATA_PATH
-        #     kwargs["ext"] = "avi"
+        if hasattr(metaset, "AVI_DATA_PATH"):
+            kwargs["root"] = metaset.AVI_DATA_PATH
+            kwargs["ext"] = "avi"
 
         if hasattr(metaset, "__ANNOTATIONS__"):
             kwargs["annots"] = metaset.__ANNOTATIONS__

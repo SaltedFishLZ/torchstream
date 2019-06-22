@@ -113,7 +113,7 @@
         "name": "SGD",
         "argv": {
             "params": "model_specified",
-            "lr": 0.001,
+            "lr": 0.01,
             "momentum": 0.9
         }
     },
@@ -121,7 +121,7 @@
     "lr_scheduler": {
         "name": "StepLR",
         "argv": {
-            "step_size": 10
+            "step_size": 20
         }
     },
 
@@ -129,15 +129,15 @@
         "epochs": 50,
         "backup": {
             "dir_path": "checkpoints/TSM/sthsthv1",
-            "pth_name": "TSM.sthsth.v1.rgb.s8.e50"
+            "pth_name": "TSM.sthsthv1.rgb.s8.scratch.lr1e-2.e50"
         },
         "resume": {
             "dir_path": "checkpoints/TSM/sthsthv1",
-            "pth_name": "TSM.sthsth.v1.rgb.s8.e20"
+            "pth_name": "TSM.sthsthv1.rgb.s8.scratch.lr1e-2.e50"
         },
         "finetune": {
-            "dir_path": "../template/checkpoints/TSM/batch64/something",
-            "pth_name": "TSM_something_RGB_resnet50_shift8_blockres_avg_segment8_e50.best"
+            "dir_path": "../template/checkpoints/TSM/tonylin/kinetics",
+            "pth_name": "TSM_kinetics_RGB_resnet50_shift8_blockres_avg_segment16_e50"
         }
     }
 
