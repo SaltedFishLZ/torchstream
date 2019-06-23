@@ -4,14 +4,19 @@
             "package": "transforms",
             "name": "CenterSegment",
             "argv": {
-                "size": 24
+                "size": 8
             }
         },
         {
-            "name": "MultiScaleCrop",
+            "name": "Resize",
             "argv": {
-                "output_size": [224, 224],
-                "scales": [1, 0.875, 0.75, 0.66]
+                "size": 256
+            }
+        },
+        {
+            "name": "CenterCrop",
+            "argv": {
+                "size": [224, 224]
             }
         },
         {
@@ -29,6 +34,7 @@
     ],
 
     "train_dataset": {
+        "package": "datasets",
         "name": "SomethingSomethingV1",
         "argv": {
             "train": true
@@ -40,7 +46,7 @@
             "package": "transforms",
             "name": "CenterSegment",
             "argv": {
-                "size": 24
+                "size": 8
             }
         },
         {
@@ -70,6 +76,7 @@
     ],
 
     "val_dataset": {
+        "package": "datasets",
         "name": "SomethingSomethingV1",
         "argv": {
             "train": false
@@ -79,7 +86,7 @@
     "train_loader":{
         "batch_size": 32,
         "num_workers": 64,
-        "shuffle": true,
+        "shuffle": false,
         "pin_memory": true,
         "drop_last": true
     },
@@ -93,11 +100,15 @@
     },
 
     "model": {
-        "package": "kfs",
-        "name": "Wrapper",
+        "package": "torchstream.models",
+        "name": "TSM",
         "argv": {
             "cls_num": 174,
-            "input_size": [8, 224, 224]
+            "input_size": [8, 224, 224],
+            "base_model": "resnet50",
+            "dropout": 0.8,
+            "partial_bn": true,
+            "use_softmax": false
         }
     },
 
@@ -109,8 +120,9 @@
         "name": "SGD",
         "argv": {
             "params": "model_specified",
-            "lr": 0.01,
-            "momentum": 0.9
+            "lr": 0.001,
+            "momentum": 0.9,
+            "weight_decay": 0.0001
         }
     },
 
@@ -123,20 +135,12 @@
 
     "train": {
         "epochs": 20,
-        "backup": {
-            "dir_path": "checkpoints/KFS/sthsthv1",
-            "pth_name": "KFS.sthsthv1.rgb.s8.f24.e20"
-        },
-        "resume": {
-            "dir_path": "checkpoints/KFS/sthsthv1",
-            "pth_name": "KFS.sthsthv1.rgb.s8.f24.e20"
-        },
         "classifier": {
             "pretrained": {
                 "dir_path": "../template/checkpoints/TSM/sthsthv1",
                 "pth_name": "TSM.sthsthv1.rgb.s8.e50.best"
             },
-            "freeze": true
+            "freeze": false
         }
     }
 

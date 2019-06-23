@@ -238,27 +238,6 @@ def main(args):
         else:
             print("failed to load checkpoint")
 
-    if "classifier" in configs["train"]:
-        classifier_config = configs["train"]["classifier"]
-        if "pretrained" in classifier_config:
-            checkpoint = utils.load_checkpoint(**(classifier_config["pretrained"]))
-            # load state_dict
-            classifier_state_dict = checkpoint["model_state_dict"]
-            old_keys = list(classifier_state_dict.keys())
-            for old_key in old_keys:
-                new_key = old_key.replace("module.", "")
-                val = classifier_state_dict[old_key]
-                del classifier_state_dict[old_key]
-                classifier_state_dict[new_key] = val
-            model.module.classifier.load_state_dict(classifier_state_dict)
-        if "freeze" in classifier_config:
-            if classifier_config["freeze"]:
-                print("Freezing Classifier...")
-                #  freeze classifier
-                model.module.freeze_classifier()
-                # for m in model.module.classifier.modules():
-                #     if m.training:
-                #         print(m)
 
     # -------------------------------------------------------- #
     #                       Echo Config                        #
