@@ -85,7 +85,7 @@ class VideoDataset(torchdata.Dataset):
 
         p = mp.Pool(32)
         if self.seq:
-            self.samples = p.map(_to_vidarr, self.datapoints)
+            self.samples = p.map(_to_imgseq, self.datapoints)
         else:
             self.samples = p.map(_to_vidarr, self.datapoints)
 

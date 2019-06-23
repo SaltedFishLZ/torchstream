@@ -29,6 +29,7 @@
     ],
 
     "train_dataset": {
+        "package": "datasets",
         "name": "SomethingSomethingV1",
         "argv": {
             "train": true
@@ -70,9 +71,10 @@
     ],
 
     "val_dataset": {
+        "package": "datasets",
         "name": "SomethingSomethingV1",
         "argv": {
-            "train": false
+            "train": true
         }
     },
 
