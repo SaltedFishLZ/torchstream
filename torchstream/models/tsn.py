@@ -36,9 +36,7 @@ class TSN(nn.Module):
         if self.use_softmax:
             self.softmax = nn.Softmax()
 
-        if partial_bn:
-            self.partialBN(True)
-
+        self._enable_pbn = partial_bn
 
     def partialBN(self, enable):
         self._enable_pbn = enable
