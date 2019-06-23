@@ -131,14 +131,10 @@
 
     "train": {
         "epochs": 20,
-        "backup": {
-            "dir_path": "checkpoints/KFS/sthsthv1",
-            "pth_name": "KFS.sthsthv1.rgb.s8.f16.e20"
-        },
         "classifier": {
             "pretrained": {
-                "dir_path": "../template/checkpoints/TSM/sthsthv1",
-                "pth_name": "TSM.sthsthv1.rgb.s8.e50.best"
+                "dir_path": "checkpoints/TSM/sthsthv1",
+                "pth_name": "TSM.sthsthv1.rgb.s8.scratch.lr5e-3.e50.best"
             },
             "freeze": false
         }

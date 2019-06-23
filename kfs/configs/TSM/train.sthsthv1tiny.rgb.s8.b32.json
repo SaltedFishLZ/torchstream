@@ -135,12 +135,9 @@
 
     "train": {
         "epochs": 20,
-        "classifier": {
-            "pretrained": {
-                "dir_path": "../template/checkpoints/TSM/sthsthv1",
-                "pth_name": "TSM.sthsthv1.rgb.s8.e50.best"
-            },
-            "freeze": false
+        "finetune": {
+            "dir_path": "checkpoints/TSM/sthsthv1",
+            "pth_name": "TSM.sthsthv1.rgb.s8.scratch.lr5e-3.e50.best"
         }
     }
 

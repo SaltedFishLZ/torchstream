@@ -201,7 +201,7 @@ def main(args):
     #             Construct Network & Optimizer                #
     # -------------------------------------------------------- #
 
-    model = kfs.Wrapper(**configs["model"]["argv"])
+    model = cfgs.config2model(configs["model"])
     model.to(device)
 
     model = torch.nn.DataParallel(model, device_ids=configs["gpus"])
