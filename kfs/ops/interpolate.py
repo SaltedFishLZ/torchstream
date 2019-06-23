@@ -64,8 +64,30 @@ class TemporalInterpolationFunction(torch.autograd.Function):
         return grad_u, grad_t
 
 
-temporal_interpolation = TemporalInterpolationFunction.apply
+def temporal_interpolation_testbench(u, t):
+    """
+    """
+    assert u.size(0) == t.size(0)
+    N, Ti, C, H, W = u.size()
+    N, To = t.size()
 
+    # anchors: 0, 1, 3, ..., Ti-1
+    anchors = torch.Tensor(range(Ti))
+
+    # unnormalized input
+    dist = torch.abs( ( t).unsqueeze(dim=-1).expand(N, To, Ti) - anchors.unsqueeze(dim=0).unsqueeze(dim=0).expand(N, To, Ti) )
+    coef = torch.max(torch.zeros_like(dist), 1 - dist)
+
+    # expand to [N][To][Ti][C][H][W]
+    coef = coef.unsqueeze(dim=-1).unsqueeze(dim=-1).unsqueeze(dim=-1).expand(N, To, Ti, C, H, W)
+    u = u.unsqueeze(dim=1).expand(N, To, Ti, C, H, W)
+    v = (coef * u).sum(dim=2)
+
+    return v
+
+
+# temporal_interpolation = TemporalInterpolationFunction.apply
+temporal_interpolation = temporal_interpolation_testbench
 
 class TemporalInterpolationModule(nn.Module):
     """
@@ -103,25 +125,21 @@ class TemporalInterpolationModule(nn.Module):
 
 
 if __name__ == "__main__":
-    N, T, C, H, W = 2, 10, 3, 224, 224
+    N, T, C, H, W = 2, 10, 3, 100, 100
 
     # u = torch.ones(N, T, C, H, W)
     u = torch.empty(N, T, C, H, W)
     for t in range(T):
         # u[0, t] = t
-        u[0, t] = t ** 2
-        u[1, t] = 2 * t ** 2
+        u[:, t] = t ** 2
 
-    t = torch.Tensor([[0.5, 0], [0.5, 0.9999999]])
+    t = torch.Tensor([
+                      [0.9, 1.0, 1.1, 1.5, 2.0, 3.0],
+                      [0.0, 1.0, 1.1, 1.5, 1.9, 9.0],
+                     ])
     t.requires_grad_(True)
     v = temporal_interpolation(u, t)
     print(v.size(), v)
     output = v.sum()
     output.backward()
     print(t.grad)
-
-    u_0 = torch.rand(N, C, T, H, W)
-    print(u_0.requires_grad)
-    conv = torch.nn.Conv3d(C, C, kernel_size=(3, 3, 3), padding=1)
-    u_1 = conv(u_0)
-    print(u_1.requires_grad)

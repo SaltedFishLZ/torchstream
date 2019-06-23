@@ -44,7 +44,12 @@ class KFS(nn.Module):
         self.fc2.weight.data.fill_(0.0)
         self.fc2.bias.data.fill_(0.0)
 
+
     def forward(self, x):
+        assert self.input_size == x.size(),\
+            ValueError("Input size error: {} expected, {} got".
+            format(self.input_size, x.size()))
+
         out = x
 
         out = self.conv1(out)
