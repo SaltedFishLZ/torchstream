@@ -263,7 +263,7 @@ def main(args):
     # -------------------------------------------------------- #
     #                       Echo Config                        #
     # -------------------------------------------------------- #
-    print(model)
+    # print(model)
     print(optimizer)
     print(lr_scheduler)
 
