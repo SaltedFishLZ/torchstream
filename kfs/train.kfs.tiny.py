@@ -170,9 +170,9 @@ def main(args):
 
     configs["train_dataset"]["argv"]["transform"] = train_transform
     train_dataset = cfgs.config2dataset(configs["train_dataset"])
-    # quick test
-    train_dataset.datapoints = train_dataset.datapoints[0 : 4096]
-    train_dataset.samples = train_dataset.samples[0 : 4096]
+    # # quick test
+    # train_dataset.datapoints = train_dataset.datapoints[0 : 4096]
+    # train_dataset.samples = train_dataset.samples[0 : 4096]
 
 
     configs["train_loader"]["dataset"] = train_dataset
@@ -188,8 +188,8 @@ def main(args):
 
     configs["val_dataset"]["argv"]["transform"] = val_transform
     val_dataset = cfgs.config2dataset(configs["val_dataset"])
-    # quick test
-    val_dataset.datapoints = copy.deepcopy(train_dataset)
+    # # quick test
+    # val_dataset.datapoints = copy.deepcopy(train_dataset)
 
 
     configs["val_loader"]["dataset"] = val_dataset

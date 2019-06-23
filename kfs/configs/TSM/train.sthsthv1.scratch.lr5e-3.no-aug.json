@@ -4,7 +4,7 @@
             "package": "transforms",
             "name": "CenterSegment",
             "argv": {
-                "size": 16
+                "size": 8
             }
         },
         {
@@ -34,7 +34,6 @@
     ],
 
     "train_dataset": {
-        "package": "datasets",
         "name": "SomethingSomethingV1",
         "argv": {
             "train": true
@@ -46,7 +45,7 @@
             "package": "transforms",
             "name": "CenterSegment",
             "argv": {
-                "size": 16
+                "size": 8
             }
         },
         {
@@ -76,7 +75,6 @@
     ],
 
     "val_dataset": {
-        "package": "datasets",
         "name": "SomethingSomethingV1",
         "argv": {
             "train": false
@@ -84,15 +82,15 @@
     },
 
     "train_loader":{
-        "batch_size": 32,
+        "batch_size": 64,
         "num_workers": 64,
-        "shuffle": false,
+        "shuffle": true,
         "pin_memory": true,
         "drop_last": true
     },
 
     "val_loader":{
-        "batch_size": 32,
+        "batch_size": 64,
         "num_workers": 64,
         "shuffle": false,
         "pin_memory": true,
@@ -100,11 +98,15 @@
     },
 
     "model": {
-        "package": "kfs",
-        "name": "Wrapper",
+        "package": "torchstream.models",
+        "name": "TSM",
         "argv": {
             "cls_num": 174,
-            "input_size": [16, 224, 224]
+            "input_size": [8, 224, 224],
+            "base_model": "resnet50",
+            "dropout": 0.8,
+            "partial_bn": true,
+            "use_softmax": false
         }
     },
 
@@ -116,31 +118,31 @@
         "name": "SGD",
         "argv": {
             "params": "model_specified",
-            "lr": 0.001,
-            "momentum": 0.9,
-            "weight_decay": 0.0001
+            "lr": 0.005,
+            "momentum": 0.9
         }
     },
 
     "lr_scheduler": {
         "name": "StepLR",
         "argv": {
-            "step_size": 10
+            "step_size": 20
         }
     },
 
     "train": {
-        "epochs": 20,
+        "epochs": 50,
         "backup": {
-            "dir_path": "checkpoints/KFS/sthsthv1",
-            "pth_name": "KFS.sthsthv1.rgb.s8.f16.e20"
+            "dir_path": "checkpoints/TSM/sthsthv1",
+            "pth_name": "TSM.sthsthv1.rgb.s8.scratch.lr5e-3.no-aug.e50"
         },
-        "classifier": {
-            "pretrained": {
-                "dir_path": "../template/checkpoints/TSM/sthsthv1",
-                "pth_name": "TSM.sthsthv1.rgb.s8.e50.best"
-            },
-            "freeze": false
+        "resume": {
+            "dir_path": "checkpoints/TSM/sthsthv1",
+            "pth_name": "TSM.sthsthv1.rgb.s8.scratch.lr5e-3.no-aug.e50"
+        },
+        "finetune": {
+            "dir_path": "../template/checkpoints/TSM/tonylin/kinetics",
+            "pth_name": "TSM_kinetics_RGB_resnet50_shift8_blockres_avg_segment16_e50"
         }
     }
 

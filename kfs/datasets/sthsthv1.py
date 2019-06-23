@@ -32,22 +32,26 @@ class SomethingSomethingV1(VideoDataset):
                                                    target_transform=target_transform,
                                                    **kwargs)
 
-        
-        
+
         ## filter samples
         categories = [
             "Picking something up",
             "Pretending to pick something up"
         ]
 
-
+        print("Filtering datapoints")
+        datapoints = []
         for datapoint in self.datapoints:
-            if datapoint.label not in categories:
-                self.datapoints.remove(datapoint)
+            if datapoint.label in categories:
+                datapoints.append(datapoint)
+        self.datapoints = datapoints
 
+        print("Generating samples")
         from torchstream.datasets.imgseq import ImageSequence, _to_imgseq
         from torchstream.datasets.vidarr import VideoArray,_to_vidarr
+        import multiprocessing as mp
+        p = mp.Pool(32)
         if self.seq:
-            self.samples = map(_to_imgseq, self.datapoints)
+            self.samples = p.map(_to_imgseq, self.datapoints)
         else:
-            self.samples = map(_to_vidarr, self.datapoints)
+            self.samples = p.map(_to_vidarr, self.datapoints)
