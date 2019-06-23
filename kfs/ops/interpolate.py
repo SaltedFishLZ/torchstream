@@ -75,7 +75,7 @@ def temporal_interpolation_testbench(u, t):
     anchors = torch.Tensor(range(Ti))
 
     # unnormalized input
-    dist = torch.abs( ( t).unsqueeze(dim=-1).expand(N, To, Ti) - anchors.unsqueeze(dim=0).unsqueeze(dim=0).expand(N, To, Ti) )
+    dist = torch.abs( ((Ti - 1) * t).unsqueeze(dim=-1).expand(N, To, Ti) - anchors.unsqueeze(dim=0).unsqueeze(dim=0).expand(N, To, Ti) )
     coef = torch.max(torch.zeros_like(dist), 1 - dist)
 
     # expand to [N][To][Ti][C][H][W]
@@ -86,8 +86,8 @@ def temporal_interpolation_testbench(u, t):
     return v
 
 
-# temporal_interpolation = TemporalInterpolationFunction.apply
-temporal_interpolation = temporal_interpolation_testbench
+temporal_interpolation = TemporalInterpolationFunction.apply
+# temporal_interpolation = temporal_interpolation_testbench
 
 class TemporalInterpolationModule(nn.Module):
     """
@@ -127,19 +127,50 @@ class TemporalInterpolationModule(nn.Module):
 if __name__ == "__main__":
     N, T, C, H, W = 2, 10, 3, 100, 100
 
-    # u = torch.ones(N, T, C, H, W)
-    u = torch.empty(N, T, C, H, W)
-    for t in range(T):
-        # u[0, t] = t
-        u[:, t] = t ** 2
-
     t = torch.Tensor([
-                      [0.9, 1.0, 1.1, 1.5, 2.0, 3.0],
-                      [0.0, 1.0, 1.1, 1.5, 1.9, 9.0],
+                      [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 1.0],
+                      [0.0, 0.111, 1/9, 0.23, 0.2134, 5/9, 1.0],
+                     ])
+    t.requires_grad_(True)
+
+    for i in range(20):
+        u = torch.rand(N, T, C, H, W)
+        
+        v = temporal_interpolation(u, t)
+        output = 1/2 * (v ** 2).sum()
+        output.backward()
+        grad = torch.Tensor(t.grad)
+
+        v_tb = temporal_interpolation_testbench(u, t)
+        output_tb = 1/2 * (v_tb ** 2).sum()
+        output_tb.backward()
+        grad_tb = torch.Tensor(t.grad)
+
+        equal = (grad == grad_tb)
+        passed = equal.prod().item()
+        
+        if not passed:
+            print(equal)
+    
+
+    u = torch.rand(N, T, C, H, W)
+    t = torch.Tensor([
+                      [0.0, 0.12, 0.23, 0.34, 0.45, 0.56, 0.99],
+                      [0.0, 1/9, 2/9, 3/9, 4/9, 5/9, 8/9],
                      ])
     t.requires_grad_(True)
     v = temporal_interpolation(u, t)
-    print(v.size(), v)
     output = v.sum()
     output.backward()
+    grad = torch.Tensor(t.grad)
+    print(t.grad)
+    t = torch.Tensor([
+                      [0.0, 1/9, 2/9, 3/9, 4/9, 5/9, 8/9],
+                      [0.0, 0.12, 0.23, 0.34, 0.45, 0.56, 0.99],
+                     ])
+    t.requires_grad_(True)
+    v = temporal_interpolation(u, t)
+    output = v.sum()
+    output.backward()
+    grad = torch.Tensor(t.grad)
     print(t.grad)
