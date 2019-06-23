@@ -46,9 +46,9 @@ class KFS(nn.Module):
 
 
     def forward(self, x):
-        assert self.input_size == x.size(),\
-            ValueError("Input size error: {} expected, {} got".
-            format(self.input_size, x.size()))
+        assert self.input_size == x.size()[-3:],\
+            ValueError("Input size error: {} expected, [N][C]{} got".
+            format(self.input_size, x.size()[-3:]))
 
         out = x
 
