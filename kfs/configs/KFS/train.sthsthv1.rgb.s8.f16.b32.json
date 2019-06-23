@@ -127,10 +127,6 @@
             "dir_path": "checkpoints/KFS/sthsthv1",
             "pth_name": "KFS.sthsthv1.rgb.s8.f16.e20"
         },
-        "resume": {
-            "dir_path": "checkpoints/KFS/sthsthv1",
-            "pth_name": "KFS.sthsthv1.rgb.s8.f16.e20"
-        },
         "classifier": {
             "pretrained": {
                 "dir_path": "../template/checkpoints/TSM/sthsthv1",

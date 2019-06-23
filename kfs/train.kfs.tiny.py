@@ -4,6 +4,7 @@ import os
 import gc
 import time
 import json
+import copy
 import argparse
 
 import torch
@@ -23,7 +24,7 @@ val_log_str = "Validation:[{:4d}/{:4d}],  " + \
 
 def validate(device, loader, model, criterion,
              log_str=val_log_str, log_interval=20, **kwargs):
-    
+
     batch_time = utils.Meter()
     data_time = utils.Meter()
     loss_meter = utils.Meter()
@@ -171,6 +172,8 @@ def main(args):
     train_dataset = cfgs.config2dataset(configs["train_dataset"])
     # quick test
     train_dataset.datapoints = train_dataset.datapoints[0 : 4096]
+    train_dataset.samples = train_dataset.samples[0 : 4096]
+
 
     configs["train_loader"]["dataset"] = train_dataset
     train_loader = cfgs.config2dataloader(configs["train_loader"])
@@ -186,7 +189,8 @@ def main(args):
     configs["val_dataset"]["argv"]["transform"] = val_transform
     val_dataset = cfgs.config2dataset(configs["val_dataset"])
     # quick test
-    val_dataset.datapoints = val_dataset.datapoints[0 : 4096]
+    val_dataset.datapoints = copy.deepcopy(train_dataset)
+
 
     configs["val_loader"]["dataset"] = val_dataset
     val_loader = cfgs.config2dataloader(configs["val_loader"])

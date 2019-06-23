@@ -11,7 +11,7 @@ class KFS(nn.Module):
     def __init__(self, input_size=(16, 224, 224), output_size=8):
         super(KFS, self).__init__()
 
-        self.input_size = input_size
+        self.input_size = tuple(input_size)
         self.output_size = output_size
 
         self.maxpool = nn.MaxPool3d(kernel_size=(1, 2, 2))
@@ -46,9 +46,10 @@ class KFS(nn.Module):
 
 
     def forward(self, x):
-        assert self.input_size == x.size()[-3:],\
-            ValueError("Input size error: {} expected, [N][C]{} got".
-            format(self.input_size, x.size()[-3:]))
+        N, C, T, H, W = x.size()
+        assert self.input_size == (T, H, W),\
+            ValueError("Input size error: {} expected, {} got".
+            format(self.input_size, (T, H, W)))
 
         out = x
 
