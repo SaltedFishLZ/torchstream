@@ -1,7 +1,6 @@
 {
     "train_transforms": [
         {
-            "package": "transforms",
             "name": "CenterSegment",
             "argv": {
                 "size": 16
@@ -43,7 +42,6 @@
 
     "val_transforms": [
         {
-            "package": "transforms",
             "name": "CenterSegment",
             "argv": {
                 "size": 16
