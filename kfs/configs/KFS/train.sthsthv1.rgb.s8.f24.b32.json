@@ -1,6 +1,7 @@
 {
     "train_transforms": [
         {
+            "package": "transforms",
             "name": "CenterSegment",
             "argv": {
                 "size": 24
@@ -36,7 +37,7 @@
 
     "val_transforms": [
         {
-            "package": "torchstream.transforms",
+            "package": "transforms",
             "name": "CenterSegment",
             "argv": {
                 "size": 24

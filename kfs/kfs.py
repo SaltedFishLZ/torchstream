@@ -89,7 +89,7 @@ class Wrapper(nn.Module):
 
         self.selector = KFS(input_size=input_size, output_size=8)
         self.interpolate = TemporalInterpolationModule()
-        self.classifier = TSM(cls_num=cls_num, input_size=[8, 224, 224], dropout=0.0)
+        self.classifier = TSM(cls_num=cls_num, input_size=[8, 224, 224], dropout=0.0, partial_bn=False)
 
     def freeze_classifier(self):
         self.classifier.eval()

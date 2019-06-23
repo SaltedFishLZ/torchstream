@@ -101,18 +101,12 @@ def train(device, loader, model, criterion, optimizer, epoch,
         input = input.to(device)
         target = target.to(device)
 
-        # DEBUG
-        # print(((target < 174) & (target >= 0)).prod())
-
         ## measure extra data loading time
         data_time.update(time.time() - end)
 
         ## forward
         output = model(input)
         loss = criterion(output, target)
-
-        # DEBUG
-        ## print(output.size(), target.size())
 
         ## calculate accuracy
         accuracy = metric(output.data, target)
@@ -175,6 +169,8 @@ def main(args):
 
     configs["train_dataset"]["argv"]["transform"] = train_transform
     train_dataset = cfgs.config2dataset(configs["train_dataset"])
+    # quick test
+    train_dataset.datapoints = train_dataset.datapoints[0 : 4096]
 
     configs["train_loader"]["dataset"] = train_dataset
     train_loader = cfgs.config2dataloader(configs["train_loader"])
@@ -189,6 +185,8 @@ def main(args):
 
     configs["val_dataset"]["argv"]["transform"] = val_transform
     val_dataset = cfgs.config2dataset(configs["val_dataset"])
+    # quick test
+    val_dataset.datapoints = val_dataset.datapoints[0 : 4096]
 
     configs["val_loader"]["dataset"] = val_dataset
     val_loader = cfgs.config2dataloader(configs["val_loader"])

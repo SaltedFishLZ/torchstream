@@ -1,7 +1,7 @@
 {
     "test_transforms": [
         {
-            "package": "torchstream.transforms",
+            "package": "transforms",
             "name": "CenterSegment",
             "argv": {
                 "size": 18
