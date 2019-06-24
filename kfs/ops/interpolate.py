@@ -92,11 +92,12 @@ temporal_interpolation = TemporalInterpolationFunction.apply
 class TemporalInterpolationModule(nn.Module):
     """
     """
-    def __init__(self, norm=True, mode="interval"):
+    def __init__(self, norm=True, mode="interval", debug=False):
         assert mode in ["time", "interval"], ValueError
         super(TemporalInterpolationModule, self).__init__()
         self.norm = norm
         self.mode = mode
+        self.debug = debug
 
     def __repr__(self):
         string = self.__class__.__name__
@@ -119,6 +120,8 @@ class TemporalInterpolationModule(nn.Module):
         else:
             assert ((index >= 0.0) & (index < 1.0)).prod().item() == 1, \
                 ValueError
+        if self.debug:
+            print(index)
         # drop last
         index = index[:, :-1]
         return temporal_interpolation(input, index)

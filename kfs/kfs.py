@@ -8,8 +8,9 @@ from ops import TemporalInterpolationModule
 class KFS(nn.Module):
     """
     """
-    def __init__(self, input_size=(16, 224, 224), output_size=8):
+    def __init__(self, input_size=(16, 224, 224), output_size=8, debug=False):
         super(KFS, self).__init__()
+        self.debug = debug
 
         self.input_size = tuple(input_size)
         self.output_size = output_size
@@ -83,13 +84,14 @@ class KFS(nn.Module):
 
 
 class Wrapper(nn.Module):
-    def __init__(self, cls_num, input_size):
+    def __init__(self, cls_num, input_size, debug=False):
         super(Wrapper, self).__init__()
+        self.debug = debug
         self.cls_num = cls_num
         self.input_size = input_size
 
-        self.selector = KFS(input_size=input_size, output_size=8)
-        self.interpolate = TemporalInterpolationModule()
+        self.selector = KFS(input_size=input_size, output_size=8, debug=debug)
+        self.interpolate = TemporalInterpolationModule(norm=True, mode="interval", debug=debug)
         self.classifier = TSM(cls_num=cls_num, input_size=[8, 224, 224], dropout=0.0, partial_bn=False)
 
     def freeze_classifier(self):

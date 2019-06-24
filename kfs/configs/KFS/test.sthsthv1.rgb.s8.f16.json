@@ -42,7 +42,7 @@
 
     "test_loader":{
         "batch_size": 64,
-        "num_workers": 32,
+        "num_workers": 64,
         "shuffle": false,
         "pin_memory": true,
         "drop_last": false
@@ -53,7 +53,7 @@
         "name": "Wrapper",
         "argv": {
             "cls_num": 174,
-            "input_size": [8, 224, 224]
+            "input_size": [16, 224, 224]
         }
     },
 
