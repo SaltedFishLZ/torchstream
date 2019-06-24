@@ -62,6 +62,8 @@ class KFS(nn.Module):
         out = self.conv2(out)
         out = self.bn2(out)
         out = self.relu(out)
+        if self.debug:
+            print("KFS ReLU 2 Output", out)
 
         out = self.conv3(out)
         out = self.bn3(out)
@@ -72,6 +74,8 @@ class KFS(nn.Module):
         out = self.relu(out)
 
         out = self.avgpool(out)
+        if self.debug:
+            print("KFS avgpool Output", out)
 
         out = out.view(out.size(0), -1)
 
@@ -81,7 +85,7 @@ class KFS(nn.Module):
         out = self.fc2(out)
         
         if self.debug:
-            print(out)
+            print("KFS Final Output", out)
         
         return out
 
