@@ -2,21 +2,17 @@
     "train_transforms": [
         {
             "package": "transforms",
-            "name": "CenterSegment",
+            "name": "RandomSegment",
             "argv": {
-                "size": 16
+                "size": 16,
+                "bind": true
             }
         },
         {
-            "name": "Resize",
+            "name": "MultiScaleCrop",
             "argv": {
-                "size": 256
-            }
-        },
-        {
-            "name": "CenterCrop",
-            "argv": {
-                "size": [224, 224]
+                "output_size": [224, 224],
+                "scales": [1, 0.875, 0.75, 0.66]
             }
         },
         {
@@ -84,9 +80,9 @@
     "train_loader":{
         "batch_size": 64,
         "num_workers": 64,
-        "shuffle": false,
+        "shuffle": true,
         "pin_memory": true,
-        "drop_last": true
+        "drop_last": false
     },
 
     "val_loader":{
@@ -131,11 +127,11 @@
         "epochs": 20,
         "backup": {
             "dir_path": "checkpoints/KFS/sthsthv1",
-            "pth_name": "KFS.sthsthv1.rgb.s8.f16.b64.no-aug.e20"
+            "pth_name": "KFS.sthsthv1.rgb.s8.f16.b64.aug1.e20"
         },
         "resume": {
             "dir_path": "checkpoints/KFS/sthsthv1",
-            "pth_name": "KFS.sthsthv1.rgb.s8.f16.b64.no-aug.e20"
+            "pth_name": "KFS.sthsthv1.rgb.s8.f16.b64.aug1.e20"
         },
         "classifier": {
             "pretrained": {

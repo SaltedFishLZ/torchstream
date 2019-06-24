@@ -8,32 +8,6 @@ sys.path.append(".")
 from torchstream.transforms.functional.blob import _is_varray
 
 
-def _get_snip_indices(t, s, mode):
-    assert isinstance(t, int), TypeError
-    assert isinstance(s, int), TypeError
-    assert t > s, ValueError
-
-    # interval (length of each segment) = (t/s)
-    interval = float(t) / float(s)
-    if interval <= 0:
-        print("t={},s={}".format(t, s))
-    offsets = []
-    for i in range(s):
-        offsets.append(i * interval)
-    offsets = np.array(offsets)
-
-    if mode == "center":
-        indices = offsets + np.array([interval // 2] * s)
-        indices = list(indices)
-        return sorted(indices)
-    elif mode == "random":
-        indices = offsets + np.random.randint(low=0, high=interval, size=s)
-        indices = list(indices)
-        return sorted(indices)
-    else:
-        raise ValueError
-
-
 def center_segment(vid, s):
     """
     Args:
