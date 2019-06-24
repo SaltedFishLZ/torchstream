@@ -3,7 +3,7 @@ import importlib
 from torchstream.datasets.dataset import VideoDataset
 from torchstream.datasets.metadata.metasets import sth_sth_v1 as sth_sth_v1
 
-class SomethingSomethingV1(VideoDataset):
+class SomethingSomethingV1Tiny(VideoDataset):
 
     def __init__(self, train=True, transform=None, target_transform=None,
                  **kwargs):
@@ -23,9 +23,9 @@ class SomethingSomethingV1(VideoDataset):
             # here, we use validation set
             datapoint_filter = sth_sth_v1.ValsetFilter()
 
-        super(SomethingSomethingV1, self).__init__(root=root, layout=layout,
-                                                   annots=annots,
-                                                   class_to_idx=class_to_idx,
+        super(SomethingSomethingV1Tiny, self).__init__(root=root, layout=layout,
+                                                       annots=annots,
+                                                       class_to_idx=class_to_idx,
                                                    mod=mod, ext=ext, tmpl="{0:05d}", offset=1,
                                                    datapoint_filter=datapoint_filter,
                                                    transform=transform,

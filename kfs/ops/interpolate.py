@@ -120,8 +120,9 @@ class TemporalInterpolationModule(nn.Module):
         else:
             assert ((index >= 0.0) & (index < 1.0)).prod().item() == 1, \
                 ValueError
-        if self.debug:
-            print(index)
+        # if self.debug:
+        #     print(index)
+
         # drop last
         index = index[:, :-1]
         return temporal_interpolation(input, index)

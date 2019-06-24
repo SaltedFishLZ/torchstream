@@ -1,1 +1,1 @@
-from .sthsthv1 import SomethingSomethingV1
+from .sthsthv1tiny import SomethingSomethingV1Tiny
