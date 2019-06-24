@@ -79,7 +79,10 @@ class KFS(nn.Module):
         out = self.relu(out)
 
         out = self.fc2(out)
-
+        
+        if self.debug:
+            print(out)
+        
         return out
 
 
