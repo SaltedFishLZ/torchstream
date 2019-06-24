@@ -1,7 +1,6 @@
 {
     "train_transforms": [
         {
-            "package": "transforms",
             "name": "CenterSegment",
             "argv": {
                 "size": 16
@@ -35,7 +34,7 @@
 
     "train_dataset": {
         "package": "datasets",
-        "name": "SomethingSomethingV1",
+        "name": "SomethingSomethingV1Tiny",
         "argv": {
             "train": true
         }
@@ -43,7 +42,6 @@
 
     "val_transforms": [
         {
-            "package": "transforms",
             "name": "CenterSegment",
             "argv": {
                 "size": 16
@@ -86,7 +84,7 @@
     "train_loader":{
         "batch_size": 32,
         "num_workers": 64,
-        "shuffle": true,
+        "shuffle": false,
         "pin_memory": true,
         "drop_last": true
     },
@@ -131,12 +129,9 @@
 
     "train": {
         "epochs": 20,
-        "classifier": {
-            "pretrained": {
-                "dir_path": "checkpoints/TSM/sthsthv1",
-                "pth_name": "TSM.sthsthv1.rgb.s8.scratch.lr5e-3.e50.best"
-            },
-            "freeze": false
+        "finetune": {
+            "dir_path": "checkpoints/TSM/sthsthv1",
+            "pth_name": "TSM.sthsthv1.rgb.s8.scratch.lr5e-3.e50.best"
         }
     }
 

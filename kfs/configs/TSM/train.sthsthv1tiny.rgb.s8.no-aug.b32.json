@@ -4,7 +4,7 @@
             "package": "transforms",
             "name": "CenterSegment",
             "argv": {
-                "size": 24
+                "size": 8
             }
         },
         {
@@ -35,7 +35,7 @@
 
     "train_dataset": {
         "package": "datasets",
-        "name": "SomethingSomethingV1",
+        "name": "SomethingSomethingV1Tiny",
         "argv": {
             "train": true
         }
@@ -46,7 +46,7 @@
             "package": "transforms",
             "name": "CenterSegment",
             "argv": {
-                "size": 24
+                "size": 8
             }
         },
         {
@@ -100,11 +100,15 @@
     },
 
     "model": {
-        "package": "kfs",
-        "name": "Wrapper",
+        "package": "torchstream.models",
+        "name": "TSM",
         "argv": {
             "cls_num": 174,
-            "input_size": [24, 224, 224]
+            "input_size": [8, 224, 224],
+            "base_model": "resnet50",
+            "dropout": 0.8,
+            "partial_bn": true,
+            "use_softmax": false
         }
     },
 
@@ -131,12 +135,9 @@
 
     "train": {
         "epochs": 20,
-        "classifier": {
-            "pretrained": {
-                "dir_path": "checkpoints/TSM/sthsthv1",
-                "pth_name": "TSM.sthsthv1.rgb.s8.scratch.lr5e-3.e50.best"
-            },
-            "freeze": false
+        "finetune": {
+            "dir_path": "checkpoints/TSM/sthsthv1",
+            "pth_name": "TSM.sthsthv1.rgb.s8.scratch.lr5e-3.e50.best"
         }
     }
 
