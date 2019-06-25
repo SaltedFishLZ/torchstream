@@ -106,8 +106,16 @@ def test_mc_with_trace(device, loader, model, criterion, chances=20,
                     all_correct = torch.cat((all_correct, correct))
 
             # debug
-            print(all_index.size())
-            print(all_index)
+            # print(all_index.size())
+            # print(all_index)
+            trace_dir = "new-mc-trace/chance{}".format(c)
+            os.makedirs(trace_dir)
+            f = open(os.path.join(trace_dir, "index.pkl"), "wb")
+            pickle.dump(all_index, f)
+            f.close()
+            f = open(os.path.join(trace_dir, "correct.pkl"), "wb")
+            pickle.dump(all_correct, f)
+            f.close()
 
             print("This Chance:\n" + \
                 "Prec@1 {top1_meter.avg:5.3f} Prec@5 {top5_meter.avg:5.3f}"
