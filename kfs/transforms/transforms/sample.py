@@ -8,16 +8,21 @@ from torchstream.transforms.functional.blob import _is_varray
 class FrameSampler(object):
     """
     """
-    def __init__(self, size):
+    def __init__(self, size, output_index=False):
         """
         """
         self.size = size
+        self.output_index = output_index
 
     def __repr__(self):
         ret = self.__class__.__name__
         ret += " (size={})".format(self.size)
 
     def get_indices(self, vid):
+        """
+        Args:
+            return: a list/nparray
+        """
         assert NotImplementedError("Abstract Base Shouldn't Be Used")
         return [0] * self.size
 
@@ -26,7 +31,10 @@ class FrameSampler(object):
         """
         assert _is_varray(vid), TypeError
         idx = self.get_indices(vid)
-        return np.ascontiguousarray(vid[idx])
+        if not self.output_index:
+            return np.ascontiguousarray(vid[idx])
+        else:
+            return (np.ascontiguousarray(vid[idx]), idx)
 
 
 class RandomFrameSampler(FrameSampler):
@@ -35,10 +43,10 @@ class RandomFrameSampler(FrameSampler):
         size (int): frame number
         shuffle (bool): whether return frames in-order
     """
-    def __init__(self, size, shuffle=False):
+    def __init__(self, size, output_index=False, shuffle=False):
         """
         """
-        super(RandomFrameSampler, self).__init__(size)
+        super(RandomFrameSampler, self).__init__(size, output_index)
         self.shuffle = shuffle
 
     def __repr__(self):
