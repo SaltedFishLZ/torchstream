@@ -14,14 +14,19 @@ def main(trace_dir):
         if "chance" not in chance_dir:
             continue
 
-        index_fpath = os.path.join(trace_dir, chance_dir, "index.pkl", "rb")
-        correct_fpath = os.path.join(trace_dir, chance_dir, "correct.pkl", "rb")
+        index_fpath = os.path.join(trace_dir, chance_dir, "index.pkl")
+        correct_fpath = os.path.join(trace_dir, chance_dir, "correct.pkl")
 
-        index = pickle.load(index_fpath)
-        correct = pickle.load(correct_fpath)
+        index_pkl = open(index_fpath, "rb")
+        index = pickle.load(index_pkl)
+        index_pkl.close()
 
-        index = index.unqueeze(dim=1)
-        correct = correct.unqueeze(dim=1)
+        correct_pkl = open(correct_fpath, "rb")
+        correct = pickle.load(correct_pkl)
+        correct_pkl.close()
+
+        index = index.unsqueeze(dim=1)
+        correct = correct.unsqueeze(dim=1)
 
         if indices is None:
             indices = index
@@ -30,8 +35,8 @@ def main(trace_dir):
             indices = torch.cat((indices, index), dim=1)
             corrects = torch.cat((corrects, correct), dim=1)
 
-    print(indices.size())
-    print(corrects.size())
+    print(indices)
+    print(corrects)
 
 
 if __name__ == "__main__":
