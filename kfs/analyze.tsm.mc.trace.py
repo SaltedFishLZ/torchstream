@@ -3,6 +3,7 @@ import sys
 import pickle
 
 import torch
+from sklearn.cluster import KMeans
 
 
 def main(trace_dir):
@@ -30,8 +31,12 @@ def main(trace_dir):
             indices = torch.cat((indices, index), dim=1)
             corrects = torch.cat((corrects, correct), dim=1)
 
-    print(indices.size())
-    print(corrects.size())
+    good_indices = []
+    for i in range(corrects[0].size(0)):
+        if corrects[0][i].item():
+            good_indices.append(indices[0][i])
+    print(good_indices)
+
 
 
 if __name__ == "__main__":
