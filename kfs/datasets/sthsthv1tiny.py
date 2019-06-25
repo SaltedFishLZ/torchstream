@@ -36,7 +36,9 @@ class SomethingSomethingV1Tiny(VideoDataset):
         ## filter samples
         categories = [
             "Picking something up",
-            "Pretending to pick something up"
+            "Pretending to pick something up",
+            "Pretending to put something onto something",
+            "Putting something onto something",
         ]
 
         print("Filtering datapoints")
