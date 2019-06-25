@@ -4,7 +4,7 @@ import pickle
 
 import torch
 from sklearn.cluster import KMeans
-
+import matplotlib.pyplot as plt
 
 def main(trace_dir):
 
@@ -36,12 +36,23 @@ def main(trace_dir):
             indices = torch.cat((indices, index), dim=1)
             corrects = torch.cat((corrects, correct), dim=1)
 
-    good_indices = []
-    for i in range(corrects[0].size(0)):
-        if corrects[0][i].item():
-            good_indices.append(indices[0][i])
-    print(good_indices)
+    flag = True
+    good_indices_num = []
+    sample_num = corrects.size(0)
+    for sample_id in range(sample_num):
+        good_indices = []
+        for i in range(corrects[sample_id].size(0)):
+            if corrects[sample_id][i].item():
+                good_indices.append(indices[sample_id][i])
+                # print(indices[sample_id][i])
+        if flag and (len(good_indices) > 10 and len(good_indices) < 20):
+            for idx in good_indices:
+                print(idx)
+            flag = False
+        good_indices_num.append(len(good_indices))
 
+    plt.hist(good_indices_num, bins=25)
+    plt.show()
 
 if __name__ == "__main__":
     if len(sys.argv) == 2:
