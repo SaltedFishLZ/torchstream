@@ -57,10 +57,11 @@ def test_mc_with_trace(device, loader, model, criterion, chances=20,
             all_output = None
             all_target = None
             all_index = None
+            all_length = None
             all_correct = None
 
             end = time.time()
-            for i, ((input, index), target) in enumerate(loader):
+            for i, ((input, index, length), target) in enumerate(loader):
 
                 input = input.to(device)
                 target = target.to(device)
@@ -98,11 +99,13 @@ def test_mc_with_trace(device, loader, model, criterion, chances=20,
                     all_output = output
                     all_target = target
                     all_index = index
+                    all_length = length
                     all_correct = correct
                 else:
                     all_output = torch.cat((all_output, output))
                     all_target = torch.cat((all_target, target))
                     all_index = torch.cat((all_index, index))
+                    all_length = torch.cat((all_length, length))
                     all_correct = torch.cat((all_correct, correct))
 
             # debug
@@ -112,6 +115,9 @@ def test_mc_with_trace(device, loader, model, criterion, chances=20,
             os.makedirs(trace_dir)
             f = open(os.path.join(trace_dir, "index.pkl"), "wb")
             pickle.dump(all_index, f)
+            f.close()
+            f = open(os.path.join(trace_dir, "length.pkl"), "wb")
+            pickle.dump(all_length, f)
             f.close()
             f = open(os.path.join(trace_dir, "correct.pkl"), "wb")
             pickle.dump(all_correct, f)
@@ -158,7 +164,7 @@ def main(args):
     import transforms
 
     test_transforms.append(transforms.CenterSegment(size=24))
-    test_transforms.append(transforms.RandomFrameSampler(size=8, output_index=True))
+    test_transforms.append(transforms.RandomFrameSampler(size=8, output_index=True, output_length=True))
     test_transforms.append(
             transforms.Fork(transforms=[
             torchstream.transforms.Compose(
@@ -172,6 +178,7 @@ def main(args):
                     )
                 ]
             ),
+            lambda x: torch.Tensor(x),
             lambda x: torch.Tensor(x)
         ])
     )
