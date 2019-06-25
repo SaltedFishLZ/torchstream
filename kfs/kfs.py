@@ -31,19 +31,19 @@ class KFS(nn.Module):
                                kernel_size=(5, 5, 5), padding=2)
         self.bn3 = nn.BatchNorm3d(num_features=256)
 
-        self.conv4 = nn.Conv3d(in_channels=256, out_channels=256,
+        self.conv4 = nn.Conv3d(in_channels=256, out_channels=128,
                                kernel_size=(5, 1, 1), padding=(2, 0, 0))
-        self.bn4 = nn.BatchNorm3d(num_features=256)
+        self.bn4 = nn.BatchNorm3d(num_features=128)
 
-        self.avgpool = nn.AdaptiveAvgPool3d(output_size=(input_size[0], 2, 2))
+        self.adptpool = nn.AdaptiveMaxPool3d(output_size=(input_size[0], 12, 12))
 
-        self.fc1 = nn.Linear(in_features=256 * input_size[0] * 2 * 2,
-                             out_features=2048)
+        self.fc1 = nn.Linear(in_features=128 * input_size[0] * 12 * 12,
+                             out_features=1024)
 
-        self.fc2 = nn.Linear(in_features=2048,
+        self.fc2 = nn.Linear(in_features=1024,
                              out_features=(self.output_size + 1))
-        self.fc2.weight.data.fill_(0.0)
-        self.fc2.bias.data.fill_(0.0)
+        # self.fc2.weight.data.fill_(0.0)
+        # self.fc2.bias.data.fill_(0.0)
 
 
     def forward(self, x):
@@ -62,8 +62,8 @@ class KFS(nn.Module):
         out = self.conv2(out)
         out = self.bn2(out)
         out = self.relu(out)
-        if self.debug:
-            print("KFS ReLU 2 Output", out)
+        # if self.debug:
+        #     print("KFS ReLU 2 Output", out)
 
         out = self.conv3(out)
         out = self.bn3(out)
@@ -73,7 +73,7 @@ class KFS(nn.Module):
         out = self.bn4(out)
         out = self.relu(out)
 
-        out = self.avgpool(out)
+        out = self.adptpool(out)
         # if self.debug:
         #     print("KFS avgpool Output", out)
 
@@ -84,8 +84,8 @@ class KFS(nn.Module):
 
         out = self.fc2(out)
 
-        # if self.debug:
-        #     print("KFS Final Output", out)
+        if self.debug:
+            print("KFS Final Output", out)
 
         return out
 

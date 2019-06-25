@@ -34,6 +34,7 @@
     ],
 
     "test_dataset": {
+        "package": "datasets",
         "name": "SomethingSomethingV1Tiny",
         "argv": {
             "train": false
