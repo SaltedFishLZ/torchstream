@@ -20,7 +20,7 @@ class Fork(object):
     def __init__(self, transforms):
         assert isinstance(transforms, Sequence), TypeError
         self.transforms = transforms
-    
+
     def __repr__(self):
         string = self.__class__.__name__
         string += "\ntransforms in each branch:\n"
@@ -31,6 +31,8 @@ class Fork(object):
     def __call__(self, inputs):
         """
         """
+        # # debug
+        # print("DEBUG: fork used")
         assert isinstance(inputs, Sequence), TypeError
         assert len(inputs) == len(self.transforms), ValueError("Size mismatching")
         outputs = []

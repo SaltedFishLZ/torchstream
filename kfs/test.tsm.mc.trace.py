@@ -21,7 +21,7 @@ test_log_str = "Testing:[{:4d}/{:4d}]  " + \
 
 def test_mc_with_trace(device, loader, model, criterion, chances=20,
             log_str=test_log_str, log_interval=20, **kwargs):
-    
+
 
     mc_acc = utils.MultiChanceClassifyAccuracy(topk=(1, 5))
 
@@ -41,7 +41,7 @@ def test_mc_with_trace(device, loader, model, criterion, chances=20,
     with torch.no_grad():
 
         for c in range(chances):
-            
+
             print("#" * 40)
             print("[{:5d}] Chances".format(c))
             print("#" * 40)
@@ -61,6 +61,7 @@ def test_mc_with_trace(device, loader, model, criterion, chances=20,
 
             end = time.time()
             for i, ((input, index), target) in enumerate(loader):
+
                 input = input.to(device)
                 target = target.to(device)
 
@@ -90,9 +91,9 @@ def test_mc_with_trace(device, loader, model, criterion, chances=20,
                                          top1_meter=top1_meter,
                                          top5_meter=top5_meter))
                 ## 
-                pred = utils.output2pred(output.data, target)
+                pred = utils.output2pred(output.data, 1)
                 correct = utils.classify_corrects(pred, target)[0]
-                
+
                 if all_output is None:
                     all_output = output
                     all_target = target
@@ -103,8 +104,10 @@ def test_mc_with_trace(device, loader, model, criterion, chances=20,
                     all_target = torch.cat((all_target, target))
                     all_index = torch.cat((all_index, index))
                     all_correct = torch.cat((all_correct, correct))
-            
-            print(all_correct.size())
+
+            # debug
+            print(all_index.size())
+            print(all_index)
 
             print("This Chance:\n" + \
                 "Prec@1 {top1_meter.avg:5.3f} Prec@5 {top5_meter.avg:5.3f}"
@@ -143,33 +146,30 @@ def main(args):
     # -------------------------------------------------------- #
 
     test_transforms = []
-    for _t in configs["test_transforms"]:
-        test_transforms.append(cfgs.config2transform(_t))
-    test_transforms = torchstream.transforms.Compose(
-        transforms=test_transforms
-        )
 
     import transforms
 
-    transforms.CenterSegment(size=24)
-    transforms.RandomFrameSampler(size=8, output_index=True)
-    transforms.Fork(transforms=[
-        torchstream.transforms.Compose(
-            [
-                torchstream.transforms.Resize(size=256),
-                torchstream.transforms.CenterCrop(size=[224, 224]),
-                torchstream.transforms.ToTensor(),
-                torchstream.transforms.Normalize(
-                    mean=[0.485, 0.456, 0.406],
-                    std=[0.229, 0.224, 0.225]
-                )
-            ]
-        ),
-        lambda x: torch.Tensor(x)
-    ])
+    test_transforms.append(transforms.CenterSegment(size=24))
+    test_transforms.append(transforms.RandomFrameSampler(size=8, output_index=True))
+    test_transforms.append(
+            transforms.Fork(transforms=[
+            torchstream.transforms.Compose(
+                [
+                    torchstream.transforms.Resize(size=256),
+                    torchstream.transforms.CenterCrop(size=[224, 224]),
+                    torchstream.transforms.ToTensor(),
+                    torchstream.transforms.Normalize(
+                        mean=[0.485, 0.456, 0.406],
+                        std=[0.229, 0.224, 0.225]
+                    )
+                ]
+            ),
+            lambda x: torch.Tensor(x)
+        ])
+    )
 
 
-    configs["test_dataset"]["argv"]["transform"] = test_transforms
+    configs["test_dataset"]["argv"]["transform"] = torchstream.transforms.Compose(test_transforms)
     test_dataset = cfgs.config2dataset(configs["test_dataset"])
 
     configs["test_loader"]["dataset"] = test_dataset
