@@ -210,6 +210,7 @@ def main(args):
     #            Resume / Finetune from Checkpoint             #
     # -------------------------------------------------------- #
 
+    resume_success = False
     if "resume" in configs["train"]:
         resume_config = configs["train"]["resume"]
         checkpoint = utils.load_checkpoint(**resume_config)
@@ -226,10 +227,11 @@ def main(args):
             lr_scheduler.load_state_dict(lr_scheduler_state_dict)
             print("Resume from epoch [{}], best prec1 [{}]".
                   format(start_epoch - 1, best_prec1))
+            resume_success = True
         else:
             print("failed to load checkpoint")
 
-    elif "finetune" in configs["train"]:
+    if (not resume_success) and "finetune" in configs["train"]:
         finetune_config = configs["train"]["finetune"]
         checkpoint = utils.load_checkpoint(**finetune_config)
 
