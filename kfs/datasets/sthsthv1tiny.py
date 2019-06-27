@@ -14,8 +14,27 @@ class SomethingSomethingV1Tiny(VideoDataset):
         ext = "avi"
         root = sth_sth_v1.AVI_DATA_PATH
         layout = sth_sth_v1.__layout__
-        class_to_idx = sth_sth_v1.__LABELS__
         annots = sth_sth_v1.__ANNOTATIONS__
+
+
+        categories = [
+            "Holding something",
+            "Turning something upside down",
+            "Picking something up",
+            "Pretending to pick something up",
+            "Pretending to put something onto something",
+            "Putting something onto something",
+        ]
+
+        class_to_idx = {
+            "Holding something"                         : 0,
+            "Turning something upside down"             : 1,
+            "Picking something up"                      : 2,
+            "Pretending to pick something up"           : 3,
+            "Pretending to put something onto something": 4,
+            "Putting something onto something"          : 5,
+        }
+
 
         if train:
             datapoint_filter = sth_sth_v1.TrainsetFilter()
@@ -34,13 +53,6 @@ class SomethingSomethingV1Tiny(VideoDataset):
 
 
         ## filter samples
-        categories = [
-            "Picking something up",
-            "Pretending to pick something up",
-            "Pretending to put something onto something",
-            "Putting something onto something",
-        ]
-
         print("Filtering datapoints")
         datapoints = []
         for datapoint in self.datapoints:
