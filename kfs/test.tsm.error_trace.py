@@ -41,6 +41,9 @@ def test(device, loader, model, criterion,
 
     end = time.time()
 
+    all_predicts = None
+    all_targets = None
+
     with torch.no_grad():
         for i, (input, target) in enumerate(loader):
             input = input.to(device)
@@ -74,6 +77,13 @@ def test(device, loader, model, criterion,
             batch_time.update(time.time() - end)
             end = time.time()
 
+            if all_predicts is None:
+                all_predicts = predict
+                all_targets = target
+            else:
+                all_predicts = torch.cat((all_predicts, predict))
+                all_targets = torch.cat((all_targets, target))
+
             if i % log_interval == 0:
                 print(log_str.format(i, len(loader),
                                      batch_time=batch_time,
@@ -83,12 +93,23 @@ def test(device, loader, model, criterion,
                                      top5_meter=top5_meter))
 
 
-    print("Results:\n" + \
-          "Prec@1 {top1_meter.avg:5.3f} Prec@5 {top5_meter.avg:5.3f} Loss {loss_meter.avg:5.3f}"
-          .format(top1_meter=top1_meter, top5_meter=top5_meter, loss_meter=loss_meter))
+
+    print("Results:\n"
+          "Prec@1 {top1_meter.avg:5.3f}"
+          "Prec@5 {top5_meter.avg:5.3f}"
+          "Loss {loss_meter.avg:5.3f}"
+          .format(top1_meter=top1_meter,
+                  top5_meter=top5_meter,
+                  loss_meter=loss_meter))
 
     # print("Top-5 Error List")
     # print(top5_error_datapoints)
+
+
+    all_predicts = list(np.array(all_predicts[0]))
+    all_targets = list(np.array(all_targets))
+    cm = utils.confusion_matrix(all_targets, all_targets)
+    utils.plot_confusion_matrix(cm)
 
     return top1_error_datapoints
 
