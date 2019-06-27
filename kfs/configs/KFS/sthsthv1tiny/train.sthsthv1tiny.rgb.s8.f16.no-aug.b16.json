@@ -103,7 +103,7 @@
         "package": "kfs",
         "name": "Wrapper",
         "argv": {
-            "cls_num": 174,
+            "cls_num": 4,
             "input_size": [16, 224, 224]
         }
     },

@@ -84,7 +84,7 @@
     },
 
     "train_loader":{
-        "batch_size": 16,
+        "batch_size": 64,
         "num_workers": 64,
         "shuffle": true,
         "pin_memory": true,
@@ -92,7 +92,7 @@
     },
 
     "val_loader":{
-        "batch_size": 16,
+        "batch_size": 64,
         "num_workers": 64,
         "shuffle": false,
         "pin_memory": true,
@@ -103,7 +103,7 @@
         "package": "kfs",
         "name": "Wrapper",
         "argv": {
-            "cls_num": 174,
+            "cls_num": 4,
             "input_size": [16, 224, 224]
         }
     },
@@ -133,18 +133,18 @@
         "epochs": 20,
         "backup": {
             "dir_path": "checkpoints/KFS/sthsthv1",
-            "pth_name": "KFS.sthsthv1tiny.rgb.s8.f16.no-aug.freezetsm.b16.e20"
+            "pth_name": "KFS.sthsthv1tiny.rgb.s8.f16.no-aug.b64.e20"
         },
         "resume": {
             "dir_path": "checkpoints/KFS/sthsthv1",
-            "pth_name": "KFS.sthsthv1tiny.rgb.s8.f16.no-aug.freezetsm.b16.e20"
+            "pth_name": "KFS.sthsthv1tiny.rgb.s8.f16.no-aug.b64.e20"
         },
         "classifier": {
             "pretrained": {
                 "dir_path": "checkpoints/TSM/sthsthv1",
                 "pth_name": "TSM.sthsthv1.rgb.s8.scratch.lr5e-3.e50.best"
             },
-            "freeze": true
+            "freeze": false
         }
     }
 

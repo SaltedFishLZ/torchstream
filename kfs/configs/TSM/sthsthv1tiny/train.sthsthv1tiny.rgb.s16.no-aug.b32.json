@@ -103,7 +103,7 @@
         "package": "kfs",
         "name": "Wrapper",
         "argv": {
-            "cls_num": 174,
+            "cls_num": 4,
             "input_size": [16, 224, 224]
         }
     },
@@ -131,6 +131,14 @@
 
     "train": {
         "epochs": 20,
+        "backup": {
+            "dir_path": "checkpoints/TSM/sthsthv1tiny",
+            "pth_name": "TSM.sthsthv1tiny.rgb.s16.no-aug.b32.e20"
+        },
+        "resume": {
+            "dir_path": "checkpoints/TSM/sthsthv1tiny",
+            "pth_name": "TSM.sthsthv1tiny.rgb.s16.no-aug.b32.e20"
+        },
         "finetune": {
             "dir_path": "checkpoints/TSM/sthsthv1",
             "pth_name": "TSM.sthsthv1.rgb.s8.scratch.lr5e-3.e50.best"

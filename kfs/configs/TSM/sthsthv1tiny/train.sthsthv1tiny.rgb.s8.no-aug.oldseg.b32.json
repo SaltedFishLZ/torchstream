@@ -1,10 +1,9 @@
 {
     "train_transforms": [
         {
-            "package": "transforms",
             "name": "CenterSegment",
             "argv": {
-                "size": 16
+                "size": 8
             }
         },
         {
@@ -35,7 +34,7 @@
 
     "train_dataset": {
         "package": "datasets",
-        "name": "SomethingSomethingV1",
+        "name": "SomethingSomethingV1Tiny",
         "argv": {
             "train": true
         }
@@ -43,10 +42,9 @@
 
     "val_transforms": [
         {
-            "package": "transforms",
             "name": "CenterSegment",
             "argv": {
-                "size": 16
+                "size": 8
             }
         },
         {
@@ -77,7 +75,7 @@
 
     "val_dataset": {
         "package": "datasets",
-        "name": "SomethingSomethingV1Tiny",
+        "name": "SomethingSomethingV1",
         "argv": {
             "train": false
         }
@@ -86,7 +84,7 @@
     "train_loader":{
         "batch_size": 32,
         "num_workers": 64,
-        "shuffle": true,
+        "shuffle": false,
         "pin_memory": true,
         "drop_last": true
     },
@@ -100,11 +98,15 @@
     },
 
     "model": {
-        "package": "kfs",
-        "name": "Wrapper",
+        "package": "torchstream.models",
+        "name": "TSM",
         "argv": {
-            "cls_num": 174,
-            "input_size": [16, 224, 224]
+            "cls_num": 4,
+            "input_size": [8, 224, 224],
+            "base_model": "resnet50",
+            "dropout": 0.8,
+            "partial_bn": true,
+            "use_softmax": false
         }
     },
 
@@ -132,19 +134,16 @@
     "train": {
         "epochs": 20,
         "backup": {
-            "dir_path": "checkpoints/KFS/sthsthv1",
-            "pth_name": "KFS.sthsthv1tiny.rgb.s8.f16.no-aug.freezetsm.b32.e20"
+            "dir_path": "checkpoints/TSM/sthsthv1tiny",
+            "pth_name": "TSM.sthsthv1tiny.rgb.s8.old-seg.no-aug.b32.e20"
         },
         "resume": {
-            "dir_path": "checkpoints/KFS/sthsthv1",
-            "pth_name": "KFS.sthsthv1tiny.rgb.s8.f16.no-aug.freezetsm.b32.e20"
+            "dir_path": "checkpoints/TSM/sthsthv1tiny",
+            "pth_name": "TSM.sthsthv1tiny.rgb.s8.old-seg.no-aug.b32.e20"
         },
-        "classifier": {
-            "pretrained": {
-                "dir_path": "checkpoints/TSM/sthsthv1",
-                "pth_name": "TSM.sthsthv1.rgb.s8.scratch.lr5e-3.e50.best"
-            },
-            "freeze": true
+        "finetune": {
+            "dir_path": "checkpoints/TSM/sthsthv1",
+            "pth_name": "TSM.sthsthv1.rgb.s8.scratch.lr5e-3.e50.best"
         }
     }
 

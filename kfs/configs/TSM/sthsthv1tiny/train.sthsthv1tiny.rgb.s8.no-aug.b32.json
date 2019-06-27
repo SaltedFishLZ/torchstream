@@ -1,6 +1,7 @@
 {
     "train_transforms": [
         {
+            "package": "transforms",
             "name": "CenterSegment",
             "argv": {
                 "size": 8
@@ -42,6 +43,7 @@
 
     "val_transforms": [
         {
+            "package": "transforms",
             "name": "CenterSegment",
             "argv": {
                 "size": 8
@@ -101,7 +103,7 @@
         "package": "torchstream.models",
         "name": "TSM",
         "argv": {
-            "cls_num": 174,
+            "cls_num": 4,
             "input_size": [8, 224, 224],
             "base_model": "resnet50",
             "dropout": 0.8,
@@ -133,6 +135,14 @@
 
     "train": {
         "epochs": 20,
+        "backup": {
+            "dir_path": "checkpoints/TSM/sthsthv1tiny",
+            "pth_name": "TSM.sthsthv1tiny.rgb.s8.no-aug.b32.e20"
+        },
+        "resume": {
+            "dir_path": "checkpoints/TSM/sthsthv1tiny",
+            "pth_name": "TSM.sthsthv1tiny.rgb.s8.no-aug.b32.e20"
+        },
         "finetune": {
             "dir_path": "checkpoints/TSM/sthsthv1",
             "pth_name": "TSM.sthsthv1.rgb.s8.scratch.lr5e-3.e50.best"
