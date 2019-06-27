@@ -75,7 +75,7 @@
 
     "val_dataset": {
         "package": "datasets",
-        "name": "SomethingSomethingV1",
+        "name": "SomethingSomethingV1Tiny",
         "argv": {
             "train": false
         }

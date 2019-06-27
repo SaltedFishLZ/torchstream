@@ -163,7 +163,7 @@ def main(args):
 
     import transforms
 
-    test_transforms.append(transforms.CenterSegment(size=24))
+    test_transforms.append(transforms.CenterSegment(size=16))
     test_transforms.append(transforms.RandomFrameSampler(size=8, output_index=True, output_length=True))
     test_transforms.append(
             transforms.Fork(transforms=[
@@ -208,7 +208,6 @@ def main(args):
 
     criterion = cfgs.config2criterion(configs["criterion"])
     criterion.to(device)
-
 
     result = test_mc_with_trace(device, test_loader, model, criterion, args.chances)
     with open(args.output, "wb") as fout:
