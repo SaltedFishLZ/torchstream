@@ -141,10 +141,10 @@
         },
         "classifier": {
             "pretrained": {
-                "dir_path": "checkpoints/TSM/sthsthv1",
-                "pth_name": "TSM.sthsthv1.rgb.s8.scratch.lr5e-3.e50.best"
+                "dir_path": "checkpoints/TSM/sthsthv1tiny",
+                "pth_name": "TSM.sthsthv1tiny.rgb.s8.no-aug.b32.e20.best"
             },
-            "freeze": true
+            "freeze": false
         }
     }
 
