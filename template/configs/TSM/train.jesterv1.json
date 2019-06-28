@@ -14,9 +14,6 @@
             }
         },
         {
-            "name": "RandomHorizontalFlip"
-        },
-        {
             "package": "torchstream.transforms",
             "name": "ToTensor"
         },
@@ -80,7 +77,7 @@
 
     "train_loader":{
         "batch_size": 64,
-        "num_workers": 64,
+        "num_workers": 128,
         "shuffle": true,
         "pin_memory": true,
         "drop_last": true
