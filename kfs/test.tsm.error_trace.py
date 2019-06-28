@@ -1,6 +1,8 @@
 import os
+import sys
 import time
 import json
+import pickle
 import shutil
 import argparse
 
@@ -26,7 +28,7 @@ def test(device, loader, model, criterion,
     datapoint_num = 0
     # top1 error datapoint list
     top1_error_datapoints = []
-    # top5 error datapoint list    
+    # top5 error datapoint list
     top5_error_datapoints = []
 
     batch_time = utils.Meter()
@@ -78,10 +80,10 @@ def test(device, loader, model, criterion,
             end = time.time()
 
             if all_predicts is None:
-                all_predicts = predict
+                all_predicts = predict[0]
                 all_targets = target
             else:
-                all_predicts = torch.cat((all_predicts, predict))
+                all_predicts = torch.cat((all_predicts, predict[0]))
                 all_targets = torch.cat((all_targets, target))
 
             if i % log_interval == 0:
@@ -105,11 +107,22 @@ def test(device, loader, model, criterion,
     # print("Top-5 Error List")
     # print(top5_error_datapoints)
 
+    all_predicts = all_predicts.cpu()
+    all_targets = all_targets.cpu()
 
-    all_predicts = list(np.array(all_predicts[0]))
-    all_targets = list(np.array(all_targets))
-    cm = utils.confusion_matrix(all_targets, all_targets)
-    utils.plot_confusion_matrix(cm)
+    all_predicts = np.array(all_predicts)
+    all_targets = np.array(all_targets)
+    # print(all_predicts == all_targets)
+
+    cm = utils.confusion_matrix(all_predicts, all_targets, normalize=True)
+
+    # np.set_printoptions(threshold=sys.maxsize)
+    # print(cm)
+
+    with open("confusion_matrix.pkl", "wb") as f:
+        pickle.dump(cm, f)
+    # utils.plot_confusion_matrix(cm)
+    # plt.show()
 
     return top1_error_datapoints
 
@@ -165,11 +178,11 @@ def main(args):
 
     top5_error_datapoints = test(device, test_loader, model, criterion)
     lens = []
-    print("Top-5 Error Num", len(top5_error_datapoints))
-    for _i in top5_error_datapoints:
-        print(test_dataset.datapoints[_i])
-        print("Video Shape", np.array(test_dataset.samples[_i]).shape)
-        # lens.append(np.array(test_dataset.samples[_i]).shape[0])
+    # print("Top-5 Error Num", len(top5_error_datapoints))
+    # for _i in top5_error_datapoints:
+    #     print(test_dataset.datapoints[_i])
+    #     print("Video Shape", np.array(test_dataset.samples[_i]).shape)
+    #     # lens.append(np.array(test_dataset.samples[_i]).shape[0])
 
     # nphist = np.histogram(lens, bins=20)
     # print("NumPy Hist")

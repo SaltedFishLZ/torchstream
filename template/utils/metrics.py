@@ -1,5 +1,5 @@
 import torch
-import sklearn
+import sklearn.metrics
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -110,7 +110,7 @@ def confusion_matrix(predicts, targets, normalize=False):
     """
     cm = sklearn.metrics.confusion_matrix(targets, predicts)
     if normalize:
-        cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
+        cm = cm.astype("float") / cm.sum(axis=1)[:, np.newaxis]
     return cm
 
 def plot_confusion_matrix(cm, labels=None, inverse_label=False,

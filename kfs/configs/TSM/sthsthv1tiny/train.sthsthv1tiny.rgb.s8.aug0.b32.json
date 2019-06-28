@@ -137,11 +137,11 @@
         "epochs": 20,
         "backup": {
             "dir_path": "checkpoints/TSM/sthsthv1tiny",
-            "pth_name": "TSM.sthsthv1tiny.rgb.s8.no-aug.b32.e20"
+            "pth_name": "TSM.sthsthv1tiny.rgb.s8.aug0.b32.e20"
         },
         "resume": {
             "dir_path": "checkpoints/TSM/sthsthv1tiny",
-            "pth_name": "TSM.sthsthv1tiny.rgb.s8.no-aug.b32.e20"
+            "pth_name": "TSM.sthsthv1tiny.rgb.s8.aug0.b32.e20"
         },
         "finetune": {
             "dir_path": "checkpoints/TSM/sthsthv1",
