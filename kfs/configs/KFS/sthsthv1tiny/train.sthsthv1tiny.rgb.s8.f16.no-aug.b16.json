@@ -132,11 +132,11 @@
     "train": {
         "epochs": 20,
         "backup": {
-            "dir_path": "checkpoints/KFS/sthsthv1",
+            "dir_path": "checkpoints/KFS/sthsthv1tiny",
             "pth_name": "KFS.sthsthv1tiny.rgb.s8.f16.no-aug.b16.e20"
         },
         "resume": {
-            "dir_path": "checkpoints/KFS/sthsthv1",
+            "dir_path": "checkpoints/KFS/sthsthv1tiny",
             "pth_name": "KFS.sthsthv1tiny.rgb.s8.f16.no-aug.b16.e20"
         },
         "classifier": {
