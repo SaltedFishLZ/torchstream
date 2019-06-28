@@ -85,7 +85,7 @@ class VideoDataset(torchdata.Dataset):
 
         p = mp.Pool(32)
         if self.seq:
-            self.samples = p.map(_to_imgseq, self.datapoints)
+            self.samples = p.map(_to_vidarr, self.datapoints)
         else:
             self.samples = p.map(_to_vidarr, self.datapoints)
 
@@ -138,9 +138,9 @@ def test(dataset, use_tqdm=True):
             "ext": "jpg",
         }
 
-        if hasattr(metaset, "AVI_DATA_PATH"):
-            kwargs["root"] = metaset.AVI_DATA_PATH
-            kwargs["ext"] = "avi"
+        # if hasattr(metaset, "AVI_DATA_PATH"):
+        #     kwargs["root"] = metaset.AVI_DATA_PATH
+        #     kwargs["ext"] = "avi"
 
         if hasattr(metaset, "__ANNOTATIONS__"):
             kwargs["annots"] = metaset.__ANNOTATIONS__

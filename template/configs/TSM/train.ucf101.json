@@ -128,12 +128,8 @@
     },
 
     "train": {
-        "epochs": 100,
+        "epochs": 50,
         "backup": {
-            "dir_path": "checkpoints/TSM/ucf101",
-            "pth_name": "TSM_ucf101_rgb_s8_e100"
-        },
-        "resume": {
             "dir_path": "checkpoints/TSM/ucf101",
             "pth_name": "TSM_ucf101_rgb_s8_e50"
         },

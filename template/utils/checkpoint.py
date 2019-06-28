@@ -20,8 +20,5 @@ def load_checkpoint(dir_path="checkpoints", pth_name="model",
     ckpt_path = os.path.realpath(ckpt_path)
     ckpt_path = os.path.expandvars(ckpt_path)
     ckpt_path = os.path.expanduser(ckpt_path)
-    if os.path.exists(ckpt_path):
-        checkpoint = torch.load(ckpt_path)
-        return checkpoint
-    else:
-        return None
+    checkpoint = torch.load(ckpt_path)
+    return checkpoint

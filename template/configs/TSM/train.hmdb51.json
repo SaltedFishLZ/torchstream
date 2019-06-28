@@ -128,14 +128,14 @@
     },
 
     "train": {
-        "epochs": 100,
+        "epochs": 50,
         "backup": {
             "dir_path": "checkpoints/TSM/hmdb51",
-            "pth_name": "TSM_hmdb51_rgb_s8_e100"
-        },
-        "resume": {
-            "dir_path": "checkpoints/TSM/hmdb51/",
             "pth_name": "TSM_hmdb51_rgb_s8_e50"
+        },
+        "finetune": {
+            "dir_path": "checkpoints/TSM/tonylin/kinetics/",
+            "pth_name": "TSM_kinetics_RGB_resnet50_shift8_blockres_avg_segment8_e50"
         }
     }
 

@@ -54,8 +54,6 @@ def varray_rss(varray, means=None, **kwargs):
 
     (_t, _h, _w) = varray.shape[0:3]
     nums = _t * _h * _w
-    # # debug
-    # print(means)
     residuals = varray - np.tile(means, (_t, _h, _w, 1))
     residual_squares = np.square(residuals)
 
@@ -83,7 +81,7 @@ def sample_rss(sample, **kwargs):
         varray = np.array(ImageSequence(sample, **kwargs))
     else:
         varray = np.array(VideoArray(sample, **kwargs))
-    return varray_rss(varray, **kwargs)
+    return varray_sum(varray, **kwargs)
 
 
 # ---------------------------------------------------------------- #

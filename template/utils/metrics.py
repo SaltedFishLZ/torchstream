@@ -1,7 +1,4 @@
 import torch
-import sklearn.metrics
-import numpy as np
-import matplotlib.pyplot as plt
 
 def output2pred(output, maxk):
     """
@@ -11,7 +8,7 @@ def output2pred(output, maxk):
         return: (LongTensor): [maxk][N], prediction tensor
     """
     # pred [N][MaxK] -> [MaxK][N]
-    _, pred = output.data.topk(maxk, dim=1)
+    _, pred = output.topk(maxk, dim=1)
     pred = pred.permute(1, 0)
     return pred
 
@@ -24,8 +21,8 @@ def classify_corrects(pred, target):
         return (ByteTensor): [K][N] bit mask, indicates topk hits or not
     """
     maxk = pred.size(0)
-    # target [N] -> [1][N] -> [MaxK][N]
-    corrects = pred.eq(target.unsqueeze(dim=0).expand_as(pred))
+    # target [N] -> [1][N]
+    corrects = pred.eq(target.view(1, -1).expand_as(pred))
     for k in range(1, maxk):
         corrects[k] = corrects[k - 1] | corrects[k]
     return corrects
@@ -50,12 +47,12 @@ class ClassifyAccuracy(object):
         N, M = output.size()
         assert (N,) == tuple(target.size()), ValueError("Incorrect target shape")
 
-        pred = output2pred(output.detach(), self.maxk)
+        pred = output2pred(output, self.maxk)
         corrects = classify_corrects(pred, target)
 
         res = {}
         for k in self.topk:
-            acc_topk = float(corrects[k-1].float().sum().item()) / N * 100.0
+            acc_topk = float(corrects[k-1].sum()) / N * 100.0
             res[k] = acc_topk
         return res
 
@@ -87,7 +84,7 @@ class MultiChanceClassifyAccuracy(object):
         N, M = output.size()
         assert (N,) == tuple(target.size()), ValueError("Incorrect target shape")
 
-        pred = output2pred(output.detach(), self.maxk)
+        pred = output2pred(output, self.maxk)
         corrects = classify_corrects(pred, target)
 
         if self.corrects is not None:
@@ -97,59 +94,6 @@ class MultiChanceClassifyAccuracy(object):
 
         res = {}
         for k in self.topk:
-            acc_topk = float(corrects[k-1].float().sum().item()) / N * 100.0
+            acc_topk = float(corrects[k-1].sum()) / N * 100.0
             res[k] = acc_topk
         return res
-
-def confusion_matrix(predicts, targets, normalize=False):
-    """
-    Args:
-        predicts: prediction
-        targets: ground truth
-        normalized each entry to [0, 1]
-    """
-    cm = sklearn.metrics.confusion_matrix(targets, predicts)
-    if normalize:
-        cm = cm.astype("float") / cm.sum(axis=1)[:, np.newaxis]
-    return cm
-
-def plot_confusion_matrix(cm, labels=None, inverse_label=False,
-                          title="Confusion Matrix",
-                          cmap=plt.cm.Blues):
-    """
-    """
-    classes = list(range(cm.shape[0]))
-    if labels is not None:
-        if inverse_label:
-            d = {v: k for k, v in labels.items()}
-            labels = d
-        classes = [labels[i] for i in classes]
-
-    fig, ax = plt.subplots()
-    im = ax.imshow(cm, interpolation='nearest', cmap=cmap)
-    ax.figure.colorbar(im, ax=ax)
-    # We want to show all ticks...
-    ax.set(xticks=np.arange(cm.shape[1]),
-           yticks=np.arange(cm.shape[0]),
-           # ... and label them with the respective list entries
-           xticklabels=classes, yticklabels=classes,
-           title=title,
-           ylabel='True label',
-           xlabel='Predicted label')
-
-    # Rotate the tick labels and set their alignment.
-    plt.setp(ax.get_xticklabels(), rotation=45, ha="right",
-             rotation_mode="anchor")
-
-    # Loop over data dimensions and create text annotations.
-    if cm.dtype == np.float:
-        fmt = ".2f"
-    else:
-        fmt = "d"
-    thresh = cm.max() / 2.
-    for i in range(cm.shape[0]):
-        for j in range(cm.shape[1]):
-            ax.text(j, i, format(cm[i, j], fmt),
-                    ha="center", va="center",
-                    color="white" if cm[i, j] > thresh else "black")
-    fig.tight_layout()

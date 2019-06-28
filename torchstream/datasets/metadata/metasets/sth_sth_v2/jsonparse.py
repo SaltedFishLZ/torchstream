@@ -9,17 +9,17 @@ DIR_PATH = os.path.dirname(FILE_PATH)
 
 fname = os.path.join(DIR_PATH, "something-something-v2-train.json")
 TRAINSET_JLIST = []
-with open(fname, "r", encoding="utf-8") as fin:
+with open(fname, "r") as fin:
     TRAINSET_JLIST = json.load(fin)
 
 fname = os.path.join(DIR_PATH, "something-something-v2-validation.json")
 VALSET_JLIST = []
-with open(fname, "r", encoding="utf-8") as fin:
+with open(fname, "r") as fin:
     VALSET_JLIST = json.load(fin)
 
 fname = os.path.join(DIR_PATH, "something-something-v2-test.json")
 TESTSET_JLIST = []
-with open(fname, "r", encoding="utf-8") as fin:
+with open(fname, "r") as fin:
     TESTSET_JLIST = json.load(fin)
 
 
