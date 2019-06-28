@@ -11,17 +11,16 @@ import cfgs
 import utils
 import kfs
 
-test_log_str = "Testing:[{:4d}/{:4d}]  " + \
-               "BatchTime:{batch_time.val:6.2f}({batch_time.avg:6.2f}),  " + \
-               "DataTime:{data_time.val:6.2f}({data_time.avg:6.2f}),  " + \
-               "Loss:{loss_meter.val:7.3f}({loss_meter.avg:7.3f}),  " + \
-               "Prec@1:{top1_meter.val:7.3f}({top1_meter.avg:7.3f}),  " + \
-               "Prec@5:{top5_meter.val:7.3f}({top5_meter.avg:7.3f})"
 
-def test(device, loader, model, criterion, 
-         log_str=test_log_str, log_interval=20, **kwargs):
-    from train import validate
-    validate(device, loader, model, criterion, log_str, log_interval, **kwargs)
+def feature_extract(device, loader, model, **kwargs):
+
+    with torch.no_grad():
+        for i, (input, target) in enumerate(loader):
+            input = input.to(device)
+            target = target.to(device)
+            output = model(input)
+            output.output.cpu()
+            print(output.size())
 
 
 def main(args):
@@ -70,10 +69,12 @@ def main(args):
     model_state_dict = checkpoint["model_state_dict"]
     model.load_state_dict(model_state_dict)
 
-    criterion = cfgs.config2criterion(configs["criterion"])
-    criterion.to(device)
+    ## hack it
+    model.module.base_model.fc = torchstream.ops.Identity()
 
-    test(device, test_loader, model, criterion)
+
+
+    feature_extract(device, test_loader, model)
 
 
 if __name__ == "__main__":

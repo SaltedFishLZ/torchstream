@@ -20,7 +20,7 @@ test_log_str = "Testing:[{:4d}/{:4d}]  " + \
 
 def test(device, loader, model, criterion, 
          log_str=test_log_str, log_interval=20, **kwargs):
-    from train import validate
+    from train_kfs import validate
     validate(device, loader, model, criterion, log_str, log_interval, **kwargs)
 
 
