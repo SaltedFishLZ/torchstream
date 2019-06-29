@@ -1,6 +1,7 @@
 import os
 import time
 import json
+import pickle
 import shutil
 import argparse
 
@@ -13,15 +14,26 @@ import kfs
 
 
 def feature_extract(device, loader, model, **kwargs):
-
+    outputs = None
     with torch.no_grad():
         for i, (input, target) in enumerate(loader):
             input = input.to(device)
             target = target.to(device)
             output = model(input)
-            output.output.cpu()
-            print(output.size())
 
+            output = output.cpu()
+
+            if outputs is None:
+                outputs = output
+            else:
+                outputs = torch.cat((outputs, output))
+
+            if i % 20 == 0:
+                print("[{}]/[{}], {}".format(i, len(loader), tuple(output.size())))
+
+    torch.save(outputs, "sthsthv1.features")
+    features = torch.load("sthsthv1.features")
+    print(features.size())
 
 def main(args):
 
@@ -71,7 +83,7 @@ def main(args):
 
     ## hack it
     model.module.base_model.fc = torchstream.ops.Identity()
-
+    model.module.consensus = torchstream.ops.Identity()
 
 
     feature_extract(device, test_loader, model)

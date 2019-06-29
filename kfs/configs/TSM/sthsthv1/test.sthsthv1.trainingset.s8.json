@@ -5,23 +5,23 @@
             "name": "CenterSegment",
             "argv": {
                 "size": 8
-            }      
+            }
         },
         {
             "name": "Resize",
             "argv": {
                 "size": 256
-            }      
+            }
         },
         {
             "name": "CenterCrop",
             "argv": {
                 "size": [224, 224]
-            }      
+            }
         },
         {
             "package": "torchstream.transforms",
-            "name": "ToTensor"  
+            "name": "ToTensor"
         },
         {
             "package": "torchstream.transforms",
@@ -36,7 +36,7 @@
     "test_dataset": {
         "name": "SomethingSomethingV1",
         "argv": {
-            "train": false
+            "train": true
         }
     },
 
