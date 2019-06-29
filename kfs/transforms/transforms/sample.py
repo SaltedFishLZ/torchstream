@@ -40,7 +40,7 @@ class FrameSampler(object):
             if self.output_index:
                 ret.append(idx)
             if self.output_length:
-                ret.append(vid.shape[0])
+                ret.append([vid.shape[0]])
             return ret
 
 
