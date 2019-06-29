@@ -59,6 +59,7 @@ def test_mc_with_trace(device, loader, model, criterion, chances=20,
             all_index = None
             all_length = None
             all_correct = None
+            all_loss = None
 
             end = time.time()
             for i, ((input, index, length), target) in enumerate(loader):
@@ -101,12 +102,14 @@ def test_mc_with_trace(device, loader, model, criterion, chances=20,
                     all_index = index
                     all_length = length
                     all_correct = correct
+                    all_loss = loss
                 else:
                     all_output = torch.cat((all_output, output))
                     all_target = torch.cat((all_target, target))
                     all_index = torch.cat((all_index, index))
                     all_length = torch.cat((all_length, length))
                     all_correct = torch.cat((all_correct, correct))
+                    all_loss = torch.cat((all_loss, loss))
 
             # debug
             # print(all_index.size())
@@ -121,6 +124,9 @@ def test_mc_with_trace(device, loader, model, criterion, chances=20,
             f.close()
             f = open(os.path.join(trace_dir, "correct.pkl"), "wb")
             pickle.dump(all_correct, f)
+            f.close()
+            f = open(os.path.join(trace_dir, "loss.pkl"), "wb")
+            pickle.dump(all_loss, f)
             f.close()
 
             print("This Chance:\n" + \
