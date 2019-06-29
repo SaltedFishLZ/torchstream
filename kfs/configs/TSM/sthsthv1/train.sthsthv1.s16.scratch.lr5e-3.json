@@ -136,8 +136,8 @@
             "pth_name": "TSM.sthsthv1.rgb.s16.scratch.lr5e-3.e50"
         },
         "finetune": {
-            "dir_path": "../template/checkpoints/TSM/batch64/something",
-            "pth_name": "TSM_something_RGB_resnet50_shift8_blockres_avg_segment8_e50.best"
+            "dir_path": "../template/checkpoints/TSM/tonylin/kinetics",
+            "pth_name": "TSM_kinetics_RGB_resnet50_shift8_blockres_avg_segment16_e50"
         }
     }
 
