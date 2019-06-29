@@ -59,12 +59,15 @@ def test_mc_with_trace(device, loader, model, criterion, chances=20,
             all_index = None
             all_length = None
             all_correct = None
+            all_loss = None
 
             end = time.time()
             for i, ((input, index, length), target) in enumerate(loader):
 
                 input = input.to(device)
                 target = target.to(device)
+
+                # print(length.size())
 
                 ## measure extra data loading time
                 data_time.update(time.time() - end)
@@ -76,7 +79,7 @@ def test_mc_with_trace(device, loader, model, criterion, chances=20,
                 prec1 = accuracy[1]
                 prec5 = accuracy[5]
 
-                loss_meter.update(loss, input.size(0))
+                loss_meter.update(loss.mean(), input.size(0))
                 top1_meter.update(prec1, input.size(0))
                 top5_meter.update(prec5, input.size(0))
 
@@ -101,12 +104,14 @@ def test_mc_with_trace(device, loader, model, criterion, chances=20,
                     all_index = index
                     all_length = length
                     all_correct = correct
+                    all_loss = loss
                 else:
                     all_output = torch.cat((all_output, output))
                     all_target = torch.cat((all_target, target))
                     all_index = torch.cat((all_index, index))
                     all_length = torch.cat((all_length, length))
                     all_correct = torch.cat((all_correct, correct))
+                    all_loss = torch.cat((all_loss, loss))
 
             # debug
             # print(all_index.size())
@@ -121,6 +126,9 @@ def test_mc_with_trace(device, loader, model, criterion, chances=20,
             f.close()
             f = open(os.path.join(trace_dir, "correct.pkl"), "wb")
             pickle.dump(all_correct, f)
+            f.close()
+            f = open(os.path.join(trace_dir, "loss.pkl"), "wb")
+            pickle.dump(all_loss, f)
             f.close()
 
             print("This Chance:\n" + \
@@ -167,20 +175,20 @@ def main(args):
     test_transforms.append(transforms.RandomFrameSampler(size=8, output_index=True, output_length=True))
     test_transforms.append(
             transforms.Fork(transforms=[
-            torchstream.transforms.Compose(
-                [
-                    torchstream.transforms.Resize(size=256),
-                    torchstream.transforms.CenterCrop(size=[224, 224]),
-                    torchstream.transforms.ToTensor(),
-                    torchstream.transforms.Normalize(
-                        mean=[0.485, 0.456, 0.406],
-                        std=[0.229, 0.224, 0.225]
-                    )
-                ]
-            ),
-            lambda x: torch.Tensor(x),
-            lambda x: torch.Tensor(x)
-        ])
+                torchstream.transforms.Compose(
+                    [
+                        torchstream.transforms.Resize(size=256),
+                        torchstream.transforms.CenterCrop(size=[224, 224]),
+                        torchstream.transforms.ToTensor(),
+                        torchstream.transforms.Normalize(
+                            mean=[0.485, 0.456, 0.406],
+                            std=[0.229, 0.224, 0.225]
+                        )
+                    ]
+                ),
+                lambda x: torch.Tensor(x),
+                lambda y: torch.Tensor(y)
+            ])
     )
 
 
@@ -206,7 +214,8 @@ def main(args):
     model.load_state_dict(model_state_dict)
     print("Model Best Prec1: ", checkpoint["best_prec1"])
 
-    criterion = cfgs.config2criterion(configs["criterion"])
+    # criterion = cfgs.config2criterion(configs["criterion"])
+    criterion = torch.nn.CrossEntropyLoss(reduction="none")
     criterion.to(device)
 
     result = test_mc_with_trace(device, test_loader, model, criterion, args.chances)
