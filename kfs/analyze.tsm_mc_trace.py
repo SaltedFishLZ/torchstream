@@ -45,14 +45,16 @@ def main(trace_dir):
             if corrects[sample_id][i].item():
                 good_indices.append(indices[sample_id][i])
                 # print(indices[sample_id][i])
-        if flag and (len(good_indices) > 10 and len(good_indices) < 20):
-            for idx in good_indices:
-                print(idx)
-            flag = False
+        # if flag and (len(good_indices) > 10 and len(good_indices) < 20):
+        #     for idx in good_indices:
+        #         print(idx)
+        #      flag = False
         good_indices_num.append(len(good_indices))
-
+    
+    print("Done")
     plt.hist(good_indices_num, bins=25)
-    plt.show()
+    # plt.show()
+    plt.savefig("mc-analysis.png", bbox_inches="tight")
 
 if __name__ == "__main__":
     if len(sys.argv) == 2:
