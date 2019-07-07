@@ -67,21 +67,21 @@ class FrameQualityDataset(data.Dataset):
                     self.corrects = torch.cat((self.corrects, correct), dim=1)
 
     def __len__(self):
-        return len(len(self.video_dataset) * self.chances)
+        return len(self.video_dataset) * self.chances
 
     def __getitem__(self, idx):
         """
             [video][chance]
             (index, blob, cid)
         """
-        video_id = idx / self.chances
+        video_id = idx // self.chances
         chance_id = idx % self.chances
 
         blob, _ = self.video_dataset[video_id]
 
         index = self.indices[video_id][chance_id]
         index_onehot = torch.zeros(self.num_frames)
-        index_onehot.scatter_(0, index, 1)
+        index_onehot.scatter_(0, index.long(), 1)
 
         cid = self.corrects[video_id][chance_id]
 
@@ -97,4 +97,4 @@ if __name__ == "__main__":
 
     import tqdm
     for i in tqdm.tqdm(range(len(dataset))):
-        blob. index, cid = dataset[_i]
+        blob, index, cid = dataset[i]
