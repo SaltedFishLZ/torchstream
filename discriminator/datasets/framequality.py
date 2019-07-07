@@ -66,11 +66,18 @@ class FrameQualityDataset(data.Dataset):
         # filter samples
         selected_video_indices = []
         for i in range(len(self.video_dataset)):
-            correct_num = self.corrects[i].sum()
+            correct_num = int(self.corrects[i].sum())
+            # print(correct_num)
             correct_ratio = correct_num / self.chances
             if (correct_ratio > 0.3) and (correct_ratio < 0.9):
                 selected_video_indices.append(i)
-        print(len(selected_video_indices))
+        # print(len(selected_video_indices))
+        new_datapoints = [self.video_dataset.datapoints[_i] for _i in selected_video_indices]
+        self.video_dataset.datapoints = new_datapoints
+        new_samples = [self.video_dataset.samples[_i] for _i in selected_video_indices]
+        self.video_dataset.samples = new_samples
+        self.corrects = self.corrects[selected_video_indices]
+        self.indices = self.indices[selected_video_indices]
 
     def __len__(self):
         return len(self.video_dataset) * self.chances
