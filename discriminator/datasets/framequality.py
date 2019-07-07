@@ -69,7 +69,7 @@ class FrameQualityDataset(data.Dataset):
             correct_num = int(self.corrects[i].sum())
             # print(correct_num)
             correct_ratio = correct_num / self.chances
-            if (correct_ratio > 0.3) and (correct_ratio < 0.9):
+            if (correct_ratio > 0.5) and (correct_ratio < 0.9):
                 selected_video_indices.append(i)
         # print(len(selected_video_indices))
         new_datapoints = [self.video_dataset.datapoints[_i] for _i in selected_video_indices]
