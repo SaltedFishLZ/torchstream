@@ -50,15 +50,17 @@ class FrameQualityDataset(data.Dataset):
 
             with open(index_file_path, "rb") as f:
                 index = pickle.load(f)
+                index.unsqueeze_(dim=1)
                 if self.indices is None:
-                    self.indices = index.unsqueeze(dim=1)
+                    self.indices = index
                 else:
                     self.indices = torch.cat((self.indices, index), dim=1)
 
             with open(correct_file_path, "rb") as f:
                 correct = pickle.load(f)
+                correct.unsqueeze_(dim=1)
                 if self.corrects is None:
-                    self.corrects = correct.unsqueeze(dim=1)
+                    self.corrects = correct
                 else:
                     self.corrects = torch.cat((self.corrects, correct), dim=1)
 
@@ -78,6 +80,6 @@ class FrameQualityDataset(data.Dataset):
 
 
 if __name__ == "__main__":
-    dataset = FrameQualityDataset(trace_root="mc-traces/s8.f16.train")
+    dataset = FrameQualityDataset(trace_root="../kfs/mc-traces/s8.f16.train")
     print(dataset.indices.size())
     print(dataset.corrects.size())

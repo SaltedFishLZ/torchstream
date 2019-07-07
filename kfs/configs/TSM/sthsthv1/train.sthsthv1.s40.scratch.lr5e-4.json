@@ -85,8 +85,8 @@
     },
 
     "val_loader":{
-        "batch_size": 64,
-        "num_workers": 64,
+        "batch_size": 32,
+        "num_workers": 32,
         "shuffle": false,
         "pin_memory": true,
         "drop_last": false
@@ -129,11 +129,11 @@
         "epochs": 50,
         "backup": {
             "dir_path": "checkpoints/TSM/sthsthv1",
-            "pth_name": "TSM.sthsthv1.rgb.s40.scratch.lr5e-3.e50"
+            "pth_name": "TSM.sthsthv1.rgb.s40.scratch.lr5e-4.e50"
         },
         "resume": {
             "dir_path": "checkpoints/TSM/sthsthv1",
-            "pth_name": "TSM.sthsthv1.rgb.s40.scratch.lr5e-3.e50"
+            "pth_name": "TSM.sthsthv1.rgb.s40.scratch.lr5e-4.e50"
         },
         "finetune": {
             "dir_path": "../template/checkpoints/TSM/tonylin/kinetics",
