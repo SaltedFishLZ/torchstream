@@ -1,15 +1,8 @@
 """
 """
 import os
-import sys
-import copy
 import pickle
-import logging
-import hashlib
-import multiprocessing as mp
 
-import tqdm
-import numpy as np
 import torch
 import torch.utils.data as data
 
@@ -84,3 +77,7 @@ class FrameQualityDataset(data.Dataset):
         return (blob, cid)
 
 
+if __name__ == "__main__":
+    dataset = FrameQualityDataset(trace_root="mc-traces/s8.f16.train")
+    print(dataset.indices.size())
+    print(dataset.corrects.size())
