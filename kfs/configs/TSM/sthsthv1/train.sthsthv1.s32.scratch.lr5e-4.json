@@ -4,7 +4,7 @@
             "package": "transforms",
             "name": "RandomSegment",
             "argv": {
-                "size": 24
+                "size": 32
             }
         },
         {
@@ -40,7 +40,7 @@
             "package": "transforms",
             "name": "CenterSegment",
             "argv": {
-                "size": 24
+                "size": 32
             }
         },
         {
@@ -57,7 +57,7 @@
         },
         {
             "package": "torchstream.transforms",
-            "name": "ToTensor"  
+            "name": "ToTensor"
         },
         {
             "package": "torchstream.transforms",
@@ -97,7 +97,7 @@
         "name": "TSM",
         "argv": {
             "cls_num": 174,
-            "input_size": [24, 224, 224],
+            "input_size": [32, 224, 224],
             "base_model": "resnet50",
             "dropout": 0.8,
             "partial_bn": true,
@@ -113,7 +113,7 @@
         "name": "SGD",
         "argv": {
             "params": "model_specified",
-            "lr": 0.005,
+            "lr": 0.0005,
             "momentum": 0.9
         }
     },
@@ -129,11 +129,11 @@
         "epochs": 50,
         "backup": {
             "dir_path": "checkpoints/TSM/sthsthv1",
-            "pth_name": "TSM.sthsthv1.rgb.s24.scratch.lr5e-3.e50"
+            "pth_name": "TSM.sthsthv1.rgb.s32.scratch.lr5e-4.e50"
         },
         "resume": {
             "dir_path": "checkpoints/TSM/sthsthv1",
-            "pth_name": "TSM.sthsthv1.rgb.s24.scratch.lr5e-3.e50"
+            "pth_name": "TSM.sthsthv1.rgb.s32.scratch.lr5e-4.e50"
         },
         "finetune": {
             "dir_path": "../template/checkpoints/TSM/tonylin/kinetics",
