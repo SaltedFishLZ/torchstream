@@ -32,6 +32,8 @@ class FrameQualityDataset(data.Dataset):
 
         self.trace_root = trace_root
         self.chances = chances
+        self.num_snippets = num_snippets
+        self.num_frames = num_frames
 
         self.video_dataset = SomethingSomethingV1(
             train=train,
@@ -72,14 +74,27 @@ class FrameQualityDataset(data.Dataset):
             [video][chance]
             (index, blob, cid)
         """
-        blob, cid = self.video_dataset[idx]
+        video_id = idx / self.chances
+        chance_id = idx % self.chances
 
-        # return (a [T][H][W][C] ndarray, class id)
-        # ndarray may need to be converted to [T][C][H][W] format in PyTorch
-        return (blob, cid)
+        blob, _ = self.video_dataset[video_id]
+
+        index = self.indices[video_id][chance_id]
+        index_onehot = torch.zeros(self.num_frames)
+        index_onehot.scatter_(0, index, 1)
+
+        cid = self.corrects[video_id][chance_id]
+
+        return (blob, index_onehot, cid)
 
 
 if __name__ == "__main__":
     dataset = FrameQualityDataset(trace_root="../kfs/mc-traces/s8.f16.train")
     print(dataset.indices.size())
     print(dataset.corrects.size())
+
+    print(len(dataset))
+
+    import tqdm
+    for i in tqdm.tqdm(range(len(dataset))):
+        blob. index, cid = dataset[_i]
