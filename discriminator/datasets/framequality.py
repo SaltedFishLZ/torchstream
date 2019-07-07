@@ -109,5 +109,6 @@ if __name__ == "__main__":
     print(len(dataset))
 
     import tqdm
-    for i in tqdm.tqdm(range(len(dataset))):
+    for i in (range(len(dataset))):
         blob, index, cid = dataset[i]
+        print(blob.size(), index, cid)

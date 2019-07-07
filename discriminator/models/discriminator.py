@@ -31,10 +31,12 @@ class FrameQualityDiscriminator(nn.Module):
         num_frames = self.video_feature_extractor.input_size[0]
         num_video_features = num_image_features * num_frames
 
+        # replace the fc layers with Indentity module
         self.video_feature_extractor.base_model.fc = Identity()
         self.video_feature_extractor.consensus = Identity()
 
-        num_index_features = num_frames * num_video_features
+        # balance the feature number
+        num_index_features = num_video_features
         self.index_feature_extractor = nn.Linear(
             in_features=num_frames,
             out_features=num_index_features
@@ -73,7 +75,11 @@ class FrameQualityDiscriminator(nn.Module):
         video, index = x
         
         v_f = self.video_feature_extractor(video)
+        v_f = v_f.view(v_f.size(0), -1)
+        print(v_f.size())
+
         i_f = self.index_feature_extractor(index)
+        print(i_f.size())
         
         feature = torch.cat((v_f, i_f), dim=-1)
 
@@ -84,6 +90,7 @@ class FrameQualityDiscriminator(nn.Module):
 
 if __name__ == "__main__":
     discriminator = FrameQualityDiscriminator(input_size=[16, 224, 224])
-    vid = torch.rand(1, 16, 224, 224)
+    vid = torch.rand(1, 3, 16, 224, 224)
     idx = torch.round(torch.rand(1, 16))
-    print(idx)
+    
+    output = discriminator((vid, idx))

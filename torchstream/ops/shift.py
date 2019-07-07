@@ -69,14 +69,15 @@ class TemporalShift(nn.Module):
     Args
         fold_div: (1/fold_div) frames will be shifted
     """
-    def __init__(self, seg_num=3, fold_div=8, inplace=False):
+    def __init__(self, seg_num=3, fold_div=8, inplace=False, verbose=False):
         super(TemporalShift, self).__init__()
         self.seg_num = seg_num
         self.fold_div = fold_div
         self.inplace = inplace
-        if inplace:
-            print('=> Using in-place shift...')
-        print('=> Using fold div: {}'.format(self.fold_div))
+        if verbose:
+            if inplace:
+                print('=> Using in-place shift...')
+            print('=> Using fold div: {}'.format(self.fold_div))
 
     def __repr__(self):
         return self.__class__.__name__ + \
@@ -159,7 +160,3 @@ if __name__ == '__main__':
             grad2 = torch.autograd.grad((y2 ** 2).mean(), [x2])[0]
             assert torch.norm(grad1 - grad2).item() < 1e-5
     print('Test passed.')
-
-
-
-
