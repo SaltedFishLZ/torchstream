@@ -113,7 +113,7 @@
         "name": "SGD",
         "argv": {
             "params": "model_specified",
-            "lr": 0.005,
+            "lr": 0.001,
             "momentum": 0.9
         }
     },
@@ -129,11 +129,11 @@
         "epochs": 50,
         "backup": {
             "dir_path": "checkpoints/TSM/sthsthv1",
-            "pth_name": "TSM.sthsthv1.rgb.s24.scratch.lr5e-3.e50"
+            "pth_name": "TSM.sthsthv1.rgb.s24.scratch.lr1e-3.e50"
         },
         "resume": {
             "dir_path": "checkpoints/TSM/sthsthv1",
-            "pth_name": "TSM.sthsthv1.rgb.s24.scratch.lr5e-3.e50"
+            "pth_name": "TSM.sthsthv1.rgb.s24.scratch.lr1e-3.e50"
         },
         "finetune": {
             "dir_path": "../template/checkpoints/TSM/tonylin/kinetics",
