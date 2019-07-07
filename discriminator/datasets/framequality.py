@@ -8,9 +8,6 @@ import torch.utils.data as data
 
 from torchstream.datasets import SomethingSomethingV1
 
-def sample_difficulty():
-    pass
-
 # ------------------------------------------------------------------------- #
 #                   Main Classes (To Be Used outside)                       #
 # ------------------------------------------------------------------------- #
@@ -65,6 +62,15 @@ class FrameQualityDataset(data.Dataset):
                     self.corrects = correct
                 else:
                     self.corrects = torch.cat((self.corrects, correct), dim=1)
+
+        # filter samples
+        selected_video_indices = []
+        for i in range(len(self.video_dataset)):
+            correct_num = self.corrects[i].sum()
+            correct_ratio = correct_num / self.chances
+            if (correct_ratio > 0.3) and (correct_ratio < 0.9):
+                selected_video_indices.append(i)
+        print(len(selected_video_indices))
 
     def __len__(self):
         return len(self.video_dataset) * self.chances
