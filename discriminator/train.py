@@ -59,8 +59,7 @@ def validate(device, loader, model, criterion,
                                      batch_time=batch_time,
                                      data_time=data_time,
                                      loss_meter=loss_meter,
-                                     top1_meter=top1_meter,
-                                     top5_meter=top5_meter))
+                                     top1_meter=top1_meter))
 
     print("Results:\n"
           "Prec@1 {top1_meter.avg:5.3f} "
