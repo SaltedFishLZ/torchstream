@@ -15,8 +15,7 @@ val_log_str = "Validation:[{:4d}/{:4d}],  " + \
               "BatchTime:{batch_time.val:6.2f}({batch_time.avg:6.2f}),  " + \
               "DataTime:{data_time.val:6.2f}({data_time.avg:6.2f}),  " + \
               "Loss:{loss_meter.val:7.3f}({loss_meter.avg:7.3f}),  " + \
-              "Prec@1:{top1_meter.val:7.3f}({top1_meter.avg:7.3f}),  " + \
-              "Prec@5:{top5_meter.val:7.3f}({top5_meter.avg:7.3f})"
+              "Prec@1:{top1_meter.val:7.3f}({top1_meter.avg:7.3f}),  "
 
 
 def validate(device, loader, model, criterion,
@@ -26,32 +25,30 @@ def validate(device, loader, model, criterion,
     data_time = utils.Meter()
     loss_meter = utils.Meter()
     top1_meter = utils.Meter()
-    top5_meter = utils.Meter()
 
-    metric = utils.ClassifyAccuracy(topk=(1, 5))
+    metric = utils.ClassifyAccuracy(topk=(1, ))
 
     model.eval()
 
     end = time.time()
 
     with torch.no_grad():
-        for i, (input, target) in enumerate(loader):
+        for i, ((input, index), target) in enumerate(loader):
             input = input.to(device)
+            index = index.to(device)
             target = target.to(device)
 
             # measure extra data loading time
             data_time.update(time.time() - end)
 
-            output = model(input)
+            output = model((input, index))
             loss = criterion(output, target)
 
             accuracy = metric(output.data, target)
             prec1 = accuracy[1]
-            prec5 = accuracy[5]
 
             loss_meter.update(loss, input.size(0))
             top1_meter.update(prec1, input.size(0))
-            top5_meter.update(prec5, input.size(0))
 
             # measure elapsed time
             batch_time.update(time.time() - end)
@@ -67,10 +64,8 @@ def validate(device, loader, model, criterion,
 
     print("Results:\n"
           "Prec@1 {top1_meter.avg:5.3f} "
-          "Prec@5 {top5_meter.avg:5.3f} "
           "Loss {loss_meter.avg:5.3f}"
           .format(top1_meter=top1_meter,
-                  top5_meter=top5_meter,
                   loss_meter=loss_meter))
 
     return top1_meter.avg
@@ -80,8 +75,7 @@ train_log_str = "Epoch:[{:3d}][{:4d}/{:4d}],  lr:{lr:5.5f},  " + \
                 "BatchTime:{batch_time.val:6.2f}({batch_time.avg:6.2f}),  " + \
                 "DataTime:{data_time.val:6.2f}({data_time.avg:6.2f}),  " + \
                 "Loss:{loss_meter.val:7.3f}({loss_meter.avg:7.3f}),  " + \
-                "Prec@1:{top1_meter.val:7.3f}({top1_meter.avg:7.3f}),  " + \
-                "Prec@5:{top5_meter.val:7.3f}({top5_meter.avg:7.3f})"
+                "Prec@1:{top1_meter.val:7.3f}({top1_meter.avg:7.3f}),  "
 
 
 def train(device, loader, model, criterion, optimizer, epoch,
@@ -91,34 +85,32 @@ def train(device, loader, model, criterion, optimizer, epoch,
     data_time = utils.Meter()
     loss_meter = utils.Meter()
     top1_meter = utils.Meter()
-    top5_meter = utils.Meter()
 
-    metric = utils.ClassifyAccuracy(topk=(1, 5))
+    metric = utils.ClassifyAccuracy(topk=(1, ))
 
     model.train()
 
     end = time.time()
 
-    for i, (input, target) in enumerate(loader):
+    for i, ((input, index), target) in enumerate(loader):
         input = input.to(device)
+        index = index.to(device)
         target = target.to(device)
 
         # measure extra data loading time
         data_time.update(time.time() - end)
 
         # forward
-        output = model(input)
+        output = model((input, index))
         loss = criterion(output, target)
 
         # calculate accuracy
         accuracy = metric(output.data, target)
         prec1 = accuracy[1]
-        prec5 = accuracy[5]
 
         # update statistics
         loss_meter.update(loss, input.size(0))
         top1_meter.update(prec1, input.size(0))
-        top5_meter.update(prec5, input.size(0))
 
         # backward
         optimizer.zero_grad()
@@ -135,7 +127,6 @@ def train(device, loader, model, criterion, optimizer, epoch,
                                  data_time=data_time,
                                  loss_meter=loss_meter,
                                  top1_meter=top1_meter,
-                                 top5_meter=top5_meter,
                                  lr=optimizer.param_groups[-1]['lr']))
 
 

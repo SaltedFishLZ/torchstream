@@ -32,6 +32,7 @@
         "package": "datasets",
         "name": "FrameQualityDataset",
         "argv": {
+            "trace_root": "../kfs/mc-traces/s8.f16.train",
             "train": true
         }
     },
@@ -74,7 +75,8 @@
         "package": "datasets",
         "name": "FrameQualityDataset",
         "argv": {
-            "train": false
+            "trace_root": "../kfs/mc-traces/s8.f16.train",
+            "train": true
         }
     },
 
@@ -98,7 +100,7 @@
         "package": "models",
         "name": "FrameQualityDiscriminator",
         "argv": {
-            "input_size": [16, 224, 224],
+            "input_size": [16, 224, 224]
         }
     },
 
@@ -117,6 +119,7 @@
 
     "lr_scheduler": {
         "name": "StepLR",
+        "params": "model_specified",
         "argv": {
             "step_size": 20
         }

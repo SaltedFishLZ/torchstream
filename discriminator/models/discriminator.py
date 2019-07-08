@@ -71,26 +71,29 @@ class FrameQualityDiscriminator(nn.Module):
     def forward(self, x):
         assert isinstance(x, Sequence), TypeError
         assert len(x) == 2, ValueError
-        
+
         video, index = x
-        
+
         v_f = self.video_feature_extractor(video)
         v_f = v_f.view(v_f.size(0), -1)
-        print(v_f.size())
+        # print(v_f.size())
 
         i_f = self.index_feature_extractor(index)
-        print(i_f.size())
-        
+        # print(i_f.size())
+
         feature = torch.cat((v_f, i_f), dim=-1)
 
         out = self.aggregation_network(feature)
 
         return out
 
+    def get_optim_policies(self):
+        return self.parameters()
+
 
 if __name__ == "__main__":
     discriminator = FrameQualityDiscriminator(input_size=[16, 224, 224])
     vid = torch.rand(1, 3, 16, 224, 224)
     idx = torch.round(torch.rand(1, 16))
-    
+
     output = discriminator((vid, idx))

@@ -69,7 +69,7 @@ class FrameQualityDataset(data.Dataset):
             correct_num = int(self.corrects[i].sum())
             # print(correct_num)
             correct_ratio = correct_num / self.chances
-            if (correct_ratio > 0.5) and (correct_ratio < 0.9):
+            if (correct_ratio > 0.3) and (correct_ratio < 0.5):
                 selected_video_indices.append(i)
         # print(len(selected_video_indices))
         new_datapoints = [self.video_dataset.datapoints[_i] for _i in selected_video_indices]
@@ -96,9 +96,9 @@ class FrameQualityDataset(data.Dataset):
         index_onehot = torch.zeros(self.num_frames)
         index_onehot.scatter_(0, index.long(), 1)
 
-        cid = self.corrects[video_id][chance_id]
+        cid = (self.corrects[video_id][chance_id]).long()
 
-        return (blob, index_onehot, cid)
+        return ((blob, index_onehot), cid)
 
 
 if __name__ == "__main__":
@@ -110,5 +110,5 @@ if __name__ == "__main__":
 
     import tqdm
     for i in range(len(dataset)):
-        blob, index, cid = dataset[i]
+        (blob, index), cid = dataset[i]
         print(blob.shape, index, cid)
