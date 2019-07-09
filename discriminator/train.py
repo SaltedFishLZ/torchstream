@@ -205,7 +205,7 @@ def main(args):
         checkpoint = utils.load_checkpoint(**resume_config)
 
         if checkpoint is not None:
-            best_prec1 = checkpoint["best_prec1"]
+            # best_prec1 = checkpoint["best_prec1"]
             configs["train"]["start_epoch"] = start_epoch = checkpoint["epoch"] + 1
             model_state_dict = checkpoint["model_state_dict"]
             optimizer_state_dict = checkpoint["optimizer_state_dict"]
@@ -214,8 +214,9 @@ def main(args):
             model.load_state_dict(model_state_dict)
             optimizer.load_state_dict(optimizer_state_dict)
             lr_scheduler.load_state_dict(lr_scheduler_state_dict)
-            print("Resume from epoch [{}], best prec1 [{}]".
-                  format(start_epoch - 1, best_prec1))
+            print("Resume from epoch [{}]".format(start_epoch - 1))
+            # print("Resume from epoch [{}], best prec1 [{}]".
+            #       format(start_epoch - 1, best_prec1))
         else:
             print("failed to load checkpoint")
 
@@ -246,14 +247,14 @@ def main(args):
               criterion=criterion, optimizer=optimizer,
               epoch=epoch)
 
-        # evaluate on validation set
-        prec1 = validate(device=device, loader=val_loader, model=model,
-                         criterion=criterion, epoch=epoch)
+        # # evaluate on validation set
+        # prec1 = validate(device=device, loader=val_loader, model=model,
+        #                  criterion=criterion, epoch=epoch)
 
-        # remember best prec@1
-        is_best = prec1 > best_prec1
-        best_prec1 = max(prec1, best_prec1)
-        print("Best Prec@1: %.3f\n" % (best_prec1))
+        # # remember best prec@1
+        # is_best = prec1 > best_prec1
+        # best_prec1 = max(prec1, best_prec1)
+        # print("Best Prec@1: %.3f\n" % (best_prec1))
 
         lr_scheduler.step()
 
@@ -266,10 +267,11 @@ def main(args):
                 "model_state_dict": model.state_dict(),
                 "optimizer_state_dict": optimizer.state_dict(),
                 "lr_scheduler_state_dict": lr_scheduler.state_dict(),
-                "best_prec1": best_prec1
+                # "best_prec1": best_prec1
                 }
             utils.save_checkpoint(checkpoint=checkpoint,
-                                  is_best=is_best,
+                                  is_best=False,
+                                  # is_best=is_best,
                                   dir_path=dir_path,
                                   pth_name=pth_name)
 

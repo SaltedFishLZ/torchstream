@@ -83,9 +83,9 @@
     "train_loader":{
         "batch_size": 32,
         "num_workers": 32,
-        "shuffle": true,
+        "shuffle": false,
         "pin_memory": true,
-        "drop_last": true
+        "drop_last": false
     },
 
     "val_loader":{
@@ -112,7 +112,7 @@
         "name": "SGD",
         "argv": {
             "params": "model_specified",
-            "lr": 0.001,
+            "lr": 0.0005,
             "momentum": 0.9
         }
     },
@@ -126,14 +126,14 @@
     },
 
     "train": {
-        "epochs": 50,
+        "epochs": 100,
         "backup": {
             "dir_path": "checkpoints/discriminator",
-            "pth_name": "discriminator.s8.f16.lr1e-3.e50"
+            "pth_name": "discriminator.s8.f16.scratch.lr5e-4.e100"
         },
         "resume": {
             "dir_path": "checkpoints/discriminator",
-            "pth_name": "discriminator.s8.f16.lr1e-3.e50"
+            "pth_name": "discriminator.s8.f16.scratch.lr5e-4.e100"
         }
     }
 
