@@ -56,29 +56,36 @@ def cherrypick_frames(device, input, discriminator):
     discriminator.eval()
 
     N, C, T, H, W = input.size()
-    chances = 50
-    index = gen_indices_random(ni=16, no=8, chances=chances)
+    chances = 64
+    index = gen_indices_random(ni=16, no=8, chances=chances * N)
     output = None
     with torch.no_grad():
         input = input.to(device)
         input = input.unsqueeze(dim=1)
         input = input.expand(N, chances, C, T, H, W)
-        input = input.view(N * chances, C, T, H, W)
+        input = input.contiguous().view(N * chances, C, T, H, W)
+
         index = index.to(device)
-        print(index.size())
+        # print("index", index.size())
         index = index.view(N * chances, index.size(-1))
+
         output = discriminator((input, index))
         output = torch.nn.functional.softmax(output, dim=-1)
         output = output.view(N, chances, 2)
 
     index_quality = output[:, :, 1]
-    print(index_quality)
+    # print("index_quality", index_quality.size())
+    # print(index_quality)
 
     index_selection = torch.argmax(index_quality,dim=1)
-    print(index_selection)
+    # print("index_selection", index_selection)
 
-    print(index[:, index_selection])
-    return index[:, index_selection]
+    cherrypicked_indices = index[index_selection.view(N, 1)].squeeze(dim=1)
+    for i in range(N):
+        bench = index[index_selection[i]]
+        print(cherrypicked_indices.size())
+        print((bench == cherrypicked_indices[i]).prod())
+    # return index[:, index_selection]
 
 
 def main(args):
