@@ -122,12 +122,7 @@ def test(device, loader, discriminator, classifier, criterion,
 
             cherrypicked_input = torch.zeros(N, 8, C, H, W)
             for j in range(N):
-                input_j = input[j]
-                print(input_j.size())
-
-                cherrypicked_input_j = cherrypicked_input[j]
-                print(cherrypicked_input_j.size())
-                cherrypicked_input_j = input_j[index[j]]
+                cherrypicked_input[j] = input[j][index[j]]
 
             cherrypicked_input = cherrypicked_input.permute(0, 2, 1, 3, 4).contiguous()
 
