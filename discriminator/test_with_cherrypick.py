@@ -63,11 +63,19 @@ def cherrypick_frames(device, input, discriminator):
         input = input.to(device)
         input = input.unsqueeze(dim=1)
         input = input.expand(N, chances, C, T, H, W)
+        input = input.view(N * chances, C, T, H, W)
+        index = index.to(device)
+        print(index.size())
+        index = index.view(N * chances, index.size(-1))
         output = discriminator((input, index))
         output = torch.nn.functional.softmax(output, dim=-1)
+        output = output.view(N, chances, 2)
 
-    index_quality = output[:, 1]
-    index_selection = torch.argmax(index_quality)
+    index_quality = output[:, :, 1]
+    print(index_quality)
+
+    index_selection = torch.argmax(index_quality,dim=1)
+    print(index_selection)
 
     print(index[:, index_selection])
     return index[:, index_selection]
