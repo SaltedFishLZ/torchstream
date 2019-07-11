@@ -51,25 +51,26 @@ def gen_indices_random(ni, no, chances, output_type="tensor_onehot"):
 def cherrypick_frames(device, input, discriminator):
     """
     Args:
-        input [C][T][H][W]
+        input [N][C][T][H][W]
     """
     discriminator.eval()
 
+    N, C, T, H, W = input.size()
     chances = 50
     index = gen_indices_random(ni=16, no=8, chances=chances)
     output = None
     with torch.no_grad():
-        C, T, H, W = input.size()
         input = input.to(device)
-        input = input.unsqueeze(dim=0)
-        input = input.expand(chances, C, T, H, W)
+        input = input.unsqueeze(dim=1)
+        input = input.expand(N, chances, C, T, H, W)
         output = discriminator((input, index))
         output = torch.nn.functional.softmax(output, dim=-1)
 
     index_quality = output[:, 1]
     index_selection = torch.argmax(index_quality)
-    print(index_selection)
-    print(index_quality)
+
+    print(index[:, index_selection])
+    return index[:, index_selection]
 
 
 def main(args):
@@ -121,7 +122,12 @@ def main(args):
     # criterion = cfgs.config2criterion(configs["criterion"])
     # criterion.to(device)
 
-    cherrypick_frames(device, test_dataset[1][0], discriminator)
+
+    with torch.no_grad():
+        for i, (input, target) in enumerate(test_loader):
+            input = input.to(device)
+            target = target.to(device)
+            cherrypick_frames(device, input, discriminator)
 
 
 if __name__ == "__main__":
