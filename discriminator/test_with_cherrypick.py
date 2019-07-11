@@ -15,11 +15,12 @@ import cfgs
 import utils
 from models import FrameQualityDiscriminator
 
-def gen_indices_random(ni, no, chances, output_type="tensor_onehot"):
+
+def gen_indices_random(ni, no, chances, output_type="tensor"):
     """Generate selected indices randomly
     """
     SUPPORTED_OUTPUTS = [
-        "list", "ndarray", "tensor", "tensor_onehot"
+        "list", "ndarray", "tensor", "tensor"
         ]
     assert output_type in SUPPORTED_OUTPUTS, NotImplementedError
 
@@ -41,12 +42,6 @@ def gen_indices_random(ni, no, chances, output_type="tensor_onehot"):
         return np.array(indices)
     elif output_type == "tensor":
         return torch.Tensor(indices).long()
-    elif output_type == "tensor_onehot":
-        indices = torch.Tensor(indices).long()
-        indices_onehot = torch.zeros(chances, ni)
-        indices_onehot.scatter_(1, indices.long(), 1)
-        return indices_onehot
-
 
 def cherrypick_frames(device, input, discriminator):
     """
@@ -57,7 +52,12 @@ def cherrypick_frames(device, input, discriminator):
 
     N, C, T, H, W = input.size()
     chances = 64
+    
+    # gen indices
     index = gen_indices_random(ni=16, no=8, chances=chances * N)
+    index_onehot = torch.zeros(chances, 16)
+    index_onehot.scatter_(1, indices.long(), 1)
+
     output = None
     with torch.no_grad():
         input = input.to(device)
@@ -65,11 +65,10 @@ def cherrypick_frames(device, input, discriminator):
         input = input.expand(N, chances, C, T, H, W)
         input = input.contiguous().view(N * chances, C, T, H, W)
 
-        index = index.to(device)
-        # print("index", index.size())
-        index = index.view(N * chances, index.size(-1))
+        index_onehot = index_onehot.to(device)
+        index_onehot = index_onehot.view(N * chances, index_onehot.size(-1))
 
-        output = discriminator((input, index))
+        output = discriminator((input, index_onehot))
         output = torch.nn.functional.softmax(output, dim=-1)
         output = output.view(N, chances, 2)
 
@@ -80,13 +79,81 @@ def cherrypick_frames(device, input, discriminator):
     index_selection = torch.argmax(index_quality,dim=1)
     # print("index_selection", index_selection)
 
-    cherrypicked_indices = index[index_selection.view(N, 1)].squeeze(dim=1)
-    for i in range(N):
-        bench = index[index_selection[i]]
-        print(cherrypicked_indices.size())
-        print((bench == cherrypicked_indices[i]).prod())
-    # return index[:, index_selection]
+    cherrypicked_index = index[index_selection.view(N, 1)]
+    cherrypicked_index = cherrypicked_index.squeeze(dim=1)
 
+    return cherrypicked_index
+
+test_log_str = "Testing:[{:4d}/{:4d}]  " + \
+               "BatchTime:{batch_time.val:6.2f}({batch_time.avg:6.2f}),  " + \
+               "DataTime:{data_time.val:6.2f}({data_time.avg:6.2f}),  " + \
+               "Loss:{loss_meter.val:7.3f}({loss_meter.avg:7.3f}),  " + \
+               "Prec@1:{top1_meter.val:7.3f}({top1_meter.avg:7.3f}),  " + \
+               "Prec@5:{top5_meter.val:7.3f}({top5_meter.avg:7.3f})"
+
+def test(device, loader, discriminator, classifier, criterion,
+         log_str=test_log_str, log_interval=20, **kwargs):
+
+    batch_time = utils.Meter()
+    data_time = utils.Meter()
+    loss_meter = utils.Meter()
+    top1_meter = utils.Meter()
+    top5_meter = utils.Meter()
+
+    metric = utils.ClassifyAccuracy(topk=(1, 5))
+
+    discriminator.eval()
+    classifier.eval()
+
+    end = time.time()
+
+    with torch.no_grad():
+        for i, (input, target) in enumerate(loader):
+            N, C, T, H, W = input.size()
+
+            input = input.to(device)
+            target = target.to(device)
+            
+            # measure extra data loading time
+            data_time.update(time.time() - end)
+
+            index = cherrypick_frames(device, input, discriminator)
+            input = input.permute(0, 2, 1, 3, 4).contiguous()
+            input = input[index, :, :, :]
+            input = input.permute(0, 2, 1, 3, 4).contiguous()
+
+            output = classifier(input)
+            loss = criterion(output, target)
+
+            accuracy = metric(output.data, target)
+            prec1 = accuracy[1]
+            prec5 = accuracy[5]
+
+            loss_meter.update(loss, input.size(0))
+            top1_meter.update(prec1, input.size(0))
+            top5_meter.update(prec5, input.size(0))
+
+            # measure elapsed time
+            batch_time.update(time.time() - end)
+            end = time.time()
+
+            if i % log_interval == 0:
+                print(log_str.format(i, len(loader),
+                                     batch_time=batch_time,
+                                     data_time=data_time,
+                                     loss_meter=loss_meter,
+                                     top1_meter=top1_meter,
+                                     top5_meter=top5_meter))
+
+    print("Results:\n"
+          "Prec@1 {top1_meter.avg:5.3f} "
+          "Prec@5 {top5_meter.avg:5.3f} "
+          "Loss {loss_meter.avg:5.3f}"
+          .format(top1_meter=top1_meter,
+                  top5_meter=top5_meter,
+                  loss_meter=loss_meter))
+
+    return top1_meter.avg
 
 def main(args):
 
@@ -100,7 +167,6 @@ def main(args):
         configs["gpus"] = list(range(torch.cuda.device_count())) 
 
     device = torch.device("cuda:0")
-
 
     # -------------------------------------------------------- #
     #          Construct Datasets & Dataloaders                #
@@ -124,25 +190,34 @@ def main(args):
     #          Construct Network & Load Weights                #
     # -------------------------------------------------------- #
 
+    # construct discriminator
     discriminator = cfgs.config2model(configs["discriminator"])
     discriminator.to(device)
 
     discriminator = torch.nn.DataParallel(discriminator, device_ids=configs["gpus"])
 
-    # load model
-    checkpoint = torch.load(args.weights)
+    # load discriminator model
+    checkpoint = torch.load(args.discriminator_weights)
     model_state_dict = checkpoint["model_state_dict"]
     discriminator.load_state_dict(model_state_dict)
 
-    # criterion = cfgs.config2criterion(configs["criterion"])
-    # criterion.to(device)
+    # construct classifier
+    classifier = cfgs.config2model(configs["classifier"])
+    classifier.to(device)
+
+    classifier = torch.nn.DataParallel(classifier, device_ids=configs["gpus"])
+
+    # load discriminator model
+    checkpoint = torch.load(args.classifier_weights)
+    model_state_dict = checkpoint["model_state_dict"]
+    classifier.load_state_dict(model_state_dict)  
 
 
     with torch.no_grad():
         for i, (input, target) in enumerate(test_loader):
             input = input.to(device)
             target = target.to(device)
-            cherrypick_frames(device, input, discriminator)
+            index = cherrypick_frames(device, input, discriminator)
 
 
 if __name__ == "__main__":
@@ -151,9 +226,12 @@ if __name__ == "__main__":
     # configuration file
     parser.add_argument("config", type=str,
                         help="path to configuration file")
-    parser.add_argument("--weights", type=str, default=None)
+    parser.add_argument("--discriminator_weights", type=str, default=None)
+    parser.add_argument("--classifier_weights", type=str, default=None)
     parser.add_argument("--gpus", nargs='+', type=int, default=None)
 
     args = parser.parse_args()
+    assert args.discriminator_weights is not None, ValueError("Must specify weights")
+    assert args.classifier_weights is not None, ValueError("Must specify weights")
 
     main(args)
