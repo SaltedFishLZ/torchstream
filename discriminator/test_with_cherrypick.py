@@ -63,10 +63,13 @@ def cherrypick_frames(device, input, discriminator):
         input = input.to(device)
         input = input.unsqueeze(dim=0)
         input = input.expand(chances, C, T, H, W)
-        output = discriminator(input, index)
+        output = discriminator((input, index))
+        output = torch.nn.functional.softmax(output, dim=-1)
 
-    print(output)
-
+    index_quality = output[:, 1]
+    index_selection = torch.argmax(index_quality)
+    print(index_selection)
+    print(index_quality)
 
 
 def main(args):
@@ -115,10 +118,10 @@ def main(args):
     model_state_dict = checkpoint["model_state_dict"]
     discriminator.load_state_dict(model_state_dict)
 
-    criterion = cfgs.config2criterion(configs["criterion"])
-    criterion.to(device)
+    # criterion = cfgs.config2criterion(configs["criterion"])
+    # criterion.to(device)
 
-    cherrypick_frames(device, test_dataset[1], discriminator)
+    cherrypick_frames(device, test_dataset[1][0], discriminator)
 
 
 if __name__ == "__main__":
