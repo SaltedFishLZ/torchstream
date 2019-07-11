@@ -48,29 +48,27 @@ def cherrypick_frames(device, input, discriminator):
     Args:
         input [N][C][T][H][W]
     """
-    discriminator.eval()
 
     N, C, T, H, W = input.size()
     chances = 64
-    
+
     # gen indices
-    index = gen_indices_random(ni=16, no=8, chances=chances * N)
-    index_onehot = torch.zeros(chances, 16)
-    index_onehot.scatter_(1, indices.long(), 1)
+    index = gen_indices_random(ni=16, no=8, chances=N * chances)
+    index_onehot = torch.zeros(N * chances, 16)
+    index_onehot.scatter_(1, index.long(), 1)
 
     output = None
-    with torch.no_grad():
-        input = input.to(device)
-        input = input.unsqueeze(dim=1)
-        input = input.expand(N, chances, C, T, H, W)
-        input = input.contiguous().view(N * chances, C, T, H, W)
 
-        index_onehot = index_onehot.to(device)
-        index_onehot = index_onehot.view(N * chances, index_onehot.size(-1))
+    input = input.to(device)
+    input = input.unsqueeze(dim=1)
+    input = input.expand(N, chances, C, T, H, W)
+    input = input.contiguous().view(N * chances, C, T, H, W)
 
-        output = discriminator((input, index_onehot))
-        output = torch.nn.functional.softmax(output, dim=-1)
-        output = output.view(N, chances, 2)
+    index_onehot = index_onehot.to(device)
+
+    output = discriminator((input, index_onehot))
+    output = torch.nn.functional.softmax(output, dim=-1)
+    output = output.view(N, chances, 2)
 
     index_quality = output[:, :, 1]
     # print("index_quality", index_quality.size())
@@ -109,20 +107,31 @@ def test(device, loader, discriminator, classifier, criterion,
 
     with torch.no_grad():
         for i, (input, target) in enumerate(loader):
+            print(i)
+
             N, C, T, H, W = input.size()
 
             input = input.to(device)
             target = target.to(device)
-            
+
             # measure extra data loading time
             data_time.update(time.time() - end)
 
             index = cherrypick_frames(device, input, discriminator)
             input = input.permute(0, 2, 1, 3, 4).contiguous()
-            input = input[index, :, :, :]
-            input = input.permute(0, 2, 1, 3, 4).contiguous()
 
-            output = classifier(input)
+            cherrypicked_input = torch.zeros(N, 8, C, H, W)
+            for j in range(N):
+                input_j = input[j]
+                print(input_j.size())
+
+                cherrypicked_input_j = cherrypicked_input[j]
+                print(cherrypicked_input_j.size())
+                cherrypicked_input_j = input_j[index[j]]
+
+            cherrypicked_input = cherrypicked_input.permute(0, 2, 1, 3, 4).contiguous()
+
+            output = classifier(cherrypicked_input)
             loss = criterion(output, target)
 
             accuracy = metric(output.data, target)
@@ -212,12 +221,13 @@ def main(args):
     model_state_dict = checkpoint["model_state_dict"]
     classifier.load_state_dict(model_state_dict)  
 
+    criterion = cfgs.config2criterion(configs["criterion"])
+    criterion.to(device)
 
-    with torch.no_grad():
-        for i, (input, target) in enumerate(test_loader):
-            input = input.to(device)
-            target = target.to(device)
-            index = cherrypick_frames(device, input, discriminator)
+    test(device=device, loader=test_loader,
+         discriminator=discriminator,
+         classifier=classifier,
+         criterion=criterion)
 
 
 if __name__ == "__main__":

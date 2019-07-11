@@ -69,16 +69,8 @@
         }
     },
 
-    "train": {
-        "epochs": 100,
-        "backup": {
-            "dir_path": "checkpoints/discriminator",
-            "pth_name": "discriminator.s8.f16.scratch.lr5e-4.e100"
-        },
-        "resume": {
-            "dir_path": "checkpoints/discriminator",
-            "pth_name": "discriminator.s8.f16.scratch.lr5e-4.e100"
-        }
+    "criterion": {
+        "name": "CrossEntropyLoss"
     }
 
 }
