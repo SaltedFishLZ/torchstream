@@ -114,8 +114,9 @@ def cherrypick_frames(device, input, discriminator):
 
     # gen indices
     index = gen_indices_restricted_random(fi=16, fo=8, n=N, chances=chances)
+    index = index.view(N * chances, -1)
     index_onehot = torch.zeros(N * chances, 16)
-    index_onehot.scatter_(1, index.view(N * chances, -1).long(), 1)
+    index_onehot.scatter_(1, index.long(), 1)
     index_onehot = index_onehot.to(device)
 
     output = discriminator((input, index_onehot))
