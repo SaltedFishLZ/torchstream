@@ -15,8 +15,15 @@ import cfgs
 import utils
 from models import FrameQualityDiscriminator
 
+def random_select_list(n, k, sort=True):
+    assert n >= k, ValueError
+    candidates = list(range(n))
+    results = random.sample(candidates, k)
+    if sort:
+        results.sort()
+    return results
 
-def gen_indices_random(ni, no, chances, output_type="tensor"):
+def gen_indices_random(fi, fo, n, chances, bind=False, output_type="tensor"):
     """Generate selected indices randomly
     """
     SUPPORTED_OUTPUTS = [
@@ -24,24 +31,69 @@ def gen_indices_random(ni, no, chances, output_type="tensor"):
         ]
     assert output_type in SUPPORTED_OUTPUTS, NotImplementedError
 
-    candidates = list(range(ni))
-    # padding
-    while len(candidates) < no:
-        candidates.append(candidates[-1])
-
-    indices = []
-    for i in range(chances):
-        # sample without replacement
-        idx = random.sample(candidates, no)
-        idx.sort()
-        indices.append(idx)
+    index = []
+    if bind:
+        index_per_sample = []
+        for chance in range(chances):
+            index_per_sample.append(random_select_list(n=fi, k=fo))
+        index = [index_per_sample, ] * n
+    else:
+        for i in range(n):
+            index_per_sample = []
+            for chance in range(chances):
+                index_per_sample.append(random_select_list(n=fi, k=fo))
+            index.append(index_per_sample)
 
     if output_type == "list":
-        return indices
+        return index
     elif output_type == "ndarray":
-        return np.array(indices)
+        return np.array(index)
     elif output_type == "tensor":
-        return torch.Tensor(indices).long()
+        return torch.Tensor(index).long()
+
+def restricted_random_select_list(n, k):
+    assert n >= k, ValueError
+    interval = float(n) / float(k)
+    offsets = interval * np.array(range(k))
+
+    cursors = []
+    while len(cursors) < k:
+        cursors.append(random.uniform(0, interval))
+    cursors = np.array(cursors)
+    
+    indices = offsets + cursors
+    indices = np.uint(indices)
+    indices.sort()
+    indices = np.minimum(indices, n - 1)
+
+    return indices
+
+def gen_indices_restricted_random(fi, fo, n, chances, bind=False,
+                                  output_type="tensor"):
+    SUPPORTED_OUTPUTS = [
+        "list", "ndarray", "tensor", "tensor"
+        ]
+    assert output_type in SUPPORTED_OUTPUTS, NotImplementedError
+
+    index = []
+    if bind:
+        index_per_sample = []
+        for chance in range(chances):
+            index_per_sample.append(restricted_random_select_list(n=fi, k=fo))
+        index = [index_per_sample, ] * n
+    else:
+        for i in range(n):
+            index_per_sample = []
+            for chance in range(chances):
+                index_per_sample.append(restricted_random_select_list(n=fi, k=fo))
+            index.append(index_per_sample)
+
+    if output_type == "list":
+        return index
+    elif output_type == "ndarray":
+        return np.array(index)
+    elif output_type == "tensor":
+        return torch.Tensor(index).long()
 
 def cherrypick_frames(device, input, discriminator):
     """
@@ -52,10 +104,6 @@ def cherrypick_frames(device, input, discriminator):
     N, C, T, H, W = input.size()
     chances = 64
 
-    # gen indices
-    index = gen_indices_random(ni=16, no=8, chances=N * chances)
-    index_onehot = torch.zeros(N * chances, 16)
-    index_onehot.scatter_(1, index.long(), 1)
 
     output = None
 
@@ -64,6 +112,10 @@ def cherrypick_frames(device, input, discriminator):
     input = input.expand(N, chances, C, T, H, W)
     input = input.contiguous().view(N * chances, C, T, H, W)
 
+    # gen indices
+    index = gen_indices_restricted_random(fi=16, fo=8, n=N, chances=chances)
+    index_onehot = torch.zeros(N * chances, 16)
+    index_onehot.scatter_(1, index.view(N * chances, -1).long(), 1)
     index_onehot = index_onehot.to(device)
 
     output = discriminator((input, index_onehot))
@@ -107,7 +159,6 @@ def test(device, loader, discriminator, classifier, criterion,
 
     with torch.no_grad():
         for i, (input, target) in enumerate(loader):
-            print(i)
 
             N, C, T, H, W = input.size()
 
