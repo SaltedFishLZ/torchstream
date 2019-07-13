@@ -4,7 +4,7 @@
             "package": "transforms",
             "name": "CenterSegment",
             "argv": {
-                "size": 16
+                "size": 24
             }
         },
         {
@@ -46,7 +46,7 @@
             "package": "transforms",
             "name": "CenterSegment",
             "argv": {
-                "size": 16
+                "size": 24
             }
         },
         {
@@ -104,7 +104,7 @@
         "name": "TSM",
         "argv": {
             "cls_num": 6,
-            "input_size": [16, 224, 224],
+            "input_size": [24, 224, 224],
             "base_model": "resnet50",
             "dropout": 0.8,
             "partial_bn": true,
@@ -137,11 +137,11 @@
         "epochs": 20,
         "backup": {
             "dir_path": "checkpoints/TSM/sthsthv1tiny",
-            "pth_name": "TSM.sthsthv1tiny.rgb.s16.no-aug.b32.e20"
+            "pth_name": "TSM.sthsthv1tiny.rgb.s24.no-aug.b32.e20"
         },
         "resume": {
             "dir_path": "checkpoints/TSM/sthsthv1tiny",
-            "pth_name": "TSM.sthsthv1tiny.rgb.s16.no-aug.b32.e20"
+            "pth_name": "TSM.sthsthv1tiny.rgb.s24.no-aug.b32.e20"
         },
         "finetune": {
             "dir_path": "checkpoints/TSM/sthsthv1",

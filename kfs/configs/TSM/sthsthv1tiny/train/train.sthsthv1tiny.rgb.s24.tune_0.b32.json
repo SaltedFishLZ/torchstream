@@ -2,21 +2,16 @@
     "train_transforms": [
         {
             "package": "transforms",
-            "name": "CenterSegment",
+            "name": "RandomSegment",
             "argv": {
-                "size": 16
+                "size": 24
             }
         },
         {
-            "name": "Resize",
+            "name": "MultiScaleCrop",
             "argv": {
-                "size": 256
-            }
-        },
-        {
-            "name": "CenterCrop",
-            "argv": {
-                "size": [224, 224]
+                "output_size": [224, 224],
+                "scales": [1, 0.875, 0.75, 0.66]
             }
         },
         {
@@ -46,7 +41,7 @@
             "package": "transforms",
             "name": "CenterSegment",
             "argv": {
-                "size": 16
+                "size": 24
             }
         },
         {
@@ -104,7 +99,7 @@
         "name": "TSM",
         "argv": {
             "cls_num": 6,
-            "input_size": [16, 224, 224],
+            "input_size": [24, 224, 224],
             "base_model": "resnet50",
             "dropout": 0.8,
             "partial_bn": true,
@@ -134,14 +129,14 @@
     },
 
     "train": {
-        "epochs": 20,
+        "epochs": 50,
         "backup": {
             "dir_path": "checkpoints/TSM/sthsthv1tiny",
-            "pth_name": "TSM.sthsthv1tiny.rgb.s16.no-aug.b32.e20"
+            "pth_name": "TSM.sthsthv1tiny.rgb.s24.tune_0.b32.e50"
         },
         "resume": {
             "dir_path": "checkpoints/TSM/sthsthv1tiny",
-            "pth_name": "TSM.sthsthv1tiny.rgb.s16.no-aug.b32.e20"
+            "pth_name": "TSM.sthsthv1tiny.rgb.s24.tune_0.b32.e50"
         },
         "finetune": {
             "dir_path": "checkpoints/TSM/sthsthv1",
