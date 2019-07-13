@@ -2,14 +2,7 @@
     "test_transforms": [
         {
             "package": "transforms",
-            "name": "CenterSegment",
-            "argv": {
-                "size": 16
-            }
-        },
-        {
-            "package": "transforms",
-            "name": "RandomFrameSampler",
+            "name": "RandomSegment",
             "argv": {
                 "size": 8
             } 
@@ -41,15 +34,16 @@
     ],
 
     "test_dataset": {
-        "name": "SomethingSomethingV1",
+        "package": "datasets",
+        "name": "SomethingSomethingV1Tiny",
         "argv": {
-            "train": true
+            "train": false
         }
     },
 
     "test_loader":{
         "batch_size": 64,
-        "num_workers": 64,
+        "num_workers": 32,
         "shuffle": false,
         "pin_memory": true,
         "drop_last": false
