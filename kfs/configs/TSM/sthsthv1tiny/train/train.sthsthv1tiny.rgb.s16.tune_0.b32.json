@@ -95,11 +95,15 @@
     },
 
     "model": {
-        "package": "kfs",
-        "name": "Wrapper",
+        "package": "torchstream.models",
+        "name": "TSM",
         "argv": {
             "cls_num": 6,
-            "input_size": [16, 224, 224]
+            "input_size": [8, 224, 224],
+            "base_model": "resnet50",
+            "dropout": 0.8,
+            "partial_bn": true,
+            "use_softmax": false
         }
     },
 
