@@ -113,15 +113,15 @@
     "optimizer": {
         "name": "SGD",
         "argv": {
-            "params": "model_specified",
-            "lr": 0.0005,
+            "params": "all",
+            "lr": 0.001,
             "momentum": 0.9
         }
     },
 
     "lr_scheduler": {
         "name": "StepLR",
-        "params": "model_specified",
+        "params": "all",
         "argv": {
             "step_size": 20
         }

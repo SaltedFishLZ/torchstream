@@ -26,7 +26,8 @@ class FrameQualityDiscriminator(nn.Module):
         self.input_size = input_size
 
         self.video_feature_extractor = TSM(cls_num=174,
-                                           input_size=input_size)
+                                           input_size=input_size,
+                                           partial_bn=False)
         num_image_features = self.video_feature_extractor.base_model.fc.fc.in_features
         num_frames = self.video_feature_extractor.input_size[0]
         num_video_features = num_image_features * num_frames
