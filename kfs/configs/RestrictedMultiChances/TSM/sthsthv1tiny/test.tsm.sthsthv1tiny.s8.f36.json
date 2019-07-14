@@ -2,6 +2,13 @@
     "test_transforms": [
         {
             "package": "transforms",
+            "name": "CenterSegment",
+            "argv": {
+                "size": 36
+            }
+        },
+        {
+            "package": "transforms",
             "name": "RandomSegment",
             "argv": {
                 "size": 8
@@ -17,11 +24,11 @@
             "name": "CenterCrop",
             "argv": {
                 "size": [224, 224]
-            }      
+            }
         },
         {
             "package": "torchstream.transforms",
-            "name": "ToTensor"  
+            "name": "ToTensor"
         },
         {
             "package": "torchstream.transforms",
@@ -53,7 +60,7 @@
         "package": "torchstream.models",
         "name": "TSM",
         "argv": {
-            "cls_num": 174,
+            "cls_num": 6,
             "input_size": [8, 224, 224],
             "base_model": "resnet50",
             "dropout": 0.8,

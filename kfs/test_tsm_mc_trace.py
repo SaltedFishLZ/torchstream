@@ -232,7 +232,7 @@ if __name__ == "__main__":
     parser.add_argument("--chances", type=int, default=20)
     parser.add_argument("--output", type=str, default=None)
     parser.add_argument("--gpus", nargs='+', type=int, default=None)
-    
+
     args = parser.parse_args()
 
     assert args.output is not None, ValueError("Must Specify Output File")

@@ -16,7 +16,8 @@ from torchstream.datasets import SomethingSomethingV1
 class FrameQualityDataset(data.Dataset):
     """Frame Quality Dataset
     """
-    def __init__(self, trace_root, chances=50, num_snippets=8, num_frames=16,
+    def __init__(self, trace_root, correct_ratio_bound=[0.4, 0.6],
+                 chances=50, num_snippets=8, num_frames=16,
                  train=True, transform=None, target_transform=None,
                  **kwargs):
         """
@@ -24,7 +25,7 @@ class FrameQualityDataset(data.Dataset):
 
         """
         check_str = "s{}.f{}.{}".format(num_snippets, num_frames,
-                                        "train" if train else "test")
+                                        "train" if train else "val")
         assert check_str in trace_root, ValueError("Invalid trace toor")
 
         self.trace_root = trace_root
@@ -49,6 +50,7 @@ class FrameQualityDataset(data.Dataset):
 
             with open(index_file_path, "rb") as f:
                 index = pickle.load(f)
+                index = index.cpu()
                 index.unsqueeze_(dim=1)
                 if self.indices is None:
                     self.indices = index
@@ -57,6 +59,7 @@ class FrameQualityDataset(data.Dataset):
 
             with open(correct_file_path, "rb") as f:
                 correct = pickle.load(f)
+                correct = correct.cpu()
                 correct.unsqueeze_(dim=1)
                 if self.corrects is None:
                     self.corrects = correct
@@ -69,9 +72,10 @@ class FrameQualityDataset(data.Dataset):
             correct_num = int(self.corrects[i].sum())
             # print(correct_num)
             correct_ratio = correct_num / self.chances
-            if (correct_ratio > 0.49) and (correct_ratio < 0.51):
+            if (correct_ratio >= correct_ratio_bound[0]) and (correct_ratio < correct_ratio_bound[1]):
                 selected_video_indices.append(i)
-        # print(len(selected_video_indices))
+
+        print(len(selected_video_indices))
         new_datapoints = [self.video_dataset.datapoints[_i] for _i in selected_video_indices]
         self.video_dataset.datapoints = new_datapoints
         new_samples = [self.video_dataset.samples[_i] for _i in selected_video_indices]
@@ -102,7 +106,7 @@ class FrameQualityDataset(data.Dataset):
 
 
 if __name__ == "__main__":
-    dataset = FrameQualityDataset(trace_root="../kfs/mc-traces/s8.f16.train")
+    dataset = FrameQualityDataset(trace_root="../kfs/mc-traces/s8.f16.val", train=False)
     print(dataset.indices.size())
     print(dataset.corrects.size())
 

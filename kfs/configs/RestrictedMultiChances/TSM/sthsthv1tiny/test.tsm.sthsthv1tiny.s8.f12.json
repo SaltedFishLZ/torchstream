@@ -4,7 +4,7 @@
             "package": "transforms",
             "name": "CenterSegment",
             "argv": {
-                "size": 20
+                "size": 12
             }
         },
         {
@@ -49,8 +49,8 @@
     },
 
     "test_loader":{
-        "batch_size": 64,
-        "num_workers": 32,
+        "batch_size": 128,
+        "num_workers": 64,
         "shuffle": false,
         "pin_memory": true,
         "drop_last": false
@@ -60,7 +60,7 @@
         "package": "torchstream.models",
         "name": "TSM",
         "argv": {
-            "cls_num": 174,
+            "cls_num": 6,
             "input_size": [8, 224, 224],
             "base_model": "resnet50",
             "dropout": 0.8,

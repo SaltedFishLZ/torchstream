@@ -2,13 +2,6 @@
     "test_transforms": [
         {
             "package": "transforms",
-            "name": "CenterSegment",
-            "argv": {
-                "size": 16
-            }
-        },
-        {
-            "package": "transforms",
             "name": "RandomSegment",
             "argv": {
                 "size": 8
@@ -50,7 +43,7 @@
 
     "test_loader":{
         "batch_size": 64,
-        "num_workers": 64,
+        "num_workers": 32,
         "shuffle": false,
         "pin_memory": true,
         "drop_last": false
@@ -60,7 +53,7 @@
         "package": "torchstream.models",
         "name": "TSM",
         "argv": {
-            "cls_num": 174,
+            "cls_num": 6,
             "input_size": [8, 224, 224],
             "base_model": "resnet50",
             "dropout": 0.8,

@@ -4,7 +4,7 @@
             "package": "transforms",
             "name": "CenterSegment",
             "argv": {
-                "size": 28
+                "size": 8
             }
         },
         {
@@ -60,7 +60,7 @@
         "package": "torchstream.models",
         "name": "TSM",
         "argv": {
-            "cls_num": 174,
+            "cls_num": 6,
             "input_size": [8, 224, 224],
             "base_model": "resnet50",
             "dropout": 0.8,

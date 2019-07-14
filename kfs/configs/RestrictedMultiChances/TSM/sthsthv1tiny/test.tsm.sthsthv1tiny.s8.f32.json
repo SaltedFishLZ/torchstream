@@ -9,7 +9,7 @@
         },
         {
             "package": "transforms",
-            "name": "RandomFrameSampler",
+            "name": "RandomSegment",
             "argv": {
                 "size": 8
             } 
@@ -24,11 +24,11 @@
             "name": "CenterCrop",
             "argv": {
                 "size": [224, 224]
-            }      
+            }
         },
         {
             "package": "torchstream.transforms",
-            "name": "ToTensor"  
+            "name": "ToTensor"
         },
         {
             "package": "torchstream.transforms",
