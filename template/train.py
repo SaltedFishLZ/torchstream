@@ -189,9 +189,36 @@ def main(args):
     # -------------------------------------------------------- #
 
     model = cfgs.config2model(configs["model"])
-    model.to(device)
 
+    if "resume" in configs["train"]:
+        resume_config = configs["train"]["resume"]
+        checkpoint = utils.load_checkpoint(**resume_config)
+
+        if checkpoint is not None:
+            best_prec1 = checkpoint["best_prec1"]
+            configs["train"]["start_epoch"] = start_epoch = checkpoint["epoch"] + 1
+            model_state_dict = checkpoint["model_state_dict"]
+            model.load_state_dict(model_state_dict)
+        else:
+            print("failed to load checkpoint")
+
+    elif "finetune" in configs["train"]:
+        finetune_config = configs["train"]["finetune"]
+        checkpoint = utils.load_checkpoint(**finetune_config)
+
+        model_state_dict = checkpoint["model_state_dict"]
+        for key in model_state_dict:
+            if "fc" in key:
+                # use FC from new network
+                print("Replacing ", key)
+                model_state_dict[key] = model.state_dict()[key]
+        model.load_state_dict(model_state_dict)
+
+
+
+    model.to(device)
     model = torch.nn.DataParallel(model, device_ids=configs["gpus"])
+
 
     if configs["optimizer"]["argv"]["params"] == "model_specified":
         print("Use Model Specified Training Policies")
@@ -221,7 +248,6 @@ def main(args):
             optimizer_state_dict = checkpoint["optimizer_state_dict"]
             lr_scheduler_state_dict = checkpoint["lr_scheduler_state_dict"]
 
-            model.load_state_dict(model_state_dict)
             optimizer.load_state_dict(optimizer_state_dict)
             lr_scheduler.load_state_dict(lr_scheduler_state_dict)
             print("Resume from epoch [{}], best prec1 [{}]".
