@@ -1,0 +1,144 @@
+{
+    "train_transforms": [
+        {
+            "package": "transforms",
+            "name": "RandomSegment",
+            "argv": {
+                "size": 40
+            }
+        },
+        {
+            "name": "MultiScaleCrop",
+            "argv": {
+                "output_size": [224, 224],
+                "scales": [1, 0.875, 0.75, 0.66]
+            }
+        },
+        {
+            "package": "torchstream.transforms",
+            "name": "ToTensor"
+        },
+        {
+            "package": "torchstream.transforms",
+            "name": "Normalize" ,
+            "argv": {
+                "mean": [0.485, 0.456, 0.406],
+                "std": [0.229, 0.224, 0.225]
+            }
+        }
+    ],
+
+    "train_dataset": {
+        "name": "SomethingSomethingV1",
+        "argv": {
+            "train": true
+        }
+    },
+
+    "val_transforms": [
+        {
+            "package": "transforms",
+            "name": "CenterSegment",
+            "argv": {
+                "size": 40
+            }
+        },
+        {
+            "name": "Resize",
+            "argv": {
+                "size": 256
+            }
+        },
+        {
+            "name": "CenterCrop",
+            "argv": {
+                "size": [224, 224]
+            }
+        },
+        {
+            "package": "torchstream.transforms",
+            "name": "ToTensor"
+        },
+        {
+            "package": "torchstream.transforms",
+            "name": "Normalize" ,
+            "argv": {
+                "mean": [0.485, 0.456, 0.406],
+                "std": [0.229, 0.224, 0.225]
+            }
+        }
+    ],
+
+    "val_dataset": {
+        "name": "SomethingSomethingV1",
+        "argv": {
+            "train": false
+        }
+    },
+
+    "train_loader":{
+        "batch_size": 24,
+        "num_workers": 64,
+        "shuffle": true,
+        "pin_memory": true,
+        "drop_last": true
+    },
+
+    "val_loader":{
+        "batch_size": 32,
+        "num_workers": 32,
+        "shuffle": false,
+        "pin_memory": true,
+        "drop_last": false
+    },
+
+    "model": {
+        "package": "torchstream.models",
+        "name": "TSM",
+        "argv": {
+            "cls_num": 174,
+            "input_size": [40, 224, 224],
+            "base_model": "resnet50",
+            "dropout": 0.8,
+            "partial_bn": true,
+            "use_softmax": false
+        }
+    },
+
+    "criterion": {
+        "name": "CrossEntropyLoss"
+    },
+
+    "optimizer": {
+        "name": "SGD",
+        "argv": {
+            "params": "model_specified",
+            "lr": 0.001,
+            "momentum": 0.9
+        }
+    },
+
+    "lr_scheduler": {
+        "name": "StepLR",
+        "argv": {
+            "step_size": 20
+        }
+    },
+
+    "train": {
+        "epochs": 50,
+        "backup": {
+            "dir_path": "checkpoints/TSM/sthsthv1",
+            "pth_name": "TSM.sthsthv1.rgb.s40.scratch.lr1e-3.e50"
+        },
+        "resume": {
+            "dir_path": "checkpoints/TSM/sthsthv1",
+            "pth_name": "TSM.sthsthv1.rgb.s40.scratch.lr1e-3.e50"
+        },
+        "finetune": {
+            "dir_path": "../template/checkpoints/TSM/tonylin/kinetics",
+            "pth_name": "TSM_kinetics_RGB_resnet50_shift8_blockres_avg_segment16_e50"
+        }
+    }
+
+}

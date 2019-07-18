@@ -10,7 +10,7 @@ import multiprocessing as mp
 
 import tqdm
 import numpy as np
-import torch.utils.data as torchdata
+import torch.utils.data as data
 
 from . import __config__
 from .metadata import __SUPPORTED_MODALITIES__, __SUPPORTED_VIDEOS__, __SUPPORTED_IMAGES__
@@ -45,7 +45,7 @@ else:
 
 ## dataset class for video recognition
 #  More details.
-class VideoDataset(torchdata.Dataset):
+class VideoDataset(data.Dataset):
     """dataset class for video recognition
     Args
         optional
@@ -170,7 +170,7 @@ def test(dataset, use_tqdm=True):
 
             if test_components["dataloader"]:
                 print("Testing torch dataloader")
-                train_loader = torchdata.DataLoader(
+                train_loader = data.DataLoader(
                         testset, batch_size=1, shuffle=True,
                         num_workers=8, pin_memory=True,
                         drop_last=True)  # prevent something not % n_GPU
