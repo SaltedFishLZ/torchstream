@@ -84,7 +84,8 @@ train_log_str = "Epoch:[{:3d}][{:4d}/{:4d}],  lr:{lr:5.5f},  " + \
                 "Prec@5:{top5_meter.val:7.3f}({top5_meter.avg:7.3f})"
 
 
-def train(device, loader, model, criterion, optimizer, epoch,
+def train(device, loader, model, criterion,
+          optimizer, lr_scheduler, epoch,
           log_str=train_log_str, log_interval=20, **kwargs):
 
     batch_time = utils.Meter()
@@ -124,6 +125,7 @@ def train(device, loader, model, criterion, optimizer, epoch,
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
+        lr_scheduler.step()
 
         # measure elapsed time on GPU
         batch_time.update(time.time() - end)
@@ -141,7 +143,9 @@ def train(device, loader, model, criterion, optimizer, epoch,
 
 def main(args):
 
-    # args, configs -> configs
+    # -------------------------------------------------------- #
+    #                Configs Initialization                    #
+    # -------------------------------------------------------- #
     configs = {}
     with open(args.config, "r") as json_config:
         configs = json.load(json_config)
@@ -149,10 +153,16 @@ def main(args):
         configs["gpus"] = args.gpus
     else:
         configs["gpus"] = list(range(torch.cuda.device_count()))
-    configs["train"]["start_epoch"] = 0
-
+    epochs = 0
     device = torch.device("cuda:0")
+
+    # -------------------------------------------------------- #
+    #                States Initialization                     #
+    # -------------------------------------------------------- #
+
+    checkpoint = None
     best_prec1 = 0
+    start_epoch = 0
 
     # -------------------------------------------------------- #
     #          Construct Datasets & Dataloaders                #
@@ -185,27 +195,28 @@ def main(args):
     val_loader = cfgs.config2dataloader(configs["val_loader"])
 
     # -------------------------------------------------------- #
-    #             Construct Network & Optimizer                #
+    #                 Construct Neural Network                 #
     # -------------------------------------------------------- #
 
     model = cfgs.config2model(configs["model"])
 
+    # load checkpoint
     if "resume" in configs["train"]:
+        # NOTE: the 1st place to load checkpoint
         resume_config = configs["train"]["resume"]
         checkpoint = utils.load_checkpoint(**resume_config)
-
+        if checkpoint is None:
+            print("Load Checkpoint Failed")
         if checkpoint is not None:
-            best_prec1 = checkpoint["best_prec1"]
-            configs["train"]["start_epoch"] = start_epoch = checkpoint["epoch"] + 1
-            model_state_dict = checkpoint["model_state_dict"]
-            model.load_state_dict(model_state_dict)
-        else:
-            print("failed to load checkpoint")
-
+            model.load_state_dict(checkpoint["model_state_dict"])
+    # ignore finetune if there is a checkpoint
     elif "finetune" in configs["train"]:
         finetune_config = configs["train"]["finetune"]
         checkpoint = utils.load_checkpoint(**finetune_config)
-
+        if checkpoint is None:
+            raise ValueError("Load Finetune Checkpoint Failed")
+        # TODO: move load finetune model into model's method
+        # not all models replace FCs only
         model_state_dict = checkpoint["model_state_dict"]
         for key in model_state_dict:
             if "fc" in key:
@@ -214,36 +225,27 @@ def main(args):
                 model_state_dict[key] = model.state_dict()[key]
         model.load_state_dict(model_state_dict)
 
-
-
     model.to(device)
     model = torch.nn.DataParallel(model, device_ids=configs["gpus"])
 
+    # -------------------------------------------------------- #
+    #            Construct Optimizer, Scheduler etc            #
+    # -------------------------------------------------------- #
 
     if configs["optimizer"]["argv"]["params"] == "model_specified":
         print("Use Model Specified Training Policies")
         configs["optimizer"]["argv"]["params"] = \
             model.module.get_optim_policies()
     else:
+        print("Train All Parameters")
         configs["optimizer"]["argv"]["params"] = model.parameters()
     optimizer = cfgs.config2optimizer(configs["optimizer"])
-
     lr_scheduler = cfgs.config2lrscheduler(optimizer, configs["lr_scheduler"])
 
-    criterion = cfgs.config2criterion(configs["criterion"])
-    criterion.to(device)
-
-    # -------------------------------------------------------- #
-    #            Resume / Finetune from Checkpoint             #
-    # -------------------------------------------------------- #
-
     if "resume" in configs["train"]:
-        resume_config = configs["train"]["resume"]
-        checkpoint = utils.load_checkpoint(**resume_config)
-
         if checkpoint is not None:
             best_prec1 = checkpoint["best_prec1"]
-            configs["train"]["start_epoch"] = start_epoch = checkpoint["epoch"] + 1
+            start_epoch = checkpoint["epoch"] + 1
             model_state_dict = checkpoint["model_state_dict"]
             optimizer_state_dict = checkpoint["optimizer_state_dict"]
             lr_scheduler_state_dict = checkpoint["lr_scheduler_state_dict"]
@@ -252,20 +254,9 @@ def main(args):
             lr_scheduler.load_state_dict(lr_scheduler_state_dict)
             print("Resume from epoch [{}], best prec1 [{}]".
                   format(start_epoch - 1, best_prec1))
-        else:
-            print("failed to load checkpoint")
 
-    elif "finetune" in configs["train"]:
-        finetune_config = configs["train"]["finetune"]
-        checkpoint = utils.load_checkpoint(**finetune_config)
-
-        model_state_dict = checkpoint["model_state_dict"]
-        for key in model_state_dict:
-            if "fc" in key:
-                # use FC from new network
-                print("Replacing ", key)
-                model_state_dict[key] = model.state_dict()[key]
-        model.load_state_dict(model_state_dict)
+    criterion = cfgs.config2criterion(configs["criterion"])
+    criterion.to(device)
 
     # -------------------------------------------------------- #
     #                       Main Loop                          #
@@ -275,23 +266,25 @@ def main(args):
     if "backup" in configs["train"]:
         backup_config = configs["train"]["backup"]
 
-    for epoch in range(configs["train"]["start_epoch"],
-                       configs["train"]["epochs"]):
+    for epoch in range(start_epoch, epochs):
+
         # train for one epoch
-        train(device=device, loader=train_loader, model=model,
-              criterion=criterion, optimizer=optimizer,
+        train(device=device,
+              loader=train_loader,
+              model=model, criterion=criterion,
+              optimizer=optimizer, lr_scheduler=lr_scheduler,
               epoch=epoch)
 
         # evaluate on validation set
-        prec1 = validate(device=device, loader=val_loader, model=model,
-                         criterion=criterion, epoch=epoch)
+        prec1 = validate(device=device,
+                         loader=val_loader,
+                         model=model, criterion=criterion,
+                         epoch=epoch)
 
         # remember best prec@1
         is_best = prec1 > best_prec1
         best_prec1 = max(prec1, best_prec1)
         print("Best Prec@1: %.3f\n" % (best_prec1))
-
-        lr_scheduler.step()
 
         # save checkpoint
         if backup_config is not None:
@@ -301,7 +294,6 @@ def main(args):
             model_state_dict = model.state_dict()
             model_state_dict = utils.checkpoint.to_cpu(model_state_dict)
             utils.checkpoint.remove_prefix_in_keys(model_state_dict)
-            print(model_state_dict.keys())
 
             checkpoint = {
                 "epoch": epoch,
