@@ -130,12 +130,12 @@
     "train": {
         "epochs": 100,
         "backup": {
-            "dir_path": "checkpoints/TSM/ucf101",
-            "pth_name": "TSM_ucf101_rgb_s8_e100"
+            "dir_path": "checkpoints/tsm/ucf101/8x224x224/",
+            "pth_name": "kinetics0_lr1e-3_p9e-1_step10_b64_j64_e100"
         },
         "resume": {
-            "dir_path": "checkpoints/TSM/ucf101",
-            "pth_name": "TSM_ucf101_rgb_s8_e50"
+            "dir_path": "checkpoints/TSM/ucf101/8x224x224",
+            "pth_name": "kinetics0_lr1e-3_p9e-1_step10_b64_j64_e100"
         },
         "finetune": {
             "dir_path": "checkpoints/TSM/tonylin/kinetics/",

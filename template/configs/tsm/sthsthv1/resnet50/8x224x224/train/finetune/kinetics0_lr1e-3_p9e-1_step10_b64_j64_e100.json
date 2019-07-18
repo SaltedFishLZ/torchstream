@@ -127,16 +127,22 @@
     "train": {
         "epochs": 50,
         "backup": {
-            "dir_path": "checkpoints/TSM/sthsth_v1",
-            "pth_name": "TSM_sthsth_v1_rgb_s8_e50"
+            "dir_path": "checkpoints/tsm/sthsthv1/8x224x224/",
+            "pth_name": "kinetics0_lr1e-3_p9e-1_step10_b64_j64_e100",
+
+            "COMMENT":
+            "kinetics0 means finetune from model 0 pretrained on Kinetics"
         },
         "resume": {
-            "dir_path": "checkpoints/TSM/sthsth_v1",
-            "pth_name": "TSM_sthsth_v1_rgb_s8_e50"
+            "dir_path": "checkpoints/tsm/sthsthv1/8x224x224/",
+            "pth_name": "kinetics0_lr1e-3_p9e-1_step10_b64_j64_e100",
+
+            "COMMENT":
+            "kinetics0 means finetune from model 0 pretrained on Kinetics"
         },
         "finetune": {
-            "dir_path": "checkpoints/TSM/batch64/something",
-            "pth_name": "TSM_something_RGB_resnet50_shift8_blockres_avg_segment8_e50.best"
+            "dir_path": "checkpoints/TSM/tonylin/kinetics/",
+            "pth_name": "TSM_kinetics_RGB_resnet50_shift8_blockres_avg_segment8_e50"
         }
     }
 
