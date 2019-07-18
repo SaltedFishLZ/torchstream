@@ -21,7 +21,8 @@ def crop(vid, i, j, h, w):
     """
     if not _is_varray(vid):
         raise TypeError('vid should be ndarray. Got {}'.format(vid))
-    return vid[:, i : i + h, j : j + w, :]
+    return vid[:, i: i + h, j: j + w, :]
+
 
 def center_crop(vid, output_size):
     """Crop the given video in the center
@@ -34,6 +35,7 @@ def center_crop(vid, output_size):
     j = int(round((w - tw) / 2.))
     return crop(vid, i, j, th, tw)
 
+
 def upper_left_crop(vid, output_size):
     """Crop the given video in the upper left
     """
@@ -43,6 +45,7 @@ def upper_left_crop(vid, output_size):
     i = 0
     j = 0
     return crop(vid, i, j, th, tw)
+
 
 def upper_center_crop(vid, output_size):
     """Crop the given video in the upper center
@@ -55,6 +58,7 @@ def upper_center_crop(vid, output_size):
     j = int(round((w - tw) / 2.))
     return crop(vid, i, j, th, tw)
 
+
 def upper_right_crop(vid, output_size):
     """Crop the given video in the upper right
     """
@@ -65,6 +69,7 @@ def upper_right_crop(vid, output_size):
     i = 0
     j = w - tw
     return crop(vid, i, j, th, tw)
+
 
 def center_left_crop(vid, output_size):
     """Crop the given video in the center left
@@ -77,6 +82,7 @@ def center_left_crop(vid, output_size):
     j = 0
     return crop(vid, i, j, th, tw)
 
+
 def center_right_crop(vid, output_size):
     """Crop the given video in the center right
     """
@@ -87,6 +93,7 @@ def center_right_crop(vid, output_size):
     i = int(round((h - th) / 2.))
     j = w - tw
     return crop(vid, i, j, th, tw)
+
 
 def lower_left_crop(vid, output_size):
     """Crop the given video in the lower left
@@ -99,6 +106,7 @@ def lower_left_crop(vid, output_size):
     j = 0
     return crop(vid, i, j, th, tw)
 
+
 def lower_center_crop(vid, output_size):
     """Crop the given video in the lower center
     """
@@ -110,6 +118,7 @@ def lower_center_crop(vid, output_size):
     j = int(round((w - tw) / 2.))
     return crop(vid, i, j, th, tw)
 
+
 def lower_right_crop(vid, output_size):
     """Crop the given video in the lower right
     """
@@ -120,6 +129,7 @@ def lower_right_crop(vid, output_size):
     i = h - th
     j = w - tw
     return crop(vid, i, j, th, tw)
+
 
 def five_crop(vid, output_size):
     """
@@ -134,6 +144,7 @@ def five_crop(vid, output_size):
     center = center_crop(vid, output_size)
     return (ul, ur, ll, lr, center)
 
+
 def one_of_five_crop(vid, output_size):
     """
     """
@@ -146,6 +157,7 @@ def one_of_five_crop(vid, output_size):
     ]
     transform = random.choice(transforms)
     return transform(vid, output_size)
+
 
 def nine_crop(vid, output_size):
     """
@@ -169,6 +181,7 @@ def nine_crop(vid, output_size):
             ll, lc, lr
         )
     )
+
 
 def one_of_nine_crop(vid, output_size):
     """
