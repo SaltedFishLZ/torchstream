@@ -141,7 +141,7 @@
             "kinetics0 means finetune from model 0 pretrained on Kinetics"
         },
         "finetune": {
-            "dir_path": "checkpoints/TSM/tonylin/kinetics/",
+            "dir_path": "checkpoints/tsm/tonylin/kinetics/",
             "pth_name": "TSM_kinetics_RGB_resnet50_shift8_blockres_avg_segment8_e50"
         }
     }
