@@ -153,7 +153,6 @@ def main(args):
         configs["gpus"] = args.gpus
     else:
         configs["gpus"] = list(range(torch.cuda.device_count()))
-    epochs = 0
     device = torch.device("cuda:0")
 
     # -------------------------------------------------------- #
@@ -265,6 +264,7 @@ def main(args):
     backup_config = None
     if "backup" in configs["train"]:
         backup_config = configs["train"]["backup"]
+    epochs = configs["train"]["epochs"]
 
     for epoch in range(start_epoch, epochs):
 
