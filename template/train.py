@@ -271,9 +271,15 @@ def main(args):
         if backup_config is not None:
             dir_path = backup_config["dir_path"]
             pth_name = backup_config["pth_name"]
+
+            model_state_dict = model.state_dict()
+            model_state_dict = utils.checkpoint.to_cpu(model_state_dict)
+            utils.checkpoint.remove_prefix_in_keys(model_state_dict)
+            print(model_state_dict.keys())
+
             checkpoint = {
                 "epoch": epoch,
-                "model_state_dict": model.state_dict(),
+                "model_state_dict": model_state_dict,
                 "optimizer_state_dict": optimizer.state_dict(),
                 "lr_scheduler_state_dict": lr_scheduler.state_dict(),
                 "best_prec1": best_prec1
