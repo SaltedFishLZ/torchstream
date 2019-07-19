@@ -14,7 +14,7 @@ class TSN(nn.Module):
         input_size (tuple): (T, H, W), shape of the input blob. channel == 3 only
     """
     def __init__(self, cls_num, input_size,
-                 base_model='resnet50', dropout=0.8, partial_bn=True,
+                 base_model="resnet50", dropout=0.8, partial_bn=True,
                  use_softmax=False, **kwargs):
 
         super(TSN, self).__init__()

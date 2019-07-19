@@ -125,7 +125,6 @@ def train(device, loader, model, criterion,
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
-        lr_scheduler.step()
 
         # measure elapsed time on GPU
         batch_time.update(time.time() - end)
@@ -139,6 +138,10 @@ def train(device, loader, model, criterion,
                                  top1_meter=top1_meter,
                                  top5_meter=top5_meter,
                                  lr=optimizer.param_groups[-1]['lr']))
+
+    # schedule lr after each epoch
+    lr_scheduler.step()
+
 
 
 def main(args):
@@ -209,7 +212,7 @@ def main(args):
         if checkpoint is not None:
             model.load_state_dict(checkpoint["model_state_dict"])
     # ignore finetune if there is a checkpoint
-    elif "finetune" in configs["train"]:
+    if (checkpoint is None) and ("finetune" in configs["train"]):
         finetune_config = configs["train"]["finetune"]
         checkpoint = utils.load_checkpoint(**finetune_config)
         if checkpoint is None:
@@ -223,6 +226,8 @@ def main(args):
                 print("Replacing ", key)
                 model_state_dict[key] = model.state_dict()[key]
         model.load_state_dict(model_state_dict)
+        # set to None to prevent loading other states
+        checkpoint = None
 
     model.to(device)
     model = torch.nn.DataParallel(model, device_ids=configs["gpus"])
