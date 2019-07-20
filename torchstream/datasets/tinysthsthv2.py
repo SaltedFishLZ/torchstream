@@ -50,7 +50,7 @@ class TinySomethingSomethingV2(VideoDataset):
             # here, we use validation set
             datapoint_filter = sth_sth_v2.ValsetFilter()
 
-        super(TinySomethingSomethingV1, self).__init__(
+        super(TinySomethingSomethingV2, self).__init__(
             root=root, layout=layout,
             annots=annots,
             class_to_idx=class_to_idx,
