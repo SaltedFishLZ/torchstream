@@ -1,9 +1,9 @@
 import importlib
 
 from .dataset import VideoDataset
-from .metadata.metasets import sth_sth_v1 as sth_sth_v1
+from .metadata.metasets import sth_sth_v2 as sth_sth_v2
 
-class TinySomethingSomethingV1(VideoDataset):
+class TinySomethingSomethingV2(VideoDataset):
 
     def __init__(self, train=True, transform=None, target_transform=None,
                  **kwargs):
@@ -12,9 +12,9 @@ class TinySomethingSomethingV1(VideoDataset):
 
         mod = "RGB"
         ext = "avi"
-        root = sth_sth_v1.AVI_DATA_PATH
-        layout = sth_sth_v1.__layout__
-        annots = sth_sth_v1.__ANNOTATIONS__
+        root = sth_sth_v2.AVI_DATA_PATH
+        layout = sth_sth_v2.__layout__
+        annots = sth_sth_v2.__ANNOTATIONS__
 
 
         categories = [
@@ -45,12 +45,12 @@ class TinySomethingSomethingV1(VideoDataset):
 
 
         if train:
-            datapoint_filter = sth_sth_v1.TrainsetFilter()
+            datapoint_filter = sth_sth_v2.TrainsetFilter()
         else:
             # here, we use validation set
-            datapoint_filter = sth_sth_v1.ValsetFilter()
+            datapoint_filter = sth_sth_v2.ValsetFilter()
 
-        super(TinySomethingSomethingV1, self).__init__(
+        super(TinySomethingSomethingV2, self).__init__(
             root=root, layout=layout,
             annots=annots,
             class_to_idx=class_to_idx,
