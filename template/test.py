@@ -4,6 +4,8 @@ import argparse
 import torch
 from torch.utils.data import RandomSampler
 import torchstream
+import numpy as np
+import matplotlib.pyplot as plt
 
 import cfgs
 import utils
@@ -62,28 +64,28 @@ def test(device, loader, model, criterion,
                 if trace_logit is None:
                     trace_logit = output.cpu()
                 else:
-                    trace_logit = torch.cat((trace_logit, output))
+                    trace_logit = torch.cat((trace_logit, output.cpu()))
 
-            prob = torch.nn.functional.softmax(output)
+            prob = torch.nn.functional.softmax(output).cpu()
             if dump_prob:
                 if trace_prob is None:
                     trace_prob = prob.cpu()
                 else:
-                    trace_prob = torch.cat((trace_prob, prob))
+                    trace_prob = torch.cat((trace_prob, prob.cpu()))
 
             predict = utils.metrics.output2pred(output, maxk=5)
             if dump_predict:
                 if trace_predict is None:
                     trace_predict = predict.cpu()
                 else:
-                    trace_predict = torch.cat((trace_predict, predict))
-            
+                    trace_predict = torch.cat((trace_predict, predict.cpu()), dim=1)
+
             correct = utils.metrics.classify_corrects(predict, target)
             if dump_correct:
                 if trace_correct is None:
                     trace_correct = correct.cpu()
                 else:
-                    trace_correct = torch.cat((trace_correct, correct))
+                    trace_correct = torch.cat((trace_correct, correct.cpu()), dim=1)
 
             # measure loss & accuracy
             loss = criterion(output, target)
@@ -116,7 +118,12 @@ def test(device, loader, model, criterion,
                   loss_meter=loss_meter))
 
     # save trace to file
-    print(trace_prob)
+    max_prob = torch.max(trace_prob, dim=1)[0].numpy()
+    correct = trace_correct[0].numpy()
+    fig = plt.figure()
+    ax = plt.subplot()
+    ax.hist(max_prob)
+    plt.show()
 
     return top1_meter.avg
 
