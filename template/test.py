@@ -66,7 +66,7 @@ def test(device, loader, model, criterion,
                 else:
                     trace_logit = torch.cat((trace_logit, output.cpu()))
 
-            prob = torch.nn.functional.softmax(output).cpu()
+            prob = torch.nn.functional.softmax(output, dim=-1).cpu()
             if dump_prob:
                 if trace_prob is None:
                     trace_prob = prob.cpu()
@@ -118,8 +118,8 @@ def test(device, loader, model, criterion,
                   loss_meter=loss_meter))
 
     # save trace to files
-
     if dump_logit:
+        os.makedirs(trace_dir, exist_ok=True)
         file_path = os.path.join(trace_dir, "trace_logit.pkl")
         with open(file_path, "wb") as f:
             pickle.dump(trace_logit, f)
@@ -190,7 +190,7 @@ def main(args):
     criterion.to(device)
 
     test(device, test_loader, model, criterion,
-         trace_dir="test",
+         trace_dir=args.trace_dir,
          dump_logit=args.dump_logit,
          dump_prob=args.dump_prob,
          dump_pred=args.dump_pred,
@@ -215,5 +215,6 @@ if __name__ == "__main__":
     parser.add_argument("--dump_correct", action="store_true")
 
     args = parser.parse_args()
+    print(args)
 
     main(args)
