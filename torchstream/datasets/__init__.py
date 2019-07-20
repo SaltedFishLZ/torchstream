@@ -10,3 +10,4 @@ from .jesterv1 import JesterV1
 from .sthsthv1 import SomethingSomethingV1
 from .sthsthv2 import SomethingSomethingV2
 from .tinysthsthv1 import TinySomethingSomethingV1
+from .tinysthsthv2 import TinySomethingSomethingV2
