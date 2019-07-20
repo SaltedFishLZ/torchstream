@@ -1,4 +1,4 @@
-import json, time, pickle
+import os, json, time, pickle
 import argparse
 
 import torch
@@ -21,13 +21,13 @@ test_log_str = "Testing:[{:4d}/{:4d}]  " + \
 def test(device, loader, model, criterion,
          log_str=test_log_str, log_interval=20,
          trace_dir=None, dump_logit=False, dump_prob=False,
-         dump_predict=False, dump_correct=False,
+         dump_pred=False, dump_correct=False,
          **kwargs):
 
-    if ((dump_logit or dump_prob or dump_predict or dump_correct)
+    if ((dump_logit or dump_prob or dump_pred or dump_correct)
             and isinstance(loader.sampler, RandomSampler)):
         raise ValueError("DataLoader cannot be shuffled when dumping traces!")
-    if ((dump_logit or dump_prob or dump_predict or dump_correct)
+    if ((dump_logit or dump_prob or dump_pred or dump_correct)
             and (trace_dir is None)):
         raise ValueError("Must Specify Trace Directory!")
 
@@ -45,7 +45,7 @@ def test(device, loader, model, criterion,
 
     trace_logit = None
     trace_prob = None
-    trace_predict = None
+    trace_pred = None
     trace_correct = None
 
     with torch.no_grad():
@@ -74,11 +74,11 @@ def test(device, loader, model, criterion,
                     trace_prob = torch.cat((trace_prob, prob.cpu()))
 
             predict = utils.metrics.output2pred(output, maxk=5)
-            if dump_predict:
-                if trace_predict is None:
-                    trace_predict = predict.cpu()
+            if dump_pred:
+                if trace_pred is None:
+                    trace_pred = predict.cpu()
                 else:
-                    trace_predict = torch.cat((trace_predict, predict.cpu()), dim=1)
+                    trace_pred = torch.cat((trace_pred, predict.cpu()), dim=1)
 
             correct = utils.metrics.classify_corrects(predict, target)
             if dump_correct:
@@ -117,13 +117,27 @@ def test(device, loader, model, criterion,
                   top5_meter=top5_meter,
                   loss_meter=loss_meter))
 
-    # save trace to file
-    max_prob = torch.max(trace_prob, dim=1)[0].numpy()
-    correct = trace_correct[0].numpy()
-    fig = plt.figure()
-    ax = plt.subplot()
-    ax.hist(max_prob)
-    plt.show()
+    # save trace to files
+
+    if dump_logit:
+        file_path = os.path.join(trace_dir, "trace_logit.pkl")
+        with open(file_path, "wb") as f:
+            pickle.dump(trace_logit, f)
+
+    if dump_prob:
+        file_path = os.path.join(trace_dir, "trace_prob.pkl")
+        with open(file_path, "wb") as f:
+            pickle.dump(trace_prob, f)
+
+    if dump_pred:
+        file_path = os.path.join(trace_dir, "trace_pred.pkl")
+        with open(file_path, "wb") as f:
+            pickle.dump(trace_pred, f)
+
+    if dump_correct:
+        file_path = os.path.join(trace_dir, "trace_correct.pkl")
+        with open(file_path, "wb") as f:
+            pickle.dump(trace_correct, f)
 
     return top1_meter.avg
 
@@ -176,8 +190,11 @@ def main(args):
     criterion.to(device)
 
     test(device, test_loader, model, criterion,
-         trace_dir="test", dump_logit=True, dump_prob=True,
-         dump_predict=True, dump_correct=True
+         trace_dir="test",
+         dump_logit=args.dump_logit,
+         dump_prob=args.dump_prob,
+         dump_pred=args.dump_pred,
+         dump_correct=args.dump_correct
          )
 
 
@@ -190,6 +207,12 @@ if __name__ == "__main__":
                         help="path to configuration file")
     parser.add_argument("--weights", type=str, default=None)
     parser.add_argument("--gpus", nargs='+', type=int, default=None)
+
+    parser.add_argument("--trace_dir", type=str, default=None)
+    parser.add_argument("--dump_logit", action="store_true")
+    parser.add_argument("--dump_prob", action="store_true")
+    parser.add_argument("--dump_pred", action="store_true")
+    parser.add_argument("--dump_correct", action="store_true")
 
     args = parser.parse_args()
 
