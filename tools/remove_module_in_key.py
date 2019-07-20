@@ -20,8 +20,8 @@ def remove_module_in_key(state_dict):
 if __name__ == "__main__":
     if len(sys.argv) == 2:
         dir_path = sys.argv[1]
-        checkpoints = glob.glob(dir_path+"/*/*/*.pth")
-        
+        checkpoints = glob.glob(dir_path+"/*.pth")
+
         for checkpoint in tqdm.tqdm(checkpoints):
             # print(40*"##")
             # print(checkpoint)

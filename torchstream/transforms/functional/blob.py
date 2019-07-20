@@ -7,11 +7,13 @@ __all__ = ["to_tensor", "to_varray"]
 import torch
 import numpy as np
 
+
 def _is_vtensor(x):
     return(
         torch.is_tensor(x)
         and (x.ndimension() == 4)
     )
+
 
 def _is_varray(x):
     return(
@@ -19,6 +21,7 @@ def _is_varray(x):
         and (x.ndim == 4)
         and (x.dtype == np.uint8)
     )
+
 
 def to_tensor(varray):
     """Convert a ``varray`` to tensor.
@@ -41,12 +44,13 @@ def to_tensor(varray):
     else:
         return vtensor
 
+
 def to_varray(vid):
     """Convert tensor to ``varray``
     """
     if not _is_vtensor(vid):
         raise TypeError
-    
+
     if isinstance(vid, torch.FloatTensor):
         vid = vid.mul(255).byte()
 

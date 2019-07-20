@@ -11,7 +11,8 @@ from torchstream.transforms import *
 
 def make_temporal_shift(net, seg_num, fold_div=8,
                         place='blockres',
-                        temporal_pool=False
+                        temporal_pool=False,
+                        verbose=False
                        ):
     """
     """
@@ -20,7 +21,8 @@ def make_temporal_shift(net, seg_num, fold_div=8,
     else:
         seg_num_list = [seg_num] * 4
     assert seg_num_list[-1] > 0
-    print('=> seg_num per stage: {}'.format(seg_num_list))
+    if verbose:
+        print('=> seg_num per stage: {}'.format(seg_num_list))
 
     if isinstance(net, torchvision.models.ResNet):
         ## insert a temporal shift moduel before the block
@@ -29,7 +31,8 @@ def make_temporal_shift(net, seg_num, fold_div=8,
             def make_block_temporal(stage, seg_num):
                 old_blocks = list(stage.children())
                 new_blocks = []
-                print('=> Processing stage with {} blocks'.format(len(old_blocks)))
+                if verbose:
+                    print('=> Processing stage with {} blocks'.format(len(old_blocks)))
                 for block in old_blocks:
                     shift = TemporalShift(seg_num=seg_num, fold_div=fold_div)
                     new_blocks.append([shift, block])
@@ -43,11 +46,13 @@ def make_temporal_shift(net, seg_num, fold_div=8,
         elif 'blockres' in place:
             n_round = 1
             if len(list(net.layer3.children())) >= 23:
-                print('=> Using n_round {} to insert temporal shift'.format(n_round))
+                if verbose:
+                    print('=> Using n_round {} to insert temporal shift'.format(n_round))
 
             def make_block_temporal(stage, seg_num):
                 blocks = list(stage.children())
-                print('=> Processing stage with {} blocks residual'.format(len(blocks)))
+                if verbose:
+                    print('=> Processing stage with {} blocks residual'.format(len(blocks)))
                 for i, b in enumerate(blocks):
                     if i % n_round == 0:
                         shift = TemporalShift(seg_num=seg_num, fold_div=fold_div)
@@ -69,9 +74,10 @@ def make_temporal_shift(net, seg_num, fold_div=8,
         raise NotImplementedError("Backbone netowrk {}".format(net))
 
 
-def make_temporal_pool(net, seg_num):
+def make_temporal_pool(net, seg_num, verbose=False):
     if isinstance(net, torchvision.models.ResNet):
-        print('=> Injecting nonlocal pooling')
+        if verbose:
+            print('=> Injecting nonlocal pooling')
         net.layer2 = TemporalPool(net.layer2, seg_num)
     else:
         raise NotImplementedError

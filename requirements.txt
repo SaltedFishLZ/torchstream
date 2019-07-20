@@ -1,7 +1,8 @@
 tqdm
 torch==1.1
 torchvision==0.3
-opencv-python
+opencv-python==3.4.5.20
 psutil
 pandas
+sklearn
 matplotlib

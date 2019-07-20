@@ -1,3 +1,11 @@
+# logs
+*.log
+
+#
+*.jpg
+*.png
+*.txt
+
 # model file
 *.pth
 *.pth.tar
