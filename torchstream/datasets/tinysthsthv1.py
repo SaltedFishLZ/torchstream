@@ -20,6 +20,10 @@ class TinySomethingSomethingV1(VideoDataset):
         categories = [
             "Holding something",
             "Turning something upside down",
+            "Turning the camera left while filming something",
+            "Turning the camera right while filming something",
+            "Opening something",
+            "Approaching something with your camera",
             "Picking something up",
             "Pretending to pick something up",
             "Pretending to put something onto something",
@@ -27,12 +31,16 @@ class TinySomethingSomethingV1(VideoDataset):
         ]
 
         class_to_idx = {
-            "Holding something"                         : 0,
-            "Turning something upside down"             : 1,
-            "Picking something up"                      : 2,
-            "Pretending to pick something up"           : 3,
-            "Pretending to put something onto something": 4,
-            "Putting something onto something"          : 5,
+            "Holding something"                                 : 0,
+            "Turning something upside down"                     : 1,
+            "Turning the camera left while filming something"   : 2,
+            "Turning the camera right while filming something"  : 3,
+            "Opening something"                                 : 4,
+            "Approaching something with your camera"            : 5,
+            "Picking something up"                              : 6,
+            "Pretending to pick something up"                   : 7,
+            "Pretending to put something onto something"        : 8,
+            "Putting something onto something"                  : 9,
         }
 
 
@@ -42,14 +50,16 @@ class TinySomethingSomethingV1(VideoDataset):
             # here, we use validation set
             datapoint_filter = sth_sth_v1.ValsetFilter()
 
-        super(SomethingSomethingV1Tiny, self).__init__(root=root, layout=layout,
-                                                       annots=annots,
-                                                       class_to_idx=class_to_idx,
-                                                   mod=mod, ext=ext, tmpl="{0:05d}", offset=1,
-                                                   datapoint_filter=datapoint_filter,
-                                                   transform=transform,
-                                                   target_transform=target_transform,
-                                                   **kwargs)
+        super(TinySomethingSomethingV1, self).__init__(
+            root=root, layout=layout,
+            annots=annots,
+            class_to_idx=class_to_idx,
+            mod=mod, ext=ext, tmpl="{0:05d}", offset=1,
+            datapoint_filter=datapoint_filter,
+            transform=transform,
+            target_transform=target_transform,
+            **kwargs
+            )
 
 
         ## filter samples
