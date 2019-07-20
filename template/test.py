@@ -1,11 +1,12 @@
-import json
+import json, time, pickle
 import argparse
 
 import torch
+from torch.utils.data import RandomSampler
 import torchstream
 
 import cfgs
-
+import utils
 
 test_log_str = "Testing:[{:4d}/{:4d}]  " + \
                "BatchTime:{batch_time.val:6.2f}({batch_time.avg:6.2f}),  " + \
@@ -16,9 +17,108 @@ test_log_str = "Testing:[{:4d}/{:4d}]  " + \
 
 
 def test(device, loader, model, criterion,
-         log_str=test_log_str, log_interval=20, **kwargs):
-    from train import validate
-    validate(device, loader, model, criterion, log_str, log_interval, **kwargs)
+         log_str=test_log_str, log_interval=20,
+         trace_dir=None, dump_logit=False, dump_prob=False,
+         dump_predict=False, dump_correct=False,
+         **kwargs):
+
+    if ((dump_logit or dump_prob or dump_predict or dump_correct)
+            and isinstance(loader.sampler, RandomSampler)):
+        raise ValueError("DataLoader cannot be shuffled when dumping traces!")
+    if ((dump_logit or dump_prob or dump_predict or dump_correct)
+            and (trace_dir is None)):
+        raise ValueError("Must Specify Trace Directory!")
+
+    batch_time = utils.Meter()
+    data_time = utils.Meter()
+    loss_meter = utils.Meter()
+    top1_meter = utils.Meter()
+    top5_meter = utils.Meter()
+
+    metric = utils.ClassifyAccuracy(topk=(1, 5))
+
+    model.eval()
+
+    end = time.time()
+
+    trace_logit = None
+    trace_prob = None
+    trace_predict = None
+    trace_correct = None
+
+    with torch.no_grad():
+        for i, (input, target) in enumerate(loader):
+            input = input.to(device)
+            target = target.to(device)
+
+            # measure extra data loading time
+            data_time.update(time.time() - end)
+
+            # get result
+            output = model(input)
+
+            # dump trace
+            if dump_logit:
+                if trace_logit is None:
+                    trace_logit = output.cpu()
+                else:
+                    trace_logit = torch.cat((trace_logit, output))
+
+            prob = torch.nn.functional.softmax(output)
+            if dump_prob:
+                if trace_prob is None:
+                    trace_prob = prob.cpu()
+                else:
+                    trace_prob = torch.cat((trace_prob, prob))
+
+            predict = utils.metrics.output2pred(output, maxk=5)
+            if dump_predict:
+                if trace_predict is None:
+                    trace_predict = predict.cpu()
+                else:
+                    trace_predict = torch.cat((trace_predict, predict))
+            
+            correct = utils.metrics.classify_corrects(predict, target)
+            if dump_correct:
+                if trace_correct is None:
+                    trace_correct = correct.cpu()
+                else:
+                    trace_correct = torch.cat((trace_correct, correct))
+
+            # measure loss & accuracy
+            loss = criterion(output, target)
+            accuracy = metric(output.data, target)
+            prec1 = accuracy[1]
+            prec5 = accuracy[5]
+
+            loss_meter.update(loss, input.size(0))
+            top1_meter.update(prec1, input.size(0))
+            top5_meter.update(prec5, input.size(0))
+
+            # measure elapsed time
+            batch_time.update(time.time() - end)
+            end = time.time()
+
+            if i % log_interval == 0:
+                print(log_str.format(i, len(loader),
+                                     batch_time=batch_time,
+                                     data_time=data_time,
+                                     loss_meter=loss_meter,
+                                     top1_meter=top1_meter,
+                                     top5_meter=top5_meter))
+
+    print("Results:\n"
+          "Prec@1 {top1_meter.avg:5.3f} "
+          "Prec@5 {top5_meter.avg:5.3f} "
+          "Loss {loss_meter.avg:5.3f}"
+          .format(top1_meter=top1_meter,
+                  top5_meter=top5_meter,
+                  loss_meter=loss_meter))
+
+    # save trace to file
+    print(trace_prob)
+
+    return top1_meter.avg
 
 
 def main(args):
@@ -68,7 +168,10 @@ def main(args):
     criterion = cfgs.config2criterion(configs["criterion"])
     criterion.to(device)
 
-    test(device, test_loader, model, criterion)
+    test(device, test_loader, model, criterion,
+         trace_dir="test", dump_logit=True, dump_prob=True,
+         dump_predict=True, dump_correct=True
+         )
 
 
 if __name__ == "__main__":
