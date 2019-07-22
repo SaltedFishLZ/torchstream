@@ -80,7 +80,7 @@
         "num_workers": 64,
         "shuffle": true,
         "pin_memory": true,
-        "drop_last": true
+        "drop_last": false
     },
 
     "val_loader":{

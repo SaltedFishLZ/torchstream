@@ -3,7 +3,7 @@
         {
             "name": "RandomSegment",
             "argv": {
-                "size": 16
+                "size": 8
             }
         },
         {
@@ -39,7 +39,7 @@
             "package": "torchstream.transforms",
             "name": "CenterSegment",
             "argv": {
-                "size": 16
+                "size": 8
             }
         },
         {
@@ -80,7 +80,7 @@
         "num_workers": 64,
         "shuffle": true,
         "pin_memory": true,
-        "drop_last": true
+        "drop_last": false
     },
 
     "val_loader":{
@@ -96,7 +96,7 @@
         "name": "TSM",
         "argv": {
             "cls_num": 174,
-            "input_size": [16, 224, 224],
+            "input_size": [8, 224, 224],
             "base_model": "resnet50",
             "dropout": 0.8,
             "partial_bn": true,
@@ -120,22 +120,22 @@
     "lr_scheduler": {
         "name": "StepLR",
         "argv": {
-            "step_size": 10
+            "step_size": 20
         }
     },
 
     "train": {
-        "epochs": 100,
+        "epochs": 50,
         "backup": {
-            "dir_path": "checkpoints/tsm/sthsthv1/16x224x224/",
-            "pth_name": "kinetics0_lr1e-3_p9e-1_step10_b64_j64_e100",
+            "dir_path": "checkpoints/tsm/sthsthv1/8x224x224/",
+            "pth_name": "kinetics0_lr1e-3_p9e-1_step20_b64_j64_e50",
 
             "COMMENT":
             "kinetics0 means finetune from model 0 pretrained on Kinetics"
         },
         "resume": {
-            "dir_path": "checkpoints/tsm/sthsthv1/16x224x224/",
-            "pth_name": "kinetics0_lr1e-3_p9e-1_step10_b64_j64_e100",
+            "dir_path": "checkpoints/tsm/sthsthv1/8x224x224/",
+            "pth_name": "kinetics0_lr1e-3_p9e-1_step20_b64_j64_e50",
 
             "COMMENT":
             "kinetics0 means finetune from model 0 pretrained on Kinetics"

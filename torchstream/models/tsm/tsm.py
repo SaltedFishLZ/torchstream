@@ -4,7 +4,7 @@ import torch
 import torchvision
 import torch.nn as nn
 
-from .tsn import TSN
+from torchstream.models import TSN
 from torchstream.ops import Consensus, Identity, TemporalShift, TemporalPool
 from torchstream.transforms import *
 
