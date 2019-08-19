@@ -251,9 +251,8 @@ if (os.path.exists(ANNOT_FILE)
         and (touch_date(FILE_PATH) < touch_date(ANNOT_FILE))
    ):
     logger.info("Find valid annotation cache")
-    fin = open(ANNOT_FILE, "rb")
-    __ANNOTATIONS__ = pickle.load(fin)
-    fin.close()
+    with open(ANNOT_FILE, "rb") as fin:
+        __ANNOTATIONS__ = pickle.load(fin)
 else:
     logger.info("Building annotation data...")
     ## training/validation set has labels
@@ -267,10 +266,10 @@ else:
         for _jdict in _jlist:
             video = str(_jdict["id"])
             __ANNOTATIONS__[video] = UNKNOWN_LABEL  
-    ## TODO: write failure check
-    f = open(ANNOT_FILE, "wb")
-    pickle.dump(__ANNOTATIONS__, f)
-    f.close()
+    # ## TODO: write failure check
+    # f = open(ANNOT_FILE, "wb")
+    # pickle.dump(__ANNOTATIONS__, f)
+    # f.close()
 
 
 def test():

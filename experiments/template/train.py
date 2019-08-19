@@ -301,7 +301,7 @@ def worker(pid, ngpus_per_node, args):
     if args.distributed:
         torch.cuda.set_device(args.gid)
         model.cuda(args.gid)
-        model = torch.nn.parallel.DistributedDataParallel(model, , device_ids=[args.gid])
+        model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gid])
     else:
         model = torch.nn.DataParallel(model).cuda()
 

@@ -256,10 +256,10 @@ else:
         for idx, row in df.iterrows():
             video = str(row["video"])
             __ANNOTATIONS__[video] = UNKNOWN_LABEL
-    ## TODO: write failure check
-    fout = open(ANNOT_FILE, "wb")
-    pickle.dump(__ANNOTATIONS__, fout)
-    fout.close()
+    # ## TODO: write failure check
+    # fout = open(ANNOT_FILE, "wb")
+    # pickle.dump(__ANNOTATIONS__, fout)
+    # fout.close()
 
 
 ## Self Test Function
