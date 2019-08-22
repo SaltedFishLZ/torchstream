@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
 # Video / Image IO Utilities
 # Author: Zheng Liang
-# 
 # NOTE
 # This module only handle data of a certain modality. To fuse
-# different modalities (e.g., RGB + Flow), please do it at the 
+# different modalities (e.g., RGB + Flow), please do it at the
 # dataset level
-# 
+#
 # Term / Naming Conversion:
 # ┌─────────────┬───────────────────────────────────────────────┐
 # │ Frames(s)   |*Description: Separate images(s) from a certain|
@@ -31,8 +30,8 @@
 # |             | 'varray', 'v_array', 'vid_array'              |
 # |             |*Type: numpy.ndarray('uint8')                  |
 # └─────────────┴───────────────────────────────────────────────┘
-# 
-# 
+#
+#
 
 import os
 import logging
@@ -43,8 +42,6 @@ import psutil
 
 from . import __config__
 
-FILE_PATH = os.path.realpath(__file__)
-DIR_PATH = os.path.dirname(FILE_PATH)
 
 # local settings (only in dev)
 __FRAME_NUM_ERR_LIMIT__ = 10
@@ -80,31 +77,29 @@ else:
 # ------------------------------------------------------------------------- #
 
 def failure_suspection(**kwargs):
-    # suspections:
-    # - memory overflow
-    # - video not exists
-    # - unknown
+    """
+    """
     reasons = []
-    
+    # memory overflow
     vm_dict = psutil.virtual_memory()._asdict()
     if vm_dict["percent"] > 95:
         _reason = "memory usage {};".format(vm_dict["percent"])
         reasons.append(_reason)
-    
+    # video missing
     if "vid_path" in kwargs:
         if not os.path.exists(kwargs["vid_path"]):
-            _reason = "file not exists"
+            _reason = "file missing"
             reasons.append(_reason)
-    
     return ';'.join(reasons)
 
 
 def convert_farray_color(farray, cin, cout, **kwargs):
     """
-    - farray : input frame as a Numpy ndarray
-    - cin : input frame's color space
-    - cout : output frame's color space
-    - return value : output frame as a Numpy ndarray   
+    Args:
+        farray : input frame as a Numpy ndarray
+        cin : input frame's color space
+        cout : output frame's color space
+        return value : output frame as a Numpy ndarray   
     """
     if (cin == cout):
         return(farray)
@@ -142,14 +137,13 @@ def farray_show(caption, farray, cin="RGB", **kwargs):
 # ------------------------------------------------------------------------- #
 
 def video2ndarray(video, cin="BGR", cout="RGB", **kwargs):
+    """Read video from given file path and return 1 video array.
+    Args:
+        video (str): input video file path
+        cin (str): input video's color space
+        cout (str): output ndarray's color space
+        return(ndarray): a Numpy ndarray for the video
     """
-    Read video from given file path ${video} and return the video array.
-    - video : input video file path
-    - cin : input video's color space
-    - cout : output ndarray's color space
-    - return value : a Numpy ndarray for the video
-    """
-    # Check santity
     # TODO: currenly only support input BGR video
     assert "BGR" == cin, NotImplementedError("Only supported BGR video")
     
@@ -157,7 +151,7 @@ def video2ndarray(video, cin="BGR", cout="RGB", **kwargs):
         if not os.path.exists(video):
             warn_str = "[video2frames] src video {} missing".format(video)
             logger.error(warn_str)
-            return(False)
+            return False
         
     # open VideoCapture
     cap = cv2.VideoCapture(video)
@@ -230,7 +224,6 @@ def video2ndarray(video, cin="BGR", cout="RGB", **kwargs):
             warn_str += "Get {} frames."
             warn_str = warn_str.format(video, f_n, cnt)
             logger.error(warn_str)
-        # slice the buffder
         buf = buf[:cnt, : , :, :]
 
     # output status
@@ -240,17 +233,16 @@ def video2ndarray(video, cin="BGR", cout="RGB", **kwargs):
 
     return buf
 
-## Video -> Frames
-#  Dump a video file to frame files
+
 def video2frames(video, dst_path, cin="BGR", cout="BGR", **kwargs):
-    """
-    Read 1 video from ${video} and dump to frames in ${dst_path}.
-    - video : the input video file path
-    - dst_path : destination directory for images
-    - cin : input video's color space
-    - cout : output frames' color space
-    - return value : (False, 0) if failed; (True, ${frame count}) if 
-    succeeded. TODO: format string for frames
+    """Read 1 video from ${video} and dump to frames in ${dst_path}.
+    Args:
+        video : the input video file path
+        dst_path : destination directory for images
+        cin : input video's color space
+        cout : output frames' color space
+        return : (False, 0) if failed; (True, ${frame count}) if 
+            succeeded. TODO: format string for frames
     """
     # check santity
     # TODO: currenly only support input BGR video
@@ -382,12 +374,12 @@ def ndarray2video(varray, dst_path, cin="RGB", cout="BGR", fps=12, **kwargs):
 
 
 def frame2ndarray(frame, cin="BGR", cout="RGB"):
-    """
-    Read 1 frame and get a farray
-    - frame : input frame's file path
-    - cin : input frame's color space
-    - cout : output ndarray's color space  
-    - return value : the corresponding farray of the frame
+    """Read 1 frame and get a farray
+    Args:
+        frame : input frame's file path
+        cin : input frame's color space
+        cout : output ndarray's color space  
+        return value : the corresponding farray of the frame
     """
     # santity check
     # TODO
@@ -409,12 +401,12 @@ def frame2ndarray(frame, cin="BGR", cout="RGB"):
 
 
 def frames2ndarray(frames, cin="BGR", cout="RGB", **kwargs):
-    """
-    Read all frames, take them as a continuous video, and get a varray
-    - frames : input frames' file paths
-    - cin : input video's color space
-    - cout : output ndarray's color space  
-    - return value : the corresponding varray of all the frames
+    """Read all frames, take them as a continuous video, and get a varray
+    Args:
+        frames : input frames' file paths
+        cin : input video's color space
+        cout : output ndarray's color space  
+        return value : the corresponding varray of all the frames
     """
     # get video shape & check santity
     _f = len(frames)
