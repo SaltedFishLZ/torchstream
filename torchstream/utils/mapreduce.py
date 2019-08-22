@@ -116,9 +116,9 @@ class Manager(object):
 
     def hire(self, worker_num):
         for _i in range(worker_num):
-            self.workers.append(Worker(
-                wid=_i, mapper=self.mapper, reducer=self.reducer,
-                **(self.kwargs)))
+            self.workers.append(Worker(wid=_i,
+                                       mapper=self.mapper,
+                                       reducer=self.reducer))
 
     def launch(self, tasks, progress=False):
         """
