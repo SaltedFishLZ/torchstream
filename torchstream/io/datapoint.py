@@ -7,71 +7,67 @@ import collections
 
 from . import __config__
 from .__const__ import UNKNOWN_LABEL
-from .__support__ import __SUPPORTED_MODALITIES__, \
-    __SUPPORTED_IMAGES__, __SUPPORTED_VIDEOS__
+from .__support__ import __SUPPORTED_IMAGES__, __SUPPORTED_VIDEOS__
 from ..utils.filesys import strip_extension
 
-
-# ---------------------------------------------------------------- #
-#                  Configuring Python Logger                       #
-# ---------------------------------------------------------------- #
-
-if __config__.__VERY_VERBOSE__:
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(name)s - %(levelname)s - %(message)s"
-    )
-elif __config__.__VERY_VERBOSE__:
-    logging.basicConfig(
-        level=logging.WARNING,
-        format="%(name)s - %(levelname)s - %(message)s"
-    )
-elif __config__.__VERBOSE__:
-    logging.basicConfig(
-        level=logging.ERROR,
-        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-    )
-else:
-    logging.basicConfig(
-        level=logging.CRITICAL,
-        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-    )
-    
+# configuring logger
+LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+logging.basicConfig(format=LOG_FORMAT)
 logger = logging.getLogger(__name__)
+logger.setLevel(__config__.LOGGER_LEVEL)
 
 
 class DataPoint(object):
+    """Meta-data of a video sample in a certain dataset
+    Args:
+        root (str): root path of the dataset
+        reldir (str): relative directory path of the sample in the dataset
+        name (str): file name of the sample (without any extension and path)
+        ext (str): file extension of the sample (e.g., "avi", "mp4").
+            NOTE: '.' excluded.
+        label (str): class label of this sample
     """
-    An video sample struct containing the meta-data of a video sample
-    """
-    #  @param root str: absolute root path of the dataset
-    #  @param path str: absolute path of 1 video sample
-    #  @param name str: file name (without any extension and path)
-    #  @param ext str:  file extension (e.g., "avi", "mp4"), '.' excluded.
-    #  @param label str:  
-    #      label of the sample, is a unique string in certain dataset
-    #  @param cid str:  
-    #      class id of the sample, is the numerical representation of label
-    def __init__(self, root, rpath, name, label=UNKNOWN_LABEL,
-                 mod="RGB", ext="jpg"):
+    def __init__(self, root, reldir, name, ext="jpg", label=UNKNOWN_LABEL):
         assert isinstance(root, str), TypeError
-        assert isinstance(rpath, str), TypeError
+        assert isinstance(reldir, str), TypeError
         assert isinstance(name, str), TypeError
-        assert isinstance(mod, str), TypeError
         assert isinstance(ext, str), TypeError
         assert isinstance(label, str), TypeError
 
-        if __config__.__STRICT__:
-            assert mod in __SUPPORTED_MODALITIES__, NotImplementedError
-            assert ext in __SUPPORTED_MODALITIES__[mod], NotImplementedError
         self.root = root
-        self.rpath = rpath
+        self.reldir = reldir
         self.name = name
-        self.mod = mod
         self.ext = ext
         self.label = label
+
+    @property
+    def seq(self):
+        return self.ext in __SUPPORTED_IMAGES__["RGB"]
+
+    @property
+    def absdir(self):
+        return os.path.join(self.root, self.reldir)
+
+    @property
+    def filename(self):
+        if not self.seq:
+            if (self.ext != "") and (self.ext is not None):
+                return self.name + "." + self.ext
+        return self.name
+
+    @property
+    def path(self):
+        return os.path.join(self.absdir, self.name)
+
+    @property
+    def fcount(self):
+        self.fcount = None
+        if self.seq:
+            self.fcount = len(os.listdir(self.path))
+
+
         self.seq = ext in __SUPPORTED_IMAGES__[mod]
-        self.path = os.path.join(root, rpath)
+        self.path = os.path.join(root, reldir)
         self.fcount = None
         if self.seq:
             self.fcount = len(os.listdir(self.path))
@@ -114,10 +110,10 @@ class DataPoint(object):
         except ValueError:
             name_1 = other.name
         
-        ## both name can be converted to int
+        # both name can be converted to int
         if isinstance(name_0, int) and isinstance(name_1, int):
             return name_0 < name_1
-        ## compare order: label -> name
+        # compare order: label -> name
         else:
             if self.label != other.label:
                 return self.label < other.label
@@ -131,7 +127,7 @@ class DataPoint(object):
         datapoint = copy.deepcopy(self)
         datapoint.root = new_root
         datapoint.path = os.path.join(datapoint.root,
-                                      datapoint.rpath)
+                                      datapoint.reldir)
         return datapoint
 
 
@@ -147,7 +143,7 @@ class DataPoint(object):
             """
             sample.seq = True
             sample.ext = ext
-            sample.rpath = strip_extension(sample.rpath)
+            sample.reldir = strip_extension(sample.reldir)
             sample.path = strip_extension(sample.path)
             return sample
         
@@ -156,7 +152,7 @@ class DataPoint(object):
             """
             sample.seq = False
             sample.ext = ext
-            sample.rpath = strip_extension(sample.rpath) + "." + ext
+            sample.reldir = strip_extension(sample.reldir) + "." + ext
             sample.path = strip_extension(sample.path) + "." + ext
             return sample
 
@@ -186,7 +182,7 @@ class DataPointCounter(collections.Counter):
     def __repr__(self):
         return collections.Counter.__repr__(self)
 
-    ## Filter samples using a filter.
+    # Filter samples using a filter.
     def filter_samples(self, filter_):
         """Remove samples according to a given filter
 
@@ -231,15 +227,15 @@ class DataPointCounter(collections.Counter):
 # ------------------------------------------------------------------------- #
 
 def test_sample():
-    a = DataPoint(root="Foo", rpath="Bar", name="test", ext="avi")
+    a = DataPoint(root="Foo", reldir="Bar", name="test", ext="avi")
     print(a)
     b = a.root_migrated("Fooood")
     print(b)
     c = b.extension_migrated(ext="jpg")
     print(c)
-    d = DataPoint(root="Foo", rpath="Bar", name="aha", ext="avi")
-    d1000 = DataPoint(root="Foo", rpath="Bar", name="1000", ext="avi")
-    d9 = DataPoint(root="Foo", rpath="Bar", name="9", ext="avi")
+    d = DataPoint(root="Foo", reldir="Bar", name="aha", ext="avi")
+    d1000 = DataPoint(root="Foo", reldir="Bar", name="1000", ext="avi")
+    d9 = DataPoint(root="Foo", reldir="Bar", name="9", ext="avi")
     print("Test Equality", a == c)
     print("Test Order", a < c, c < a, d < a, d9 < d1000)
 
