@@ -1,39 +1,23 @@
 """ Image Sequences
 """
-
 import os
 import logging
-
 import numpy as np
 
 from . import __config__
 from .metadata.datapoint import DataPoint
 from .utils.vision import frame2ndarray, frames2ndarray
 
-FILE_PATH = os.path.realpath(__file__)
-DIR_PATH = os.path.dirname(FILE_PATH)
-
-# ---------------------------------------------------------------- #
-#                  Configuring Python Logger                       #
-# ---------------------------------------------------------------- #
-
+# configuring logger
 LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 logging.basicConfig(format=LOG_FORMAT)
 logger = logging.getLogger(__name__)
-if __config__.__VERY_VERY_VERBOSE__:
-    logger.setLevel(logging.INFO)
-elif __config__.__VERY_VERBOSE__:
-    logger.setLevel(logging.WARNING)
-elif __config__.__VERBOSE__:
-    logger.setLevel(logging.ERROR)
-else:
-    logger.setLevel(logging.CRITICAL)
-
-
+logger.setLevel(__config__.LOGGER_LEVEL)
 
 # ------------------------------------------------------------------------- #
 #                   Main Classes (To Be Used outside)                       #
 # ------------------------------------------------------------------------- #
+
 
 class ImageSequence(object):
     """A wrapper for a folder containing dumped frames from a video.
@@ -87,11 +71,11 @@ class ImageSequence(object):
         else:
             self.offset = 0
 
-        ## initialization
+        # initialization
         if fcount is None:
             self.fcount = 0       # frame count
             self.fpaths = []      # frame paths
-            ## seek all valid frames and add their indices
+            # seek all valid frames and add their indices
             file_path = self.get_frame_path(self.fcount)
             while (os.path.exists(file_path)):
                 self.fpaths.append(file_path)
@@ -166,53 +150,3 @@ def _to_imgseq(x, **kwargs):
     """
     assert isinstance(x, DataPoint), TypeError
     return ImageSequence(x, **kwargs)
-
-
-
-
-
-def TestImageSequence():
-    test_video = os.path.join(DIR_PATH, "test.avi")
-    test_frames = os.path.join(DIR_PATH, "test_frames")
-    from .utils.vision import video2frames, farray_show
-    video2frames(test_video, test_frames)
-
-    imgseq_0 = ImageSequence(path=test_frames,
-                             ext="jpg", cin="BGR", cout="RGB"
-                             )
-
-    varray = imgseq_0.get_varray()
-    print(varray.shape)
-    # print(imgseq_0.get_farray(0).shape)
-    # farray_show(caption="test", farray=farray)
-
-    # import cv2
-    # (cv2.waitKey(0) & 0xFF == ord("q"))
-    # cv2.destroyAllWindows()
-
-    import importlib
-
-    dataset = "weizmann"
-    metaset = importlib.import_module(
-        "datasets.metadata.metasets.{}".format(dataset))
-
-    kwargs = {
-        "root" : metaset.JPG_DATA_PATH,
-        "layout" : metaset.__layout__,
-        "lbls" : metaset.__LABELS__,
-        "mod" : "RGB",
-        "ext" : "jpg",
-    }
-    
-    from .metadata.collect import collect_datapoints
-    datapoints = collect_datapoints(**kwargs)
-
-    for datapoint in datapoints:
-        imgseq = ImageSequence(datapoint)
-        print(np.all(np.array(imgseq) == imgseq.get_varray()))
-
-
-
-
-if __name__ == "__main__":
-    TestImageSequence()
