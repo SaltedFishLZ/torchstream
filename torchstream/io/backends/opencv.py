@@ -54,23 +54,11 @@ __SUPPORTED_FRAME_OUTPUTS__ = ["jpg"]
 # some optical-flow based methods may store flow files in jpg
 __SUPPORTED_COLORS__ = ["BGR", "RGB", "GRAY"]
 
-
-# ---------------------------------------------------------------- #
-#                  Configuring Python Logger                       #
-# ---------------------------------------------------------------- #
-
+# configuring logger
 LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 logging.basicConfig(format=LOG_FORMAT)
 logger = logging.getLogger(__name__)
-if __config__.__VERY_VERY_VERBOSE__:
-    logger.setLevel(logging.INFO)
-elif __config__.__VERY_VERBOSE__:
-    logger.setLevel(logging.WARNING)
-elif __config__.__VERBOSE__:
-    logger.setLevel(logging.ERROR)
-else:
-    logger.setLevel(logging.CRITICAL)
-
+logger.setLevel(__config__.LOGGER_LEVEL)
 
 # ------------------------------------------------------------------------- #
 #               Auxiliary Functions (Not To Be Exported)                    #

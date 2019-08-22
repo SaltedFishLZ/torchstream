@@ -11,7 +11,7 @@
 *.pth.tar
 
 # cache files
-.cahce/
+.cahce
 
 # project files
 log/
