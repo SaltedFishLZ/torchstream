@@ -4,29 +4,37 @@ __all__ = ["VideoArray"]
 
 import numpy as np
 
-from torchstream.datasets.utils.vision import video2ndarray
-from torchstream.datasets.metadata.datapoint import DataPoint
+from .datapoint import DataPoint
+from .backends.opencv import video2ndarray
+
 
 class VideoArray(object):
     """
-    A wrapper varray, supporting type-casting from Sample.
+    A wrapper for a video file, will return a varray.
+    Currently, only support RGB/BGR input.
     """
-    def __init__(self, x, **kwargs):
-        """PyCharm will get wrong type checking
+    def __init__(self, datapoint, lazy=True, volatile=True, **kwargs):
         """
+        NOTE: PyCharm will get wrong type checking (isinstance)
+        """
+        assert isinstance(datapoint, DataPoint), TypeError
+        assert not datapoint.seq, TypeError
+
+        self.datapoint = datapoint
         self.kwargs = kwargs
-        if isinstance(x, DataPoint):
-            assert not x.seq, NotImplementedError
-            ## for the safety of your memory, we set "lazy" as
-            #  the default mode
-            self.lazy = kwargs.get("lazy", True)
-            self.path = x.path
-            self._array = None if self.lazy \
-                else video2ndarray(x.path, **kwargs)
-        else:
-            self.lazy = False
-            self.path = None
-            self._array = np.array(x, **kwargs)
+
+        # for the safety of your memory, we set "lazy" & "volatile"
+        # as the default mode
+        self.lazy = lazy
+        self.volatile = volatile
+
+        self._array = None
+        if not self.lazy
+            self._array = video2ndarray(self.path, **kwargs)
+
+    @property
+    def path(self):
+        return self.datapoint.path
 
     def __repr__(self, idents=0):
         header = idents * "\t"
@@ -36,10 +44,14 @@ class VideoArray(object):
 
     def get_varray(self):
         if self.lazy:
-            _arr = video2ndarray(self.path, **self.kwargs)
+            if self.volatile:
+                _arr = video2ndarray(self.path, **self.kwargs)
+            else:
+                if self._array is None:
+                    self._array = video2ndarray(self.path, **self.kwargs)
+                _arr = self._array
         else:
             _arr = self._array
-        assert len(_arr.shape) == 4, "Shape Error"
         return _arr
 
     def __array__(self):
@@ -48,40 +60,3 @@ class VideoArray(object):
         np.ndarray.
         """
         return self.get_varray()
-
-
-def _to_vidarr(x):
-    """
-    """
-    assert isinstance(x, DataPoint), TypeError
-    return VideoArray(x)
-
-
-
-
-def test():
-
-    import importlib
-
-    dataset = "weizmann"
-    metaset = importlib.import_module(
-        "datasets.metadata.metasets.{}".format(dataset))
-
-    kwargs = {
-        "root" : metaset.AVI_DATA_PATH,
-        "layout" : metaset.__layout__,
-        "lbls" : metaset.__LABELS__,
-        "mod" : "RGB",
-        "ext" : "avi",
-    }
-
-    from .metadata.collect import collect_samples
-    samples = collect_samples(**kwargs)
-
-    for _sample in samples:
-        vid_arr = VideoArray(_sample, lazy=False)
-        print(vid_arr)
-    # print(np.array(vid_arr))
-
-if __name__ == "__main__":
-    test()

@@ -75,7 +75,7 @@ class DataPoint(object):
         if self.seq:
             # TODO: compatibility
             return(len(os.scandir(self.path)))
-        return None
+        return -1
 
     def __repr__(self, idents=0):
         string = idents * "\t" + "DataPoint: \n"
