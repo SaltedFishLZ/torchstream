@@ -46,13 +46,13 @@ def _is_valid_datapoint(path, mod, ext):
         raise NotImplementedError
     
     seq = ext in __SUPPORTED_IMAGES__
-    ## invalid video files
+    # invalid video files
     if (not seq) and (ext not in path):
         warn_str = "Insane dataset: invalid file {}".format(path)
         logger.warning(warn_str)
         return False
             
-    ## bypass invalid image sequences
+    # bypass invalid image sequences
     if seq and (not os.path.isdir(path)):
         warn_str = "Insane dataset: sequence folder {}".format(path)
         logger.warning(warn_str)
@@ -74,11 +74,11 @@ def collect_datapoints_ucf101(root, mod, ext, **kwargs):
     assert isinstance(mod, str), TypeError
     assert ext in __SUPPORTED_MODALITIES__[mod], NotImplementedError
 
-    ## initializaion
+    # initializaion
     seq = ext in __SUPPORTED_IMAGES__[mod]
     datapoints = []
 
-    ## traverse all categories/classes/labels
+    # traverse all categories/classes/labels
     for label in os.listdir(root):
 
         label_path = os.path.join(root, label)
@@ -114,15 +114,15 @@ def collect_datapoints_20bn(root, annots, mod, ext, **kwargs):
     assert isinstance(mod, str), TypeError
     assert ext in __SUPPORTED_MODALITIES__[mod], NotImplementedError
 
-    ## initializaion
+    # initializaion
     seq = ext in __SUPPORTED_IMAGES__[mod]
     datapoints = []
 
-    ## traverse all video files/image sequences
+    # traverse all video files/image sequences
     for data in os.listdir(root):
         data_path = os.path.join(root, data)
 
-        ## strip file extension if it is a video file
+        # strip file extension if it is a video file
         name = data if seq else strip_extension(data)
         
         label = annots[name]
@@ -130,7 +130,7 @@ def collect_datapoints_20bn(root, annots, mod, ext, **kwargs):
         datapoint = DataPoint(root=root, rpath=data, name=name, label=label,
                               mod=mod, ext=ext)
 
-        ## update datapoint set
+        # update datapoint set
         datapoints.append(datapoint)
 
     logger.info("get {} datapoints from a 20BN layout".format(len(datapoints)))
@@ -146,7 +146,7 @@ def collect_datapoints(root, layout, mod, ext, datapoint_filter=None, **kwargs):
     """
     assert layout in __SUPPORTED_LAYOUTS__, NotImplementedError
 
-    ## Cache Mechanism
+    # Cache Mechanism
     md5 = hashlib.md5(root.encode('utf-8')).hexdigest()
     dir_path = os.path.dirname(root)
     rel_path = os.path.relpath(root, dir_path)
@@ -166,7 +166,7 @@ def collect_datapoints(root, layout, mod, ext, datapoint_filter=None, **kwargs):
         with open(cache_file, "rb") as f:
             allpoints = pickle.load(f)
     else:
-        ## re-generate all datapoints
+        # re-generate all datapoints
         warn_str = "[collect_datapoints] regenerating all data points of {}".\
             format(root)
         logger.warning(warn_str)        
@@ -181,12 +181,12 @@ def collect_datapoints(root, layout, mod, ext, datapoint_filter=None, **kwargs):
         else:
             raise NotImplementedError
         
-        ## dump to cache file
+        # dump to cache file
         os.makedirs(CACHE_PATH, exist_ok=True)
         with open(cache_file, "wb") as f:
             pickle.dump(allpoints, f)
 
-    ## filter datapoints
+    # filter datapoints
     if datapoint_filter is not None:
         datapoints = list(filter(datapoint_filter, allpoints))
     else:
