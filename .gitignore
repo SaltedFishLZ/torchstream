@@ -95,3 +95,6 @@ venv_*
 
 # mypy
 .mypy_cache/
+
+#pytest cache
+.pytest_cache
