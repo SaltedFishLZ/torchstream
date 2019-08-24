@@ -2,7 +2,7 @@ import numpy as np
 import torch.utils.data as data
 
 
-class VideoDataset(data.Dataset):
+class FakeData(data.Dataset):
     """
     Args:
         shape (tuple): (T, H, W, C)

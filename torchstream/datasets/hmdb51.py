@@ -1,33 +1,14 @@
-import importlib
+# from .vision import VisionDataset
+from .folder import VideoFolder
 
-from .dataset import VideoDataset
-from .metadata.metasets import hmdb51 as hmdb51
-
-class HMDB51(VideoDataset):
-
-    def __init__(self, train=True, transform=None, target_transform=None,
-                 **kwargs):
-        """
-        """
-
-        mod = "RGB"
-        ext = "avi"
-        root = hmdb51.AVI_DATA_PATH
-        layout = hmdb51.__layout__
-        class_to_idx = hmdb51.__LABELS__
-
-        if train:
-            datapoint_filter = hmdb51.TrainsetFilter()
-        else:
-            datapoint_filter = hmdb51.TestsetFilter()
-        super(HMDB51, self).__init__(root=root, layout=layout,
-                                     class_to_idx=class_to_idx,
-                                     mod=mod, ext=ext,
-                                     datapoint_filter=datapoint_filter,
+class HMDB51(VideoFolder):
+    """HMDB51 Dataset
+    """
+    def __init__(self, root="~/Datasets/HMDB51/HMDB51-avi", train=True,
+                 transform=None, target_transform=None):
+        super(HMDB51, self).__init__(root=root,
                                      transform=transform,
-                                     target_transform=target_transform,
-                                     **kwargs
-                                    )
+                                     target_transform=target_transform)
 
 def test():
     dataset = HMDB51(train=True)
