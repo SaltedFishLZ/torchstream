@@ -12,7 +12,7 @@ import logging
 
 # overide global configuration
 STRICT = True
-LOGGER_LEVEL = logging.INFO
+LOGGER_LEVEL = logging.WARN
 
 
 def show_config():

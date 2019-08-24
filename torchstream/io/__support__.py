@@ -3,7 +3,7 @@ __all__ = [
 ]
 
 __SUPPORTED_VIDEOS__ = {
-    "RGB": ["avi", "mp4", "webm"]
+    "RGB": ("avi", "mp4")
 }
 
 __SUPPORTED_IMAGES__ = {
