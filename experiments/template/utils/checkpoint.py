@@ -11,7 +11,8 @@ def to_cpu(state_dict, inplace=False):
         ret = copy.deepcopy(state_dict)
 
     for key in ret:
-        ret[key] = ret[key].cpu()
+        if isinstance(ret[key], torch.Tensor):
+            ret[key] = ret[key].cpu()
 
     return ret
 

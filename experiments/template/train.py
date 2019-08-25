@@ -233,20 +233,21 @@ def worker(pid, ngpus_per_node, args):
     configs["val_dataset"]["argv"]["transform"] = val_transform
     val_dataset = cfgs.config2dataset(configs["val_dataset"])
 
-    # TODO: integrate into configuration?
-    if args.distributed:
-        val_sampler = datadist.DistributedSampler(val_dataset)
-    else:
-        val_sampler = None
+    # val_sampler -> None, all GPU do the same validation
 
-    if args.distributed:
-        configs["val_loader"]["batch_size"] = \
-            int(configs["val_loader"]["batch_size"] / ngpus_per_node)
-        configs["val_loader"]["num_workers"] = \
-            int(configs["val_loader"]["num_workers"] / ngpus_per_node)
+    # if args.distributed:
+    #     val_sampler = datadist.DistributedSampler(val_dataset)
+    # else:
+    #     val_sampler = None
+
+    # if args.distributed:
+    #     configs["val_loader"]["batch_size"] = \
+    #         int(configs["val_loader"]["batch_size"] / ngpus_per_node)
+    #     configs["val_loader"]["num_workers"] = \
+    #         int(configs["val_loader"]["num_workers"] / ngpus_per_node)
 
     configs["val_loader"]["dataset"] = val_dataset
-    configs["val_loader"]["sampler"] = val_sampler
+    # configs["val_loader"]["sampler"] = val_sampler
     val_loader = cfgs.config2dataloader(configs["val_loader"])
 
     # -------------------------------------------------------- #
@@ -260,6 +261,9 @@ def worker(pid, ngpus_per_node, args):
         # NOTE: the 1st place to load checkpoint
         resume_config = configs["train"]["resume"]
         checkpoint = utils.load_checkpoint(**resume_config)
+        # if (pid == 8):
+        #     print(checkpoint)
+        #     exit(0)
         if checkpoint is None:
             print("Load Checkpoint Failed")
         if checkpoint is not None:
@@ -317,13 +321,16 @@ def worker(pid, ngpus_per_node, args):
             optimizer_state_dict = checkpoint["optimizer_state_dict"]
             lr_scheduler_state_dict = checkpoint["lr_scheduler_state_dict"]
 
-            optimizer.load_state_dict(optimizer_state_dict)
-            lr_scheduler.load_state_dict(lr_scheduler_state_dict)
+            # optimizer.load_state_dict(optimizer_state_dict)
+            # lr_scheduler.load_state_dict(lr_scheduler_state_dict)
             print("Resume from epoch [{}], best prec1 [{}]".
                   format(start_epoch - 1, best_prec1))
 
     criterion = cfgs.config2criterion(configs["criterion"])
     criterion = criterion.cuda(args.gid)
+
+    # for _i in range(1000000000000):
+    #     cnt = i
 
     # -------------------------------------------------------- #
     #                       Main Loop                          #
@@ -368,6 +375,14 @@ def worker(pid, ngpus_per_node, args):
                 model_state_dict = utils.checkpoint.to_cpu(model_state_dict)
                 # remove prefixes in data parallel wrapper
                 utils.checkpoint.remove_prefix_in_keys(model_state_dict)
+
+                # copy back to cpu
+                optimizer_state_dict = optimizer.state_dict()
+                optimizer_state_dict = utils.checkpoint.to_cpu(optimizer_state_dict)
+
+                #
+                lr_scheduler_state_dict = lr_scheduler.state_dict()
+                lr_scheduler_state_dict = utils.checkpoint.to_cpu(lr_scheduler_state_dict)
 
                 checkpoint = {
                     "epoch": epoch,
