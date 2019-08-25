@@ -26,7 +26,7 @@ val_log_str = "Validation:[{:4d}/{:4d}],  " + \
               "Prec@5:{top5_meter.val:7.3f}({top5_meter.avg:7.3f})"
 
 
-def validate(device, loader, model, criterion,
+def validate(gid, loader, model, criterion,
              log_str=val_log_str, log_interval=20, **kwargs):
 
     batch_time = utils.Meter()
@@ -43,8 +43,8 @@ def validate(device, loader, model, criterion,
 
     with torch.no_grad():
         for i, (input, target) in enumerate(loader):
-            input = input.to(device)
-            target = target.to(device)
+            input = input.cuda(gid)
+            target = target.cuda(gid)
 
             # measure extra data loading time
             data_time.update(time.time() - end)
@@ -91,8 +91,8 @@ train_log_str = "Epoch:[{:3d}][{:4d}/{:4d}],  lr:{lr:5.5f},  " + \
                 "Prec@5:{top5_meter.val:7.3f}({top5_meter.avg:7.3f})"
 
 
-def train(device, loader, model, criterion,
-          optimizer, lr_scheduler, epoch, args,
+def train(gid, loader, model, criterion,
+          optimizer, lr_scheduler, epoch,
           log_str=train_log_str, log_interval=20, 
           **kwargs):
 
@@ -108,13 +108,11 @@ def train(device, loader, model, criterion,
 
     end = time.time()
 
-    print("Fucking Device ", device)
+    print("Fucking Device ", gid)
 
     for i, (input, target) in enumerate(loader):
-        # input = input.to(device)
-        # target = target.to(device)
-        input = input.cuda(args.gid)
-        target = target.cuda(args.gid)
+        input = input.cuda(gid)
+        target = target.cuda(gid)
 
         print("Input Device", input.device)
 
@@ -126,14 +124,14 @@ def train(device, loader, model, criterion,
         loss = criterion(output, target)
 
         # calculate accuracy
-        accuracy = metric(output.data, target)
+        accuracy = metric(output.data.cpu(), target.cpu())
         prec1 = accuracy[1]
         prec5 = accuracy[5]
 
         # update statistics
-        loss_meter.update(loss, input.size(0))
-        top1_meter.update(prec1, input.size(0))
-        top5_meter.update(prec5, input.size(0))
+        loss_meter.update(loss.cpu(), input.size(0))
+        top1_meter.update(prec1.cpu(), input.size(0))
+        top5_meter.update(prec5.cpu(), input.size(0))
 
         # backward
         optimizer.zero_grad()
@@ -171,18 +169,13 @@ def worker(pid, ngpus_per_node, args):
 
     args.gid = pid
     if pid is not None:
+        torch.cuda.set_device(args.gpu)
         print("Proc [{:2d}] Uses GPU [{:2d}] for training".format(pid, args.gid))
 
     if args.distributed:
         args.rank = args.rank * ngpus_per_node + args.gid
         dist.init_process_group(backend=args.dist_backend, init_method=args.dist_url,
                                 world_size=args.world_size, rank=args.rank)
-
-    if args.gid is None:
-        device = "cuda"
-    else:
-        torch.cuda.set_device(args.gid)
-        device = "cuda:{}".format(args.gid)
 
     global best_prec1
     start_epoch = 0
@@ -281,16 +274,11 @@ def worker(pid, ngpus_per_node, args):
         checkpoint = None
 
     # move to device
-    model = model.to(device)
+    model = model.cuda(args.gid)
     if args.distributed:
-        # torch.cuda.set_device(args.gid)
-        # model.cuda(args.gid)
         model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gid])
     else:
-        # model = model.cuda()
         model = torch.nn.DataParallel(model)
-
-    # print("PID: {}, Model Device: {}".format(pid, model.module.device()))
 
     # -------------------------------------------------------- #
     #            Construct Optimizer, Scheduler etc            #
@@ -321,7 +309,7 @@ def worker(pid, ngpus_per_node, args):
                   format(start_epoch - 1, best_prec1))
 
     criterion = cfgs.config2criterion(configs["criterion"])
-    criterion = criterion.to(device)
+    criterion = criterion.cuda(args.gid)
 
     # -------------------------------------------------------- #
     #                       Main Loop                          #
@@ -339,14 +327,14 @@ def worker(pid, ngpus_per_node, args):
             train_sampler.set_epoch(epoch)
 
         # train for one epoch
-        train(device=device,
+        train(gid=args.gid,
               loader=train_loader,
               model=model, criterion=criterion,
               optimizer=optimizer, lr_scheduler=lr_scheduler,
-              epoch=epoch, args=args)
+              epoch=epoch)
 
         # evaluate on validation set
-        prec1 = validate(device=device,
+        prec1 = validate(gid=args.gid,
                          loader=val_loader,
                          model=model, criterion=criterion,
                          epoch=epoch)
