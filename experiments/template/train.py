@@ -18,6 +18,20 @@ import cfgs
 import utils
 
 
+parser = argparse.ArgumentParser(description="Template Training Script")
+parser.add_argument("config", type=str,
+                        help="path to configuration file")
+parser.add_argument('--distributed', action='store_true')
+parser.add_argument('--nodes', default=1, type=int,
+                        help='number of nodes for distributed training')
+parser.add_argument('--rank', default=-1, type=int,
+                        help='node rank for distributed training')
+parser.add_argument('--dist-url', default='tcp://127.0.0.1:23456', type=str,
+                        help='master node url used to set up distributed training')
+parser.add_argument('--dist-backend', default='nccl', type=str,
+                        help='distributed backend')
+
+# default val log
 val_log_str = "Validation:[{:4d}/{:4d}],  " + \
               "BatchTime:{batch_time.val:6.2f}({batch_time.avg:6.2f}),  " + \
               "DataTime:{data_time.val:6.2f}({data_time.avg:6.2f}),  " + \
@@ -369,37 +383,27 @@ def worker(pid, ngpus_per_node, args):
 
 
 
-parser = argparse.ArgumentParser(description="Template Training Script")
-# configuration file
-parser.add_argument("config", type=str,
-                        help="path to configuration file")
-parser.add_argument('--distributed', action='store_true')
-parser.add_argument('--nodes', default=1, type=int,
-                        help='number of nodes for distributed training')
-parser.add_argument('--rank', default=-1, type=int,
-                        help='node rank for distributed training')
-parser.add_argument('--dist-url', default='tcp://127.0.0.1:23456', type=str,
-                        help='master node url used to set up distributed training')
-parser.add_argument('--dist-backend', default='nccl', type=str,
-                        help='distributed backend')
+def main()
+    args = parser.parse_args()
 
-args = parser.parse_args()
+    best_prec1 = 0
 
-best_prec1 = 0
+    # When using multiple nodes, automatically set distributed
+    if args.nodes > 1:
+        args.distributed = True
 
-# When using multiple nodes, automatically set distributed
-if args.nodes > 1:
-    args.distributed = True
-
-ngpus_per_node = torch.cuda.device_count()
-if args.distributed:
-    # We have ngpus_per_node processes per node
-    args.world_size = ngpus_per_node * args.nodes
-    # Use torch.multiprocessing.spawn to launch distributed processes: the
-    # worker process function
-    mp.spawn(worker, nprocs=ngpus_per_node, args=(ngpus_per_node, args))
-else:
-    # Simply call worker function
-    worker(None, ngpus_per_node, args)
+    ngpus_per_node = torch.cuda.device_count()
+    if args.distributed:
+        # We have ngpus_per_node processes per node
+        args.world_size = ngpus_per_node * args.nodes
+        # Use torch.multiprocessing.spawn to launch distributed processes: the
+        # worker process function
+        mp.spawn(worker, nprocs=ngpus_per_node, args=(ngpus_per_node, args))
+    else:
+        # Simply call worker function
+        worker(None, ngpus_per_node, args)
 
 
+
+if __name__ == '__main__':
+    main()
