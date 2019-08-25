@@ -15,6 +15,9 @@ def to_cpu(state_dict, inplace=False):
             ret[key] = ret[key].cpu()
         elif isinstance(ret[key], dict):
             ret[key] = to_cpu(ret[key], inplace=True)
+        elif isinstance(ret[key], (list, tuple)):
+            for element in ret[key]:
+                element = to_cpu(element, inplace=True)
 
     return ret
 
