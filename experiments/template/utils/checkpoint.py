@@ -13,6 +13,8 @@ def to_cpu(state_dict, inplace=False):
     for key in ret:
         if isinstance(ret[key], torch.Tensor):
             ret[key] = ret[key].cpu()
+        elif isinstance(ret[key], dict):
+            ret[key] = to_cpu(ret[key], inplace=True)
 
     return ret
 
@@ -55,7 +57,8 @@ def load_checkpoint(dir_path="checkpoints", pth_name="model",
     ckpt_path = os.path.expandvars(ckpt_path)
     ckpt_path = os.path.expanduser(ckpt_path)
     if os.path.exists(ckpt_path):
-        checkpoint = torch.load(ckpt_path)
+        checkpoint = torch.load(ckpt_path,
+                                map_location=lambda storage, location: "cpu")
         return checkpoint
     else:
         return None

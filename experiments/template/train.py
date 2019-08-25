@@ -381,17 +381,14 @@ def worker(pid, ngpus_per_node, args):
                 pth_name = backup_config["pth_name"]
 
                 model_state_dict = model.state_dict()
-                # copy the state_dict back to CPU side for dumping
-                model_state_dict = utils.checkpoint.to_cpu(model_state_dict)
+                optimizer_state_dict = optimizer.state_dict()
+                lr_scheduler_state_dict = lr_scheduler.state_dict()
+
                 # remove prefixes in data parallel wrapper
                 utils.checkpoint.remove_prefix_in_keys(model_state_dict)
-
-                # copy back to cpu
-                optimizer_state_dict = optimizer.state_dict()
+                # copy the state_dict back to CPU side for dumping
+                model_state_dict = utils.checkpoint.to_cpu(model_state_dict)
                 optimizer_state_dict = utils.checkpoint.to_cpu(optimizer_state_dict)
-
-                #
-                lr_scheduler_state_dict = lr_scheduler.state_dict()
                 lr_scheduler_state_dict = utils.checkpoint.to_cpu(lr_scheduler_state_dict)
 
                 checkpoint = {
