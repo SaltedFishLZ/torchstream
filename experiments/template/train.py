@@ -290,7 +290,7 @@ def worker(pid, ngpus_per_node, args):
     # move to device
     model = model.cuda(args.gid)
     if args.distributed:
-        model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gid])
+        model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gid], find_unused_parameters=True)
     else:
         model = torch.nn.DataParallel(model)
 
@@ -383,7 +383,7 @@ def worker(pid, ngpus_per_node, args):
 
 
 
-def main()
+def main():
     args = parser.parse_args()
 
     best_prec1 = 0
