@@ -168,6 +168,7 @@ def train(gid, loader, model, criterion,
 
 def worker(pid, ngpus_per_node, args):
     """
+    Note:
     Until platform setting, everything runs on CPU side.
     """
 
@@ -283,21 +284,15 @@ def worker(pid, ngpus_per_node, args):
             raise ValueError("Load Finetune Model Failed")
         # TODO: move load finetune model into model's method
         # not all models replace FCs only
-        fck_model_state_dict = checkpoint["model_state_dict"]
-        model_state_dict = utils.checkpoint.to_cpu(fck_model_state_dict)
-        del fck_model_state_dict
+        model_state_dict = checkpoint["model_state_dict"]
         for key in model_state_dict:
             if "fc" in key:
                 # use FC from new network
                 print("Replacing ", key)
                 model_state_dict[key] = model.state_dict()[key]
-        model.load_state_dict(model_state_dict, map_location="cpu")
+        model.load_state_dict(model_state_dict)
         # set to None to prevent loading other states
         checkpoint = None
-
-    # sum = 0
-    # for _i in range(1000000000000):
-    #     sum += _i
 
     # move to device
     model = model.cuda(args.gid)
@@ -332,16 +327,13 @@ def worker(pid, ngpus_per_node, args):
             optimizer_state_dict = checkpoint["optimizer_state_dict"]
             lr_scheduler_state_dict = checkpoint["lr_scheduler_state_dict"]
 
-            # optimizer.load_state_dict(optimizer_state_dict)
-            # lr_scheduler.load_state_dict(lr_scheduler_state_dict)
+            optimizer.load_state_dict(optimizer_state_dict)
+            lr_scheduler.load_state_dict(lr_scheduler_state_dict)
             print("Resume from epoch [{}], best prec1 [{}]".
                   format(start_epoch - 1, best_prec1))
 
     criterion = cfgs.config2criterion(configs["criterion"])
     criterion = criterion.cuda(args.gid)
-
-    # for _i in range(1000000000000):
-    #     cnt = i
 
     # -------------------------------------------------------- #
     #                       Main Loop                          #
@@ -385,12 +377,8 @@ def worker(pid, ngpus_per_node, args):
                 optimizer_state_dict = optimizer.state_dict()
                 lr_scheduler_state_dict = lr_scheduler.state_dict()
 
-                # remove prefixes in data parallel wrapper
+                # remove prefixes in (distributed) data parallel wrapper
                 utils.checkpoint.remove_prefix_in_keys(model_state_dict)
-                # copy the state_dict back to CPU side for dumping
-                model_state_dict = utils.checkpoint.to_cpu(model_state_dict)
-                optimizer_state_dict = utils.checkpoint.to_cpu(optimizer_state_dict)
-                lr_scheduler_state_dict = utils.checkpoint.to_cpu(lr_scheduler_state_dict)
 
                 checkpoint = {
                     "epoch": epoch,
@@ -403,7 +391,6 @@ def worker(pid, ngpus_per_node, args):
                                       is_best=is_best,
                                       dir_path=dir_path,
                                       pth_name=pth_name)
-
 
 
 def main():

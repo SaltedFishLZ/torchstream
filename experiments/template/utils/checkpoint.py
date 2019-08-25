@@ -6,6 +6,9 @@ import torch
 def to_cpu(state_dict, inplace=False):
     """Transfer a state_dict back to CPU
     """
+    if not isinstance(state_dict, dict):
+        return state_dict
+
     ret = state_dict
     if not inplace:
         ret = copy.deepcopy(state_dict)
