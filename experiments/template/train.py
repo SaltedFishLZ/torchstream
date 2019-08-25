@@ -17,6 +17,7 @@ import torchstream
 import cfgs
 import utils
 
+best_prec1 = 0
 
 parser = argparse.ArgumentParser(description="Template Training Script")
 parser.add_argument("config", type=str,
@@ -85,14 +86,14 @@ def validate(gid, loader, model, criterion,
                                      loss_meter=loss_meter,
                                      top1_meter=top1_meter,
                                      top5_meter=top5_meter))
-
-    print("Results:\n"
-          "Prec@1 {top1_meter.avg:5.3f} "
-          "Prec@5 {top5_meter.avg:5.3f} "
-          "Loss {loss_meter.avg:5.3f}"
-          .format(top1_meter=top1_meter,
-                  top5_meter=top5_meter,
-                  loss_meter=loss_meter))
+    if gid == 0:
+        print("Results:\n"
+              "Prec@1 {top1_meter.avg:5.3f} "
+              "Prec@5 {top5_meter.avg:5.3f} "
+              "Loss {loss_meter.avg:5.3f}"
+              .format(top1_meter=top1_meter,
+                      top5_meter=top5_meter,
+                      loss_meter=loss_meter))
 
     return top1_meter.avg
 
@@ -122,13 +123,9 @@ def train(gid, loader, model, criterion,
 
     end = time.time()
 
-    print("Fucking Device ", gid)
-
     for i, (input, target) in enumerate(loader):
         input = input.cuda(gid)
         target = target.cuda(gid)
-
-        print("Input Device", input.device)
 
         # measure extra data loading time
         data_time.update(time.time() - end)
@@ -137,15 +134,15 @@ def train(gid, loader, model, criterion,
         output = model(input)
         loss = criterion(output, target)
 
-        # # calculate accuracy
-        # accuracy = metric(output.data.cpu(), target.cpu())
-        # prec1 = accuracy[1]
-        # prec5 = accuracy[5]
+        # calculate accuracy
+        accuracy = metric(output.data.cpu(), target.cpu())
+        prec1 = accuracy[1]
+        prec5 = accuracy[5]
 
-        # # update statistics
-        # loss_meter.update(loss.data.cpu(), input.size(0))
-        # top1_meter.update(prec1, input.size(0))
-        # top5_meter.update(prec5, input.size(0))
+        # update statistics
+        loss_meter.update(loss.data.cpu(), input.size(0))
+        top1_meter.update(prec1, input.size(0))
+        top5_meter.update(prec5, input.size(0))
 
         # backward
         optimizer.zero_grad()
@@ -290,7 +287,10 @@ def worker(pid, ngpus_per_node, args):
     # move to device
     model = model.cuda(args.gid)
     if args.distributed:
-        model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gid], find_unused_parameters=True)
+        model = torch.nn.parallel.DistributedDataParallel(
+            model, device_ids=[args.gid],
+            find_unused_parameters=True
+        )
     else:
         model = torch.nn.DataParallel(model)
 
@@ -348,45 +348,43 @@ def worker(pid, ngpus_per_node, args):
               epoch=epoch)
 
         # evaluate on validation set
-        prec1 = validate(gid=args.gid,
-                         loader=val_loader,
-                         model=model, criterion=criterion,
-                         epoch=epoch)
+        if args.gid == 0:
+            prec1 = validate(gid=args.gid,
+                             loader=val_loader,
+                             model=model, criterion=criterion,
+                             epoch=epoch)
+            # remember best prec@1
+            is_best = prec1 > best_prec1
+            best_prec1 = max(prec1, best_prec1)
+            print("Best Prec@1: %.3f\n" % (best_prec1))
 
-        # remember best prec@1
-        is_best = prec1 > best_prec1
-        best_prec1 = max(prec1, best_prec1)
-        print("Best Prec@1: %.3f\n" % (best_prec1))
+            # save checkpoint
+            if backup_config is not None:
+                dir_path = backup_config["dir_path"]
+                pth_name = backup_config["pth_name"]
 
-        # save checkpoint
-        if backup_config is not None:
-            dir_path = backup_config["dir_path"]
-            pth_name = backup_config["pth_name"]
+                model_state_dict = model.state_dict()
+                # copy the state_dict back to CPU side for dumping
+                model_state_dict = utils.checkpoint.to_cpu(model_state_dict)
+                # remove prefixes in data parallel wrapper
+                utils.checkpoint.remove_prefix_in_keys(model_state_dict)
 
-            model_state_dict = model.state_dict()
-            # copy the state_dict back to CPU side for dumping
-            model_state_dict = utils.checkpoint.to_cpu(model_state_dict)
-            # remove prefixes in data parallel wrapper
-            utils.checkpoint.remove_prefix_in_keys(model_state_dict)
-
-            checkpoint = {
-                "epoch": epoch,
-                "model_state_dict": model_state_dict,
-                "optimizer_state_dict": optimizer.state_dict(),
-                "lr_scheduler_state_dict": lr_scheduler.state_dict(),
-                "best_prec1": best_prec1
-                }
-            utils.save_checkpoint(checkpoint=checkpoint,
-                                  is_best=is_best,
-                                  dir_path=dir_path,
-                                  pth_name=pth_name)
+                checkpoint = {
+                    "epoch": epoch,
+                    "model_state_dict": model_state_dict,
+                    "optimizer_state_dict": optimizer.state_dict(),
+                    "lr_scheduler_state_dict": lr_scheduler.state_dict(),
+                    "best_prec1": best_prec1
+                    }
+                utils.save_checkpoint(checkpoint=checkpoint,
+                                      is_best=is_best,
+                                      dir_path=dir_path,
+                                      pth_name=pth_name)
 
 
 
 def main():
     args = parser.parse_args()
-
-    best_prec1 = 0
 
     # When using multiple nodes, automatically set distributed
     if args.nodes > 1:
@@ -401,8 +399,7 @@ def main():
         mp.spawn(worker, nprocs=ngpus_per_node, args=(ngpus_per_node, args))
     else:
         # Simply call worker function
-        worker(None, ngpus_per_node, args)
-
+        worker(0, ngpus_per_node, args)
 
 
 if __name__ == '__main__':
