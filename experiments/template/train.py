@@ -214,7 +214,8 @@ def worker(pid, ngpus_per_node, args):
 
     # TODO: integrate into configuration?
     if args.distributed:
-        train_sampler = datadist.DistributedSampler(train_dataset)
+        train_sampler = datadist.DistributedSampler(train_dataset,
+                                                    shuffle=True)
     else:
         train_sampler = None
 
@@ -228,7 +229,6 @@ def worker(pid, ngpus_per_node, args):
 
     configs["train_loader"]["dataset"] = train_dataset
     configs["train_loader"]["sampler"] = train_sampler
-    configs["train_loader"]["shuffle"] = configs["train_loader"]["shuffle"] and (train_sampler is None)
     train_loader = cfgs.config2dataloader(configs["train_loader"])
 
     val_transforms = []
