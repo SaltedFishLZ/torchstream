@@ -273,6 +273,7 @@ def worker(pid, ngpus_per_node, args):
                     raise ValueError("Device Mismatch [{}]: {} -> {}".format(
                         _k, expected_device, _v.device
                     ))
+            print("Loading Checkpoint...")
             model.load_state_dict(model_state_dict)
     # ignore finetune if there is a checkpoint
     if (checkpoint is None) and ("finetune" in configs["train"]):
@@ -294,9 +295,9 @@ def worker(pid, ngpus_per_node, args):
         # set to None to prevent loading other states
         checkpoint = None
 
-    sum = 0
-    for _i in range(1000000000000):
-        sum += _i
+    # sum = 0
+    # for _i in range(1000000000000):
+    #     sum += _i
 
     # move to device
     model = model.cuda(args.gid)
