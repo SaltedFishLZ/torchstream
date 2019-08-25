@@ -92,8 +92,9 @@ train_log_str = "Epoch:[{:3d}][{:4d}/{:4d}],  lr:{lr:5.5f},  " + \
 
 
 def train(device, loader, model, criterion,
-          optimizer, lr_scheduler, epoch,
-          log_str=train_log_str, log_interval=20, **kwargs):
+          optimizer, lr_scheduler, epoch, args,
+          log_str=train_log_str, log_interval=20, 
+          **kwargs):
 
     batch_time = utils.Meter()
     data_time = utils.Meter()
@@ -107,9 +108,15 @@ def train(device, loader, model, criterion,
 
     end = time.time()
 
+    print("Fucking Device ", device)
+
     for i, (input, target) in enumerate(loader):
-        input = input.to(device)
-        target = target.to(device)
+        # input = input.to(device)
+        # target = target.to(device)
+        input = input.cuda(args.gid)
+        target = target.cuda(args.gid)
+
+        print("Input Device", input.device)
 
         # measure extra data loading time
         data_time.update(time.time() - end)
@@ -171,6 +178,12 @@ def worker(pid, ngpus_per_node, args):
         dist.init_process_group(backend=args.dist_backend, init_method=args.dist_url,
                                 world_size=args.world_size, rank=args.rank)
 
+    if args.gid is None:
+        device = "cuda"
+    else:
+        torch.cuda.set_device(args.gid)
+        device = "cuda:{}".format(args.gid)
+
     global best_prec1
     start_epoch = 0
     checkpoint = None
@@ -203,6 +216,7 @@ def worker(pid, ngpus_per_node, args):
 
     configs["train_loader"]["dataset"] = train_dataset
     configs["train_loader"]["sampler"] = train_sampler
+    configs["train_loader"]["shuffle"] = configs["train_loader"]["shuffle"] and (train_sampler is None)
     train_loader = cfgs.config2dataloader(configs["train_loader"])
 
     val_transforms = []
@@ -251,10 +265,12 @@ def worker(pid, ngpus_per_node, args):
         finetune_config = configs["train"]["finetune"]
         checkpoint = utils.load_checkpoint(**finetune_config)
         if checkpoint is None:
-            raise ValueError("Load Finetune Checkpoint Failed")
+            raise ValueError("Load Finetune Model Failed")
         # TODO: move load finetune model into model's method
         # not all models replace FCs only
-        model_state_dict = checkpoint["model_state_dict"]
+        fck_model_state_dict = checkpoint["model_state_dict"]
+        model_state_dict = utils.checkpoint.to_cpu(fck_model_state_dict)
+        del fck_model_state_dict
         for key in model_state_dict:
             if "fc" in key:
                 # use FC from new network
@@ -264,9 +280,22 @@ def worker(pid, ngpus_per_node, args):
         # set to None to prevent loading other states
         checkpoint = None
 
+    # move to device
+    model = model.to(device)
+    if args.distributed:
+        # torch.cuda.set_device(args.gid)
+        # model.cuda(args.gid)
+        model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gid])
+    else:
+        # model = model.cuda()
+        model = torch.nn.DataParallel(model)
+
+    # print("PID: {}, Model Device: {}".format(pid, model.module.device()))
+
     # -------------------------------------------------------- #
     #            Construct Optimizer, Scheduler etc            #
     # -------------------------------------------------------- #
+    print("Setting Optimizer & Lr Scheduler...")
 
     if configs["optimizer"]["argv"]["params"] == "model_specified":
         print("Use Model Specified Training Policies")
@@ -292,18 +321,7 @@ def worker(pid, ngpus_per_node, args):
                   format(start_epoch - 1, best_prec1))
 
     criterion = cfgs.config2criterion(configs["criterion"])
-    criterion.to(device)
-
-    # -------------------------------------------------------- #
-    #                   Platform Setting                       #
-    # -------------------------------------------------------- #
-
-    if args.distributed:
-        torch.cuda.set_device(args.gid)
-        model.cuda(args.gid)
-        model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gid])
-    else:
-        model = torch.nn.DataParallel(model).cuda()
+    criterion = criterion.to(device)
 
     # -------------------------------------------------------- #
     #                       Main Loop                          #
@@ -314,6 +332,8 @@ def worker(pid, ngpus_per_node, args):
         backup_config = configs["train"]["backup"]
     epochs = configs["train"]["epochs"]
 
+    print("Training Begins")
+
     for epoch in range(start_epoch, epochs):
         if args.distributed:
             train_sampler.set_epoch(epoch)
@@ -323,7 +343,7 @@ def worker(pid, ngpus_per_node, args):
               loader=train_loader,
               model=model, criterion=criterion,
               optimizer=optimizer, lr_scheduler=lr_scheduler,
-              epoch=epoch)
+              epoch=epoch, args=args)
 
         # evaluate on validation set
         prec1 = validate(device=device,
@@ -360,7 +380,24 @@ def worker(pid, ngpus_per_node, args):
                                   pth_name=pth_name)
 
 
-def main(args):
+if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser(description="Template Training Script")
+    # configuration file
+    parser.add_argument("config", type=str,
+                        help="path to configuration file")
+    parser.add_argument('--distributed', action='store_true')
+    parser.add_argument('--nodes', default=1, type=int,
+                        help='number of nodes for distributed training')
+    parser.add_argument('--rank', default=-1, type=int,
+                        help='node rank for distributed training')
+    parser.add_argument('--dist-url', default='tcp://127.0.0.1:23456', type=str,
+                        help='master node url used to set up distributed training')
+    parser.add_argument('--dist-backend', default='nccl', type=str,
+                        help='distributed backend')
+
+    args = parser.parse_args()
+
     best_prec1 = 0
 
     # When using multiple nodes, automatically set distributed
@@ -379,22 +416,3 @@ def main(args):
         worker(None, ngpus_per_node, args)
 
 
-if __name__ == "__main__":
-
-    parser = argparse.ArgumentParser(description="Template Training Script")
-    # configuration file
-    parser.add_argument("config", type=str,
-                        help="path to configuration file")
-    parser.add_argument('--distributed', action='store_true')
-    parser.add_argument('--nodes', default=-1, type=int,
-                        help='number of nodes for distributed training')
-    parser.add_argument('--rank', default=-1, type=int,
-                        help='node rank for distributed training')
-    parser.add_argument('--dist-url', default='tcp://127.0.0.1:23456', type=str,
-                        help='master node url used to set up distributed training')
-    parser.add_argument('--dist-backend', default='nccl', type=str,
-                        help='distributed backend')
-
-    args = parser.parse_args()
-
-    main(args)
