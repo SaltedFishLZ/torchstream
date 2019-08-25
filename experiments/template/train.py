@@ -269,7 +269,7 @@ def worker(pid, ngpus_per_node, args):
             for _k in model_state_dict:
                 _v = model_state_dict[_k]
                 expected_device = "cuda:{}".format(args.gid)
-                if expected_device != _v.device:
+                if expected_device != _v.device and "cuda" in str(_v.device):
                     raise ValueError("Device Mismatch [{}]: {} -> {}".format(
                         _k, expected_device, _v.device
                     ))
@@ -290,9 +290,13 @@ def worker(pid, ngpus_per_node, args):
                 # use FC from new network
                 print("Replacing ", key)
                 model_state_dict[key] = model.state_dict()[key]
-        model.load_state_dict(model_state_dict)
+        model.load_state_dict(model_state_dict, map_location="cpu")
         # set to None to prevent loading other states
         checkpoint = None
+
+    sum = 0
+    for _i in range(1000000000000):
+        sum += _i
 
     # move to device
     model = model.cuda(args.gid)
