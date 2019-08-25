@@ -123,15 +123,15 @@ def train(gid, loader, model, criterion,
         output = model(input)
         loss = criterion(output, target)
 
-        # calculate accuracy
-        accuracy = metric(output.data.cpu(), target.cpu())
-        prec1 = accuracy[1]
-        prec5 = accuracy[5]
+        # # calculate accuracy
+        # accuracy = metric(output.data.cpu(), target.cpu())
+        # prec1 = accuracy[1]
+        # prec5 = accuracy[5]
 
-        # update statistics
-        loss_meter.update(loss.cpu(), input.size(0))
-        top1_meter.update(prec1.cpu(), input.size(0))
-        top5_meter.update(prec5.cpu(), input.size(0))
+        # # update statistics
+        # loss_meter.update(loss.data.cpu(), input.size(0))
+        # top1_meter.update(prec1, input.size(0))
+        # top5_meter.update(prec5, input.size(0))
 
         # backward
         optimizer.zero_grad()
@@ -169,7 +169,7 @@ def worker(pid, ngpus_per_node, args):
 
     args.gid = pid
     if pid is not None:
-        torch.cuda.set_device(args.gpu)
+        torch.cuda.set_device(args.gid)
         print("Proc [{:2d}] Uses GPU [{:2d}] for training".format(pid, args.gid))
 
     if args.distributed:
@@ -368,39 +368,38 @@ def worker(pid, ngpus_per_node, args):
                                   pth_name=pth_name)
 
 
-if __name__ == "__main__":
 
-    parser = argparse.ArgumentParser(description="Template Training Script")
-    # configuration file
-    parser.add_argument("config", type=str,
+parser = argparse.ArgumentParser(description="Template Training Script")
+# configuration file
+parser.add_argument("config", type=str,
                         help="path to configuration file")
-    parser.add_argument('--distributed', action='store_true')
-    parser.add_argument('--nodes', default=1, type=int,
+parser.add_argument('--distributed', action='store_true')
+parser.add_argument('--nodes', default=1, type=int,
                         help='number of nodes for distributed training')
-    parser.add_argument('--rank', default=-1, type=int,
+parser.add_argument('--rank', default=-1, type=int,
                         help='node rank for distributed training')
-    parser.add_argument('--dist-url', default='tcp://127.0.0.1:23456', type=str,
+parser.add_argument('--dist-url', default='tcp://127.0.0.1:23456', type=str,
                         help='master node url used to set up distributed training')
-    parser.add_argument('--dist-backend', default='nccl', type=str,
+parser.add_argument('--dist-backend', default='nccl', type=str,
                         help='distributed backend')
 
-    args = parser.parse_args()
+args = parser.parse_args()
 
-    best_prec1 = 0
+best_prec1 = 0
 
-    # When using multiple nodes, automatically set distributed
-    if args.nodes > 1:
-        args.distributed = True
+# When using multiple nodes, automatically set distributed
+if args.nodes > 1:
+    args.distributed = True
 
-    ngpus_per_node = torch.cuda.device_count()
-    if args.distributed:
-        # We have ngpus_per_node processes per node
-        args.world_size = ngpus_per_node * args.nodes
-        # Use torch.multiprocessing.spawn to launch distributed processes: the
-        # worker process function
-        mp.spawn(worker, nprocs=ngpus_per_node, args=(ngpus_per_node, args))
-    else:
-        # Simply call worker function
-        worker(None, ngpus_per_node, args)
+ngpus_per_node = torch.cuda.device_count()
+if args.distributed:
+    # We have ngpus_per_node processes per node
+    args.world_size = ngpus_per_node * args.nodes
+    # Use torch.multiprocessing.spawn to launch distributed processes: the
+    # worker process function
+    mp.spawn(worker, nprocs=ngpus_per_node, args=(ngpus_per_node, args))
+else:
+    # Simply call worker function
+    worker(None, ngpus_per_node, args)
 
 
