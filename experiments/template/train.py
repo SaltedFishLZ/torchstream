@@ -21,16 +21,16 @@ best_prec1 = 0
 
 parser = argparse.ArgumentParser(description="Template Training Script")
 parser.add_argument("config", type=str,
-                        help="path to configuration file")
+                    help="path to configuration file")
 parser.add_argument('--distributed', action='store_true')
 parser.add_argument('--nodes', default=1, type=int,
-                        help='number of nodes for distributed training')
+                    help='number of nodes for distributed training')
 parser.add_argument('--rank', default=-1, type=int,
-                        help='node rank for distributed training')
+                    help='node rank for distributed training')
 parser.add_argument('--dist-url', default='tcp://127.0.0.1:23456', type=str,
-                        help='master node url used to set up distributed training')
+                    help='master node url used to set up distributed training')
 parser.add_argument('--dist-backend', default='nccl', type=str,
-                        help='distributed backend')
+                    help='distributed backend')
 
 # default val log
 val_log_str = "Validation:[{:4d}/{:4d}],  " + \
@@ -41,7 +41,7 @@ val_log_str = "Validation:[{:4d}/{:4d}],  " + \
               "Prec@5:{top5_meter.val:7.3f}({top5_meter.avg:7.3f})"
 
 
-def validate(gid, loader, model, criterion,
+def validate(gid, loader, model, criterion, shown_count=False,
              log_str=val_log_str, log_interval=20, **kwargs):
 
     batch_time = utils.Meter()
@@ -95,7 +95,10 @@ def validate(gid, loader, model, criterion,
                       top5_meter=top5_meter,
                       loss_meter=loss_meter))
 
-    return top1_meter.avg
+    if shown_count:
+        return (top1_meter.avg, top1_meter.count)
+    else:
+        return top1_meter.avg
 
 
 train_log_str = "Epoch:[{:3d}][{:4d}/{:4d}],  lr:{lr:5.5f},  " + \
@@ -108,7 +111,7 @@ train_log_str = "Epoch:[{:3d}][{:4d}/{:4d}],  lr:{lr:5.5f},  " + \
 
 def train(gid, loader, model, criterion,
           optimizer, lr_scheduler, epoch,
-          log_str=train_log_str, log_interval=20, 
+          log_str=train_log_str, log_interval=20,
           **kwargs):
 
     batch_time = utils.Meter()
@@ -182,12 +185,14 @@ def worker(pid, ngpus_per_node, args):
     args.gid = pid
     if pid is not None:
         torch.cuda.set_device(args.gid)
-        print("Proc [{:2d}] Uses GPU [{:2d}] for training".format(pid, args.gid))
+        print("Proc [{:2d}] Uses GPU [{:2d}]".format(pid, args.gid))
 
     if args.distributed:
         args.rank = args.rank * ngpus_per_node + args.gid
-        dist.init_process_group(backend=args.dist_backend, init_method=args.dist_url,
-                                world_size=args.world_size, rank=args.rank)
+        dist.init_process_group(backend=args.dist_backend,
+                                init_method=args.dist_url,
+                                world_size=args.world_size,
+                                rank=args.rank)
 
     global best_prec1
     start_epoch = 0
@@ -218,6 +223,8 @@ def worker(pid, ngpus_per_node, args):
             int(configs["train_loader"]["batch_size"] / ngpus_per_node)
         configs["train_loader"]["num_workers"] = \
             int(configs["train_loader"]["num_workers"] / ngpus_per_node)
+        # turn off the shuffle option outside, set shuffule in sampler
+        configs["train_loader"]["shuffle"] = False
 
     configs["train_loader"]["dataset"] = train_dataset
     configs["train_loader"]["sampler"] = train_sampler

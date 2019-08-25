@@ -63,6 +63,8 @@ def load_checkpoint(dir_path="checkpoints", pth_name="model",
     ckpt_path = os.path.expandvars(ckpt_path)
     ckpt_path = os.path.expanduser(ckpt_path)
     if os.path.exists(ckpt_path):
+        # force load on CPU, then can be transfered to GPU
+        # when necessary
         checkpoint = torch.load(ckpt_path,
                                 map_location="cpu")
         return checkpoint
