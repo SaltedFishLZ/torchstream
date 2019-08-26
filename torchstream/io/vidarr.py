@@ -29,7 +29,7 @@ class VideoArray(object):
         self.volatile = volatile
 
         self._array = None
-        if not self.lazy
+        if not self.lazy:
             self._array = video2ndarray(self.path, **kwargs)
 
     @property
