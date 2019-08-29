@@ -1,11 +1,17 @@
 __all__ = [
-    "__SUPPORTED_VIDEOS__", "__SUPPORTED_IMAGES__",
+    "SUPPORTED_VIDEOS", "SUPPORTED_IMAGES", "SUPPORTED_FILES"
 ]
 
-__SUPPORTED_VIDEOS__ = {
+SUPPORTED_VIDEOS = {
     "RGB": ("avi", "mp4")
 }
 
-__SUPPORTED_IMAGES__ = {
-    "RGB": ["jpg"]
+SUPPORTED_IMAGES = {
+    "RGB": ("jpg", )
 }
+
+SUPPORTED_FILES = {
+    "RGB": ()
+}
+for k in SUPPORTED_FILES:
+    SUPPORTED_FILES[k] = SUPPORTED_IMAGES[k] + SUPPORTED_VIDEOS[k]

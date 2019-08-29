@@ -2,7 +2,7 @@
 """
 __all__ = [
     "__SUPPORTED_MODALITIES__",
-    "__SUPPORTED_VIDEOS__", "__SUPPORTED_IMAGES__",
+    "SUPPORTED_VIDEOS", "SUPPORTED_IMAGES",
 ]
 
 
@@ -10,14 +10,14 @@ __all__ = [
 #           Input Data Modality & File Name Extension               #
 # ----------------------------------------------------------------- #
 # supported input data modality and corresponding file extensions
-__SUPPORTED_VIDEOS__ = {
+SUPPORTED_VIDEOS = {
     "RGB" : ["avi", "mp4", "webm"]
 }
-__SUPPORTED_IMAGES__ = {
+SUPPORTED_IMAGES = {
     "RGB" : ["jpg"]
 }
 __SUPPORTED_MODALITIES__ = {
-    "RGB" : __SUPPORTED_VIDEOS__["RGB"] + __SUPPORTED_IMAGES__["RGB"]
+    "RGB" : SUPPORTED_VIDEOS["RGB"] + SUPPORTED_IMAGES["RGB"]
 }
 
 

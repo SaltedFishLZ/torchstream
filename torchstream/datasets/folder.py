@@ -3,7 +3,7 @@ import os.path
 import sys
 
 import torchstream.io.backends.opencv as backend
-from torchstream.io.__support__ import __SUPPORTED_VIDEOS__
+from torchstream.io.__support__ import SUPPORTED_VIDEOS
 from .vision import VisionDataset
 
 
@@ -136,7 +136,7 @@ class VideoFolder(DatasetFolder):
     def __init__(self, root, transform=None, target_transform=None,
                  loader=default_loader):
         super(VideoFolder, self).__init__(root, loader,
-                                          __SUPPORTED_VIDEOS__["RGB"],
+                                          SUPPORTED_VIDEOS["RGB"],
                                           transform=transform,
                                           target_transform=target_transform)
         self.imgs = self.samples

@@ -14,7 +14,7 @@ import multiprocessing as mp
 
 from . import __config__
 
-
+# NOTE: don't touch it now !!!
 END_FLAG = "[DONE]"
 
 # configuring logger

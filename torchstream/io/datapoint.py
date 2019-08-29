@@ -4,7 +4,7 @@ import os
 import logging
 
 from . import __config__
-from .__support__ import __SUPPORTED_IMAGES__
+from .__support__ import SUPPORTED_IMAGES
 
 # configuring logger
 LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
@@ -13,9 +13,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(__config__.LOGGER_LEVEL)
 
 # constants
-UNKNOWN_LABEL = "Unknown"
-UNKNOWN_CID = -1
-
+UNKNOWN_LABEL = None
 
 class DataPoint(object):
     """Meta-data of a video sample in a certain dataset
@@ -34,15 +32,23 @@ class DataPoint(object):
         assert isinstance(ext, str), TypeError
         assert isinstance(label, str), TypeError
 
+        # scan the file system to get mroe information
+        # NOTE: need to check compatibility each time update
+        # these entries
+
         self.root = root
         self.reldir = reldir
         self.name = name
         self.ext = ext
         self.label = label
 
+        self._seq = self.seq()
+        self._path = self.path()
+        self._fcount = self.fcount()
+
     @property
     def seq(self):
-        return self.ext in __SUPPORTED_IMAGES__["RGB"]
+        return self.ext in SUPPORTED_IMAGES["RGB"]
 
     @property
     def absdir(self):
@@ -73,7 +79,8 @@ class DataPoint(object):
         return: None for videos, # frames for image sequence.
         """
         if self.seq:
-            # TODO: compatibility
+            # TODO: os.scandir compatibility
+            # TODO: check valid files
             return(len(os.scandir(self.path)))
         return -1
 

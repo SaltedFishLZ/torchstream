@@ -8,7 +8,7 @@ import hashlib
 from . import __config__
 from .datapoint import DataPoint, DataPointCounter
 from ..utils.filesys import strip_extension, touch_date
-from .__support__ import __SUPPORTED_MODALITIES__, __SUPPORTED_IMAGES__
+from .__support__ import __SUPPORTED_MODALITIES__, SUPPORTED_IMAGES
 from .__support__ import __SUPPORTED_LAYOUTS__
 
 FILE_PATH = os.path.realpath(__file__)
@@ -45,7 +45,7 @@ def _is_valid_datapoint(path, mod, ext):
     if ext not in __SUPPORTED_MODALITIES__[mod]:
         raise NotImplementedError
     
-    seq = ext in __SUPPORTED_IMAGES__
+    seq = ext in SUPPORTED_IMAGES
     # invalid video files
     if (not seq) and (ext not in path):
         warn_str = "Insane dataset: invalid file {}".format(path)
@@ -75,7 +75,7 @@ def collect_datapoints_ucf101(root, mod, ext, **kwargs):
     assert ext in __SUPPORTED_MODALITIES__[mod], NotImplementedError
 
     # initializaion
-    seq = ext in __SUPPORTED_IMAGES__[mod]
+    seq = ext in SUPPORTED_IMAGES[mod]
     datapoints = []
 
     # traverse all categories/classes/labels
@@ -115,7 +115,7 @@ def collect_datapoints_20bn(root, annots, mod, ext, **kwargs):
     assert ext in __SUPPORTED_MODALITIES__[mod], NotImplementedError
 
     # initializaion
-    seq = ext in __SUPPORTED_IMAGES__[mod]
+    seq = ext in SUPPORTED_IMAGES[mod]
     datapoints = []
 
     # traverse all video files/image sequences
