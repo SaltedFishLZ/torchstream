@@ -36,6 +36,7 @@
     "test_dataset": {
         "name": "HMDB51",
         "argv": {
+            "root": "~/Datasets/HMDB51/HMDB51-avi",
             "train": false
         }
     },

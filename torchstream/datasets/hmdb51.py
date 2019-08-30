@@ -8,8 +8,11 @@ import torchstream.io.backends.opencv as backend
 from torchstream.io.__support__ import SUPPORTED_IMAGES, SUPPORTED_VIDEOS
 from torchstream.utils.download import download
 
-CACHE_DIR = os.path.expanduser("~/.cache/torchstream/hmdb51")
-DOWNLOAD_SERVER_PREFIX = "a18:/home/eecs/zhen/video-acc/download/"
+CACHE_DIR = os.path.expanduser("~/.cache/torchstream/datasets/hmdb51/")
+DOWNLOAD_SERVER_PREFIX = (
+    "a18:/home/eecs/zhen/video-acc/download/"
+    "torchstream/datasets/hmdb51/"
+)
 
 
 class HMDB51(VisionDataset):
@@ -24,20 +27,19 @@ class HMDB51(VisionDataset):
         # -------------------- #
 
         # assemble paths
-        datapoint_file_dir = os.path.join(CACHE_DIR, "datapoints")
-        if not (os.path.exists(datapoint_file_dir) and
-                os.path.isdir(datapoint_file_dir)):
-            os.makedirs(datapoint_file_dir, exist_ok=True)
+        if not (os.path.exists(CACHE_DIR) and
+                os.path.isdir(CACHE_DIR)):
+            os.makedirs(CACHE_DIR, exist_ok=True)
         if train:
             datapoint_file_name = "hmdb51_training_split{}.pkl".format(split)
         else:
             datapoint_file_name = "hmdb51_testing_split{}.pkl".format(split)
-        datapoint_file_path = os.path.join(datapoint_file_dir,
-                                           datapoint_file_name)
+        datapoint_file_path = os.path.join(CACHE_DIR, datapoint_file_name)
         # download when missing
         if not os.path.exists(datapoint_file_path):
-            print("Downloading HMDB51 datapoints...")
-            download(src=(DOWNLOAD_SERVER_PREFIX + datapoint_file_name),
+            print("downloading HMDB51 datapoints...")
+            download(src=os.path.join(DOWNLOAD_SERVER_PREFIX,
+                                      datapoint_file_name),
                      dst=datapoint_file_path)
         # real load
         with open(datapoint_file_path, "rb") as fin:
@@ -52,8 +54,8 @@ class HMDB51(VisionDataset):
         label_file = "hmdb51_labels.txt"
         label_path = os.path.join(CACHE_DIR, label_file)
         if not os.path.exists(label_path):
-            label_src = DOWNLOAD_SERVER_PREFIX + \
-                "tools/datasets/metadata/hmdb51/{}".format(label_file)
+            print("downloading HMDB51 label_path...")
+            label_src = os.path.join(DOWNLOAD_SERVER_PREFIX, label_file)
             download(label_src, label_path)
         # build class label to class id mapping (a dictionary)
         self.class_to_idx = collections.OrderedDict()
