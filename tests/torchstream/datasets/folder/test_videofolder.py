@@ -13,6 +13,8 @@ def test_videofolder():
     dataset_path = "~/Datasets/HMDB51/HMDB51-avi"
     # dataset_path = "~/Datasets/Kinetics/Kinetics-400-mp4/val"
 
+    dataset_path = os.path.expanduser(dataset_path)
+
     if not os.path.exists(dataset_path):
         print("Warning: dataset missing")
         print(dataset_path)

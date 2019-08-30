@@ -1,3 +1,4 @@
+import collections
 from torchstream.datasets.hmdb51 import HMDB51
 
 
@@ -7,9 +8,13 @@ def test_hmdb51():
     dataset = HMDB51(root=dataset_path, train=True)
     print(dataset.__len__())
 
+    num_samples_per_class = collections.OrderedDict()
     for vid, cid in dataset:
-        print(cid)
-
+        if cid in num_samples_per_class:
+            num_samples_per_class[cid] += 1
+        else:
+            num_samples_per_class[cid] = 1
+    print(num_samples_per_class)
 
 if __name__ == "__main__":
     test_hmdb51()
