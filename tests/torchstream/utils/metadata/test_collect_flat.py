@@ -9,7 +9,7 @@ def test_collect_flat():
     # If you don't have [Something Something V1] in your testing machine,
     # this test will give a warning and return without an assertion.
     dataset_len = 108499
-    dataset_path = "~/Datasets/Sth-Sth/Sth-sth-v1-jpg"
+    dataset_path = "~/Datasets/Sth-sth/Sth-sth-v1-jpg"
     dataset_ext = "jpg"
 
     dataset_path = os.path.expanduser(dataset_path)
