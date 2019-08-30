@@ -1,16 +1,16 @@
 import os
 import time
-from torchstream.utils.metadata import collect_flat
+from torchstream.utils.metadata import collect_folder
 
 
 def test_collect_flat():
-    # Currently, we use [Something Something V1] as the testing case.
+    # Currently, we use [HMDB51] as the testing case.
     # You can create symbol link for testing.
-    # If you don't have [Something Something V1] in your testing machine,
+    # If you don't have [HMDB51] in your testing machine,
     # this test will give a warning and return without an assertion.
-    dataset_len = 108499
-    dataset_path = "/home/zheng/Datasets/Sth-Sth/Sth-sth-v1-jpg"
-    dataset_ext = "jpg"
+    dataset_len = 6766
+    dataset_path = "/home/zheng/Datasets/HMDB51/HMDB51-avi"
+    dataset_ext = "avi"
 
     if not os.path.exists(dataset_path):
         print("Warning: dataset missing")
@@ -19,7 +19,7 @@ def test_collect_flat():
 
     st_time = time.time()
 
-    datapoints = collect_flat(dataset_path, dataset_ext)
+    datapoints = collect_folder(dataset_path, dataset_ext)
     print("# datapoints", len(datapoints))
     assert dataset_len == len(datapoints), ValueError
 
