@@ -4,7 +4,7 @@
 import subprocess
 
 def download_ssh(src, dst):
-    subprocess.run(["scp", src, dst])
+    subprocess.run(["scp", "-r", src, dst])
 
 def download(src, dst, backend="ssh"):
     if backend == "ssh":

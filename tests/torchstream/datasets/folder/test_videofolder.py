@@ -10,7 +10,7 @@ def test_videofolder():
     # If you don't have [HMDB51] in your testing machine, this test will
     # give a warning without an assertion.
     dataset_len = 6766
-    dataset_path = "/home/zheng/Datasets/HMDB51/HMDB51-avi"
+    dataset_path = "~/Datasets/HMDB51/HMDB51-avi"
     # dataset_path = "~/Datasets/Kinetics/Kinetics-400-mp4/val"
 
     if not os.path.exists(dataset_path):
