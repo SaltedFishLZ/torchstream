@@ -30,7 +30,8 @@ class DataPoint(object):
         assert isinstance(reldir, str), TypeError
         assert isinstance(name, str), TypeError
         assert isinstance(ext, str), TypeError
-        assert isinstance(label, str), TypeError
+        if label != UNKNOWN_LABEL:
+            assert isinstance(label, str), TypeError
 
         # scan the file system to get mroe information
         # NOTE: need to check compatibility each time update
@@ -42,9 +43,9 @@ class DataPoint(object):
         self.ext = ext
         self.label = label
 
-        self._seq = self.seq()
-        self._path = self.path()
-        self._fcount = self.fcount()
+        self._seq = self.seq
+        self._path = self.path
+        self._fcount = self.fcount
 
     @property
     def seq(self):
@@ -80,8 +81,8 @@ class DataPoint(object):
         """
         if self.seq:
             # TODO: os.scandir compatibility
-            # TODO: check valid files
-            return(len(os.scandir(self.path)))
+            # TODO: check valid files, bypass invalid files
+            return(len(os.listdir(self.path)))
         return -1
 
     def __repr__(self, idents=0):

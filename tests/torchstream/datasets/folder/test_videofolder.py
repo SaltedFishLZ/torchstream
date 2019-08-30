@@ -5,18 +5,18 @@ from torchstream.datasets.folder import VideoFolder
 
 
 def test_videofolder():
-    """
-    """
-    # Currently, we use HMDB51 as the testing case.
+    # Currently, we use [HMDB51] as the testing case.
     # You can create symbol link for testing.
-    # If you don't have HMDB51 in your testing machine, this test will
-    # give a warning
+    # If you don't have [HMDB51] in your testing machine, this test will
+    # give a warning without an assertion.
     dataset_len = 6766
     dataset_path = "/home/zheng/Datasets/HMDB51/HMDB51-avi"
     # dataset_path = "~/Datasets/Kinetics/Kinetics-400-mp4/val"
+
     if not os.path.exists(dataset_path):
         print("Warning: dataset missing")
         print(dataset_path)
+        return
 
     dataset = VideoFolder(root=dataset_path)
     assert len(dataset) == dataset_len
