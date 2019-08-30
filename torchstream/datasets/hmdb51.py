@@ -19,6 +19,8 @@ class HMDB51(VisionDataset):
 
     def __init__(self, root, train, split=1,
                  transform=None, target_transform=None):
+        root = os.path.expanduser(root)
+
         super(HMDB51, self).__init__(root=root,
                                      transform=transform,
                                      target_transform=target_transform)
@@ -46,6 +48,10 @@ class HMDB51(VisionDataset):
             self.datapoints = pickle.load(fin)
             assert isinstance(self.datapoints, list), TypeError
             assert isinstance(self.datapoints[0], DataPoint), TypeError
+        # replace dataset root
+        for dp in self.datapoints:
+            dp.root = root
+            dp._path = dp.path
 
         # ------------------ #
         #  load class_to_idx #
