@@ -6,11 +6,8 @@ __all__ = [
     "LOGGER_LEVEL"
     ]
 
-# import global configuration
-# from ..__config__ import *
 import logging
 
-# overide global configuration
 STRICT = True
 LOGGER_LEVEL = logging.INFO
 

@@ -1,17 +1,20 @@
 # logs
 *.log
 
-#
+# media files
 *.jpg
 *.png
-*.txt
+*.bmp
+*.avi
+*.mp4
+*.webm
 
 # model file
 *.pth
 *.pth.tar
 
 # cache files
-.cahce/
+.cahce
 
 # project files
 log/
@@ -92,3 +95,6 @@ venv_*
 
 # mypy
 .mypy_cache/
+
+#pytest cache
+.pytest_cache

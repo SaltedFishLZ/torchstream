@@ -3,14 +3,12 @@ class Meter(object):
     """
     def __init__(self, name=""):
         self.name = name
-        self.val = 0
-        self.avg = 0
-        self.sum = 0
-        self.count = 0    
+        self.val = 0    # last value
+        self.sum = 0    # sum
+        self.count = 0  # weight count
 
     def reset(self):
         self.val = 0
-        self.avg = 0
         self.sum = 0
         self.count = 0
 
@@ -18,7 +16,13 @@ class Meter(object):
         self.val = val
         self.sum += val * n
         self.count += n
-        self.avg = self.sum / self.count
+
+    @property
+    def avg(self):
+        """running avg
+        """
+        avg = self.sum / self.count
+        return avg
     
     def __repr__(self):
         string = self.__class__.__name__ + " {}".format(self.name)

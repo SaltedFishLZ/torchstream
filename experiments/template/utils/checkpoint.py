@@ -6,12 +6,21 @@ import torch
 def to_cpu(state_dict, inplace=False):
     """Transfer a state_dict back to CPU
     """
+    if not isinstance(state_dict, dict):
+        return state_dict
+
     ret = state_dict
     if not inplace:
         ret = copy.deepcopy(state_dict)
 
     for key in ret:
-        ret[key] = ret[key].cpu()
+        if isinstance(ret[key], torch.Tensor):
+            ret[key] = ret[key].cpu()
+        elif isinstance(ret[key], dict):
+            ret[key] = to_cpu(ret[key], inplace=True)
+        elif isinstance(ret[key], (list, tuple)):
+            for element in ret[key]:
+                element = to_cpu(element, inplace=True)
 
     return ret
 
@@ -54,7 +63,10 @@ def load_checkpoint(dir_path="checkpoints", pth_name="model",
     ckpt_path = os.path.expandvars(ckpt_path)
     ckpt_path = os.path.expanduser(ckpt_path)
     if os.path.exists(ckpt_path):
-        checkpoint = torch.load(ckpt_path)
+        # force load on CPU, then can be transfered to GPU
+        # when necessary
+        checkpoint = torch.load(ckpt_path,
+                                map_location="cpu")
         return checkpoint
     else:
         return None
