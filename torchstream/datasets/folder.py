@@ -57,8 +57,11 @@ class DatasetFolder(VisionDataset):
         classes, class_to_idx = self._find_classes(self.root)
         samples = make_dataset(self.root, class_to_idx, extensions)
         if len(samples) == 0:
-            raise (RuntimeError("Found 0 files in subfolders of: " + self.root + "\n"
-                                "Supported extensions are: " + ",".join(extensions)))
+            raise (RuntimeError(
+                "Found 0 files in subfolders of: " + self.root + "\n"
+                "Supported extensions are: " + ",".join(extensions)
+                )
+            )
 
         self.loader = loader
         self.extensions = extensions
@@ -74,7 +77,8 @@ class DatasetFolder(VisionDataset):
         Args:
             dir (string): Root directory path.
         Returns:
-            tuple: (classes, class_to_idx) where classes are relative to (dir), and class_to_idx is a dictionary.
+            tuple: (classes, class_to_idx) where classes are relative to (dir),
+            and class_to_idx is a dictionary.
         Ensures:
             No class is a subdirectory of another.
         """
@@ -82,7 +86,10 @@ class DatasetFolder(VisionDataset):
             # Faster and available in Python 3.5 and above
             classes = [d.name for d in os.scandir(dir) if d.is_dir()]
         else:
-            classes = [d for d in os.listdir(dir) if os.path.isdir(os.path.join(dir, d))]
+            classes = [
+                d for d in os.listdir(dir)
+                if os.path.isdir(os.path.join(dir, d))
+            ]
         classes.sort()
         class_to_idx = {classes[i]: i for i in range(len(classes))}
         return classes, class_to_idx
@@ -92,7 +99,8 @@ class DatasetFolder(VisionDataset):
         Args:
             index (int): Index
         Returns:
-            tuple: (sample, target) where target is class_index of the target class.
+            tuple: (sample, target) where target is class_index
+            of the target class.
         """
         path, target = self.samples[index]
         sample = self.loader(path)
@@ -120,13 +128,16 @@ class VideoFolder(DatasetFolder):
         root/cat/asd932_.avi
     Args:
         root (string): Root directory path.
-        transform (callable, optional): A function/transform that takes in a video array
-            and returns a transformed version. E.g, ``transforms.RandomCrop``
-        target_transform (callable, optional): A function/transform that takes in the
-            target and transforms it.
-        loader (callable, optional): A function to load an video given its path.
-        is_valid_file (callable, optional): A function that takes path of an video file
-            and check if the file is a valid_file (used to check of corrupt files)
+        transform (callable, optional): A function/transform that takes in
+            a video array and returns a transformed version.
+            E.g, ``transforms.RandomCrop``
+        target_transform (callable, optional): A function/transform that
+            takes in the target and transforms it.
+        loader (callable, optional): A function to load an video given
+            its path.
+        is_valid_file (callable, optional): A function that takes path of
+            an video file and check if the file is a valid_file (used to
+            check of corrupt files)
      Attributes:
         classes (list): List of the class names.
         class_to_idx (dict): Dict with items (class_name, class_index).

@@ -73,7 +73,7 @@ class HMDB51(VisionDataset):
             loader = backend.video2ndarray
         elif datapoint.ext in SUPPORTED_IMAGES["RGB"]:
             loader = backend.frames2ndarray
-    
+
         path = datapoint._path
         varray = loader(path)
 
