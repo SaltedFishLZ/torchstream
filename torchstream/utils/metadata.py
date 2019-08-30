@@ -40,7 +40,7 @@ def collect_flat(root, ext, annotations=None,
 
         # set datapoint name
         name = sample
-        if ext in SUPPORTED_VIDEOS:
+        if ext in SUPPORTED_VIDEOS["RGB"]:
             # strip the file extension for video files
             if name.endswith("." + ext):
                 name = name[: -len("." + ext)]
@@ -110,7 +110,7 @@ def collect_folder(root, ext, annotations=None,
 
             # set datapoint name
             name = sample
-            if ext in SUPPORTED_VIDEOS:
+            if ext in SUPPORTED_VIDEOS["RGB"]:
                 # strip the file extension for video files
                 if name.endswith("." + ext):
                     name = name[: -len("." + ext)]
