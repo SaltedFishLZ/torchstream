@@ -9,8 +9,10 @@ def test_collect_flat():
     # If you don't have [HMDB51] in your testing machine,
     # this test will give a warning and return without an assertion.
     dataset_len = 6766
-    dataset_path = "/home/zheng/Datasets/HMDB51/HMDB51-avi"
+    dataset_path = "~/Datasets/HMDB51/HMDB51-avi"
     dataset_ext = "avi"
+
+    dataset_path = os.path.expanduser(dataset_path)
 
     if not os.path.exists(dataset_path):
         print("Warning: dataset missing")
