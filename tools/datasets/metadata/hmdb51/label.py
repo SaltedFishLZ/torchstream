@@ -3,7 +3,9 @@ import collections
 
 from torchstream.utils.download import download
 
-DOWNLOAD_SERVER_PREFIX = "a18:/home/eecs/zhen/video-acc/download/"
+DOWNLOAD_SERVER_PREFIX = ("zhen@a18.millennium.berkeley.edu:"
+                          "/home/eecs/zhen/video-acc/download/")
+DOWNLOAD_SRC_DIR = "tools/datasets/metadata/hmdb51"
 
 FILE_PATH = os.path.realpath(__file__)
 DIR_PATH = os.path.dirname(FILE_PATH)
@@ -12,8 +14,11 @@ DIR_PATH = os.path.dirname(FILE_PATH)
 label_file = "hmdb51_labels.txt"
 label_path = os.path.join(DIR_PATH, label_file)
 if not os.path.exists(label_path):
-    label_src = DOWNLOAD_SERVER_PREFIX + \
-        "tools/datasets/metadata/hmdb51/{}".format(label_file)
+    label_src = os.path.join(
+        DOWNLOAD_SERVER_PREFIX,
+        DOWNLOAD_SRC_DIR,
+        label_file
+    )
     download(label_src, label_path)
 
 # build class label to class id mapping (a dictionary)

@@ -9,7 +9,9 @@ import glob
 
 from torchstream.utils.download import download
 
-DOWNLOAD_SERVER_PREFIX = "a18:/home/eecs/zhen/video-acc/download/"
+DOWNLOAD_SERVER_PREFIX = ("zhen@a18.millennium.berkeley.edu:"
+                          "/home/eecs/zhen/video-acc/download")
+DOWNLOAD_SRC_DIR = "tools/datasets/metadata/hmdb51"
 
 FILE_PATH = os.path.realpath(__file__)
 DIR_PATH = os.path.dirname(FILE_PATH)
@@ -18,8 +20,11 @@ DIR_PATH = os.path.dirname(FILE_PATH)
 split_annot_dir = "testTrainMulti_7030_splits"
 split_dir_path = os.path.join(DIR_PATH, split_annot_dir)
 if not os.path.exists(split_dir_path):
-    split_dir_src = DOWNLOAD_SERVER_PREFIX + \
-        "tools/datasets/metadata/hmdb51/{}".format(split_annot_dir)
+    split_dir_src = os.path.join(
+        DOWNLOAD_SERVER_PREFIX,
+        DOWNLOAD_SRC_DIR,
+        split_annot_dir
+    )
     download(split_dir_src, split_dir_path)
 
 

@@ -4,7 +4,8 @@ import os
 import torchstream.io.backends.opencv as backend
 from torchstream.utils.download import download
 
-DOWNLOAD_SERVER_PREFIX = "a18:/home/eecs/zhen/video-acc/download/"
+DOWNLOAD_SERVER_PREFIX = ("zhen@a18.millennium.berkeley.edu:"
+                          "/home/eecs/zhen/video-acc/download/")
 FILE_PATH = os.path.realpath(__file__)
 DIR_PATH = os.path.dirname(FILE_PATH)
 
