@@ -242,21 +242,20 @@ def worker(pid, ngpus_per_node, args):
     configs["val_dataset"]["argv"]["transform"] = val_transform
     val_dataset = cfgs.config2dataset(configs["val_dataset"])
 
-    # val_sampler -> None, all GPU do the same validation
+    if args.distributed:
+        val_sampler = datadist.DistributedSampler(val_dataset,
+                                                  shuffle=False)
+    else:
+        val_sampler = None
 
-    # if args.distributed:
-    #     val_sampler = datadist.DistributedSampler(val_dataset)
-    # else:
-    #     val_sampler = None
-
-    # if args.distributed:
-    #     configs["val_loader"]["batch_size"] = \
-    #         int(configs["val_loader"]["batch_size"] / ngpus_per_node)
-    #     configs["val_loader"]["num_workers"] = \
-    #         int(configs["val_loader"]["num_workers"] / ngpus_per_node)
+    if args.distributed:
+        configs["val_loader"]["batch_size"] = \
+            int(configs["val_loader"]["batch_size"] / ngpus_per_node)
+        configs["val_loader"]["num_workers"] = \
+            int(configs["val_loader"]["num_workers"] / ngpus_per_node)
 
     configs["val_loader"]["dataset"] = val_dataset
-    # configs["val_loader"]["sampler"] = val_sampler
+    configs["val_loader"]["sampler"] = val_sampler
     val_loader = cfgs.config2dataloader(configs["val_loader"])
 
     # -------------------------------------------------------- #
@@ -350,6 +349,7 @@ def worker(pid, ngpus_per_node, args):
     for epoch in range(start_epoch, epochs):
         if args.distributed:
             train_sampler.set_epoch(epoch)
+            val_sampler.set_epoch(epoch)
 
         # train for one epoch
         train(gid=args.gid,
@@ -358,18 +358,27 @@ def worker(pid, ngpus_per_node, args):
               optimizer=optimizer, lr_scheduler=lr_scheduler,
               epoch=epoch)
 
-        # evaluate on validation set
-        if args.gid == 0:
-            prec1 = validate(gid=args.gid,
-                             loader=val_loader,
-                             model=model, criterion=criterion,
-                             epoch=epoch)
-            # remember best prec@1
-            is_best = prec1 > best_prec1
-            best_prec1 = max(prec1, best_prec1)
-            print("Best Prec@1: %.3f\n" % (best_prec1))
+        # evaluate on validation set      
+        prec1 = validate(gid=args.gid,
+                         loader=val_loader,
+                         model=model, criterion=criterion,
+                         epoch=epoch)
 
-            # save checkpoint
+        # aproxiamation in distributed mode
+        # currently, each process has the same number of samples (via padding)
+        # so we directly apply `all_reduce` without weighting
+        if args.distributed:
+            prec1_tensor = torch.Tensor([prec1]).cuda(args.gid)
+            prec1_tensor = dist.all_reduce(prec1_tensor)
+            prec1 = prec1_tensor.item()
+
+        # remember best prec@1
+        is_best = prec1 > best_prec1
+        best_prec1 = max(prec1, best_prec1)
+        print("Best Prec@1: %.3f\n" % (best_prec1))
+
+        # save checkpoint
+        if args.gid == 0:
             if backup_config is not None:
                 dir_path = backup_config["dir_path"]
                 pth_name = backup_config["pth_name"]
