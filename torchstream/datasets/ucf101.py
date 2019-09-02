@@ -47,6 +47,7 @@ class UCF101(VisionDataset):
         # real load
         with open(datapoint_filepath, "rb") as fin:
             self.datapoints = pickle.load(fin)
+            print((self.datapoints))
             assert isinstance(self.datapoints, list), TypeError
             assert isinstance(self.datapoints[0], DataPoint), TypeError
         # replace dataset root

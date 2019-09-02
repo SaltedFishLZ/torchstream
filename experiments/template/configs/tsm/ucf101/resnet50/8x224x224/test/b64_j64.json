@@ -5,19 +5,19 @@
             "name": "CenterSegment",
             "argv": {
                 "size": 8
-            }      
+            }
         },
         {
             "name": "Resize",
             "argv": {
                 "size": 256
-            }      
+            }
         },
         {
             "name": "CenterCrop",
             "argv": {
                 "size": [224, 224]
-            }      
+            }
         },
         {
             "package": "torchstream.transforms",
@@ -36,6 +36,7 @@
     "test_dataset": {
         "name": "UCF101",
         "argv": {
+            "root": "~/Datasets/UCF101/UCF101-avi",
             "train": false
         }
     },

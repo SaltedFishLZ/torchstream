@@ -185,7 +185,8 @@ def worker(pid, ngpus_per_node, args):
     args.gid = pid
     if pid is not None:
         torch.cuda.set_device(args.gid)
-        print("Proc [{:2d}] Uses GPU [{:2d}]".format(pid, args.gid))
+        if args.distributed:
+            print("Proc [{:2d}] Uses GPU [{:2d}]".format(pid, args.gid))
 
     if args.distributed:
         args.rank = args.rank * ngpus_per_node + args.gid
@@ -274,13 +275,6 @@ def worker(pid, ngpus_per_node, args):
         if checkpoint is not None:
             # check checkpoint device mapping
             model_state_dict = checkpoint["model_state_dict"]
-            for _k in model_state_dict:
-                _v = model_state_dict[_k]
-                expected_device = "cuda:{}".format(args.gid)
-                if expected_device != _v.device and "cuda" in str(_v.device):
-                    raise ValueError("Device Mismatch [{}]: {} -> {}".format(
-                        _k, expected_device, _v.device
-                    ))
             print("Loading Checkpoint...")
             model.load_state_dict(model_state_dict)
     # ignore finetune if there is a checkpoint
