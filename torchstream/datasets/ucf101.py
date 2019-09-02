@@ -48,7 +48,6 @@ class UCF101(VisionDataset):
         # real load
         with open(datapoint_filepath, "rb") as fin:
             self.datapoints = pickle.load(fin)
-            print((self.datapoints))
             assert isinstance(self.datapoints, list), TypeError
             assert isinstance(self.datapoints[0], DataPoint), TypeError
         # replace dataset root
@@ -72,11 +71,12 @@ class UCF101(VisionDataset):
                 download(src=os.path.join(DOWNLOAD_SERVER_PREFIX,
                                           DOWNLOAD_SRC_DIR,
                                           class_to_idx_filename),
-                         dst=datapoint_filepath)
+                         dst=class_to_idx_filepath)
             # load class_to_idx
-            with open(datapoint_filepath, "rb") as fin:
+            with open(class_to_idx_filepath, "rb") as fin:
                 self.class_to_idx = pickle.load(fin)
         # sanity check
+        # print(self.class_to_idx)
         assert isinstance(self.class_to_idx, dict), TypeError
 
     def __len__(self):
