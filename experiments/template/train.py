@@ -366,11 +366,13 @@ def worker(pid, ngpus_per_node, args):
 
         # aproxiamation in distributed mode
         # currently, each process has the same number of samples (via padding)
-        # so we directly apply `all_reduce` without weighting
+        # so we directly apply `all_reduce` without weights
         if args.distributed:
             prec1_tensor = torch.Tensor([prec1]).cuda(args.gid)
-            prec1_tensor = dist.all_reduce(prec1_tensor)
-            prec1 = prec1_tensor.item()
+            # print("[{}] Before reduce: {}".format(pid, prec1_tensor))
+            dist.all_reduce(prec1_tensor)
+            # print("[{}] after reduce: {}".format(pid, prec1_tensor))
+            prec1 = prec1_tensor.item() / args.world_size
 
         # remember best prec@1
         is_best = prec1 > best_prec1
