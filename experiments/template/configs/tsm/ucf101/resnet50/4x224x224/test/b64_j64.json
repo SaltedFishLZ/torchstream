@@ -36,6 +36,7 @@
     "test_dataset": {
         "name": "UCF101",
         "argv": {
+            "root": "~/Datasets/UCF101/UCF101-avi",
             "train": false
         }
     },

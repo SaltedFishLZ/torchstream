@@ -33,6 +33,7 @@
     "train_dataset": {
         "name": "UCF101",
         "argv": {
+            "root": "~/Datasets/UCF101/UCF101-avi",
             "train": true
         }
     },
@@ -74,6 +75,7 @@
     "val_dataset": {
         "name": "UCF101",
         "argv": {
+            "root": "~/Datasets/UCF101/UCF101-avi",
             "train": false
         }
     },
@@ -130,11 +132,11 @@
     "train": {
         "epochs": 100,
         "backup": {
-            "dir_path": "checkpoints/tsm/ucf101/4x224x224/",
+            "dir_path": "checkpoints/tsm/ucf101/resnet50/4x224x224/",
             "pth_name": "kinetics0_lr1e-3_p9e-1_step10_b64_j64_e100"
         },
         "resume": {
-            "dir_path": "checkpoints/tsm/ucf101/4x224x224",
+            "dir_path": "checkpoints/tsm/ucf101/resnet50/4x224x224",
             "pth_name": "kinetics0_lr1e-3_p9e-1_step10_b64_j64_e100"
         },
         "finetune": {

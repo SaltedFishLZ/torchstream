@@ -18,6 +18,7 @@ CACHE_DIR = os.path.expanduser("~/.cache/torchstream/datasets/ucf101/")
 class UCF101(VisionDataset):
 
     def __init__(self, root, train, split=1, class_to_idx=None,
+                 ext="avi",
                  transform=None, target_transform=None):
         root = os.path.expanduser(root)
 
@@ -53,6 +54,7 @@ class UCF101(VisionDataset):
         # replace dataset root
         for dp in self.datapoints:
             dp.root = root
+            dp.ext = ext
             dp._path = dp.path
 
         # ------------------ #
