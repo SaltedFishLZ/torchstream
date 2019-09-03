@@ -8,11 +8,11 @@ import torchstream.io.backends.opencv as backend
 from torchstream.io.__support__ import SUPPORTED_IMAGES, SUPPORTED_VIDEOS
 from torchstream.utils.download import download
 
+DOWNLOAD_SERVER_PREFIX = ("zhen@a18.millennium.berkeley.edu:"
+                          "/home/eecs/zhen/video-acc/download")
+DOWNLOAD_SRC_DIR = "torchstream/datasets/hmdb51/"
+
 CACHE_DIR = os.path.expanduser("~/.cache/torchstream/datasets/hmdb51/")
-DOWNLOAD_SERVER_PREFIX = (
-    "a18:/home/eecs/zhen/video-acc/download/"
-    "torchstream/datasets/hmdb51/"
-)
 
 
 class HMDB51(VisionDataset):
@@ -41,8 +41,10 @@ class HMDB51(VisionDataset):
         if not os.path.exists(datapoint_file_path):
             print("downloading HMDB51 datapoints...")
             download(src=os.path.join(DOWNLOAD_SERVER_PREFIX,
+                                      DOWNLOAD_SRC_DIR,
                                       datapoint_file_name),
-                     dst=datapoint_file_path)
+                     dst=datapoint_file_path,
+                     backend="rsync")
         # real load
         with open(datapoint_file_path, "rb") as fin:
             self.datapoints = pickle.load(fin)
@@ -61,8 +63,10 @@ class HMDB51(VisionDataset):
         label_path = os.path.join(CACHE_DIR, label_file)
         if not os.path.exists(label_path):
             print("downloading HMDB51 label_path...")
-            label_src = os.path.join(DOWNLOAD_SERVER_PREFIX, label_file)
-            download(label_src, label_path)
+            label_src = os.path.join(DOWNLOAD_SERVER_PREFIX,
+                                     DOWNLOAD_SRC_DIR,
+                                     label_file)
+            download(label_src, label_path, backend="rsync")
         # build class label to class id mapping (a dictionary)
         self.class_to_idx = collections.OrderedDict()
         with open(label_path, "r") as fin:
