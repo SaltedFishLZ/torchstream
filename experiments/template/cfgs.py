@@ -91,6 +91,13 @@ def config2model(cfg):
     else:
         model = model_class()
 
+    sync_bn = False
+    if "sync_bn" in cfg:
+        sync_bn = cfg["sync_bn"]
+    if sync_bn:
+        print("Using Sync BN...")
+        model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(model)
+
     return model
 
 
