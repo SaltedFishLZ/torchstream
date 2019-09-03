@@ -43,7 +43,8 @@ class HMDB51(VisionDataset):
             download(src=os.path.join(DOWNLOAD_SERVER_PREFIX,
                                       DOWNLOAD_SRC_DIR,
                                       datapoint_file_name),
-                     dst=datapoint_file_path)
+                     dst=datapoint_file_path,
+                     backend="rsync")
         # real load
         with open(datapoint_file_path, "rb") as fin:
             self.datapoints = pickle.load(fin)
@@ -65,7 +66,7 @@ class HMDB51(VisionDataset):
             label_src = os.path.join(DOWNLOAD_SERVER_PREFIX,
                                      DOWNLOAD_SRC_DIR,
                                      label_file)
-            download(label_src, label_path)
+            download(label_src, label_path, backend="rsync")
         # build class label to class id mapping (a dictionary)
         self.class_to_idx = collections.OrderedDict()
         with open(label_path, "r") as fin:

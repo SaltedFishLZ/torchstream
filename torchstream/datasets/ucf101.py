@@ -44,7 +44,8 @@ class UCF101(VisionDataset):
             download(src=os.path.join(DOWNLOAD_SERVER_PREFIX,
                                       DOWNLOAD_SRC_DIR,
                                       datapoint_filename),
-                     dst=datapoint_filepath)
+                     dst=datapoint_filepath,
+                     backend="rsync")
         # real load
         with open(datapoint_filepath, "rb") as fin:
             self.datapoints = pickle.load(fin)
@@ -71,7 +72,8 @@ class UCF101(VisionDataset):
                 download(src=os.path.join(DOWNLOAD_SERVER_PREFIX,
                                           DOWNLOAD_SRC_DIR,
                                           class_to_idx_filename),
-                         dst=class_to_idx_filepath)
+                         dst=class_to_idx_filepath,
+                         backend="rsync")
             # load class_to_idx
             with open(class_to_idx_filepath, "rb") as fin:
                 self.class_to_idx = pickle.load(fin)
