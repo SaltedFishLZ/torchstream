@@ -77,14 +77,12 @@ def collect_flat(root, ext, annotations=None,
     return datapoints
 
 
-def collect_folder(root, ext, annotations=None,
-                   is_valid_datapoint=None):
+def collect_folder(root, ext, is_valid_datapoint=None):
     """Collecting datapoints from a folder dataset with datapoints
     distributed in seperate class folders.
     Args:
         root: dataset root path
         ext: datapoint file extension
-        annotations (dict): key: datapoint name (str), value: label (str)
         is_valid_datapoint (function): validation function
     Return:
         list (DataPoint)
