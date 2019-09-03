@@ -19,6 +19,6 @@ def download(src, dst, backend="ssh"):
     elif backend == "wget":
         download_wget(src, dst)
     elif backend == "rsync":
-        download_wget(src, dst)
+        download_rsync(src, dst)
     else:
         raise NotImplementedError("Unsupported backend")
