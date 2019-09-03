@@ -11,3 +11,7 @@ DIR_PATH = os.path.dirname(FILE_PATH)
 src = os.path.join(DOWNLOAD_SERVER_PREFIX, DOWNLOAD_SRC_DIR, "hello.log")
 dst = os.path.join(DIR_PATH, "hello.log")
 download_ssh(src, dst)
+
+src = os.path.join(DOWNLOAD_SERVER_PREFIX, DOWNLOAD_SRC_DIR, "hello.d/")
+dst = os.path.join(DIR_PATH, "hello.d")
+download_ssh(src, dst)
