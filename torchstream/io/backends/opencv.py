@@ -211,7 +211,7 @@ def video2ndarray(video, cin="BGR", cout="RGB", **kwargs):
             warn_str = "[video2ndarray] {} - CAP_PROP_FRAME_COUNT {} frames,"
             warn_str += "Get {} frames."
             warn_str = warn_str.format(video, f_n, cnt)
-            logger.error(warn_str)
+            logger.warn(warn_str)
         buf = buf[:cnt, :, :, :]
 
     # output status

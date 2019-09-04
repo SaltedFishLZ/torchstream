@@ -167,17 +167,18 @@ class TSN(nn.Module):
                     else:
                         normal_bias.append(ps[1])
 
-            elif isinstance(m, nn.BatchNorm2d):
+            elif isinstance(m, nn.modules.batchnorm._BatchNorm):
                 bn_cnt += 1
                 # later BN's are frozen
                 if not self._enable_pbn or bn_cnt == 1:
                     bn.extend(list(m.parameters()))
             
-            elif isinstance(m, nn.BatchNorm3d):
-                bn_cnt += 1
-                # later BN's are frozen
-                if not self._enable_pbn or bn_cnt == 1:
-                    bn.extend(list(m.parameters()))
+            # elif isinstance(m, nn.BatchNorm3d):
+            #     bn_cnt += 1
+            #     # later BN's are frozen
+            #     if not self._enable_pbn or bn_cnt == 1:
+            #         bn.extend(list(m.parameters()
+
             elif len(m._modules) == 0:
                 if len(list(m.parameters())) > 0:
                     raise ValueError("New atomic module type: {}. Need to give it a learning policy".format(type(m)))

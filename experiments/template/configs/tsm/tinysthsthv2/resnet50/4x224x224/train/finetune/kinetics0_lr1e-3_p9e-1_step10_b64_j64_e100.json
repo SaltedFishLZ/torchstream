@@ -127,14 +127,14 @@
     "train": {
         "epochs": 100,
         "backup": {
-            "dir_path": "checkpoints/tsm/tinysthsthv2/4x224x224/",
+            "dir_path": "checkpoints/tsm/tinysthsthv2/resnet50/4x224x224/",
             "pth_name": "kinetics0_lr1e-3_p9e-1_step10_b64_j64_e100",
 
             "COMMENT":
             "kinetics0 means finetune from model 0 pretrained on Kinetics"
         },
         "resume": {
-            "dir_path": "checkpoints/tsm/tinysthsthv2/4x224x224/",
+            "dir_path": "checkpoints/tsm/tinysthsthv2/resnet50/4x224x224/",
             "pth_name": "kinetics0_lr1e-3_p9e-1_step10_b64_j64_e100",
 
             "COMMENT":
