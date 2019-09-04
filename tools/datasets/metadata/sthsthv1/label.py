@@ -1,4 +1,5 @@
 import os
+import pickle
 import collections
 
 from torchstream.utils.download import download
@@ -36,3 +37,7 @@ for cid, label in enumerate(labels):
 
 if __name__ == "__main__":
     print(class_to_idx)
+
+    cls2idx_path = os.path.join(DIR_PATH, "sthsthv1_class_to_idx.pkl")    
+    with open(cls2idx_path, "wb") as fout:
+        pickle.dump(class_to_idx, fout)

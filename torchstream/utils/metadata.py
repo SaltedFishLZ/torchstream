@@ -16,8 +16,9 @@ logger = logging.getLogger(__name__)
 logger.setLevel(__config__.LOGGER_LEVEL)
 
 
-def collect_flat(root, ext, annotations=None,
-                 is_valid_datapoint=None):
+def collect_flat(root, ext, annotations=None,                 
+                 is_valid_datapoint=None,
+                 fpath_offset=None, fpath_tmpl=None):
     """Collecting datapoints from a flat dataset containing
     all datapoints in one folder.
     Args:
@@ -25,6 +26,9 @@ def collect_flat(root, ext, annotations=None,
         ext: datapoint file extension
         annotations (dict): key: datapoint name (str), value: label (str)
         is_valid_datapoint (function): validation function
+        fpath_offset (int)[1]: frame path offset
+        fpath_tmpl (str)[1]: frame path template
+        [1] Only valid for image sequence.
     Return:
         list (DataPoint)
     """
@@ -56,10 +60,18 @@ def collect_flat(root, ext, annotations=None,
         # set label
         label = UNKNOWN_LABEL
         if annotations is not None:
-            label = annotations[name]
+            if name in annotations:
+                label = annotations[name]
 
-        datapoint = DataPoint(root=root, reldir="",
-                              name=name, ext=ext, label=label)
+        # set other key-word arguments
+        kwargs = {}
+        if fpath_offset is not None:
+            kwargs["fpath_offset"] = fpath_offset
+        if fpath_tmpl is not None:
+            kwargs["fpath_tmpl"] = fpath_tmpl        
+
+        datapoint = DataPoint(root=root, reldir="", name=name,
+                              ext=ext, label=label, **kwargs)
 
         # bypass invalid datapoint
         if is_valid_datapoint is not None:
@@ -77,13 +89,17 @@ def collect_flat(root, ext, annotations=None,
     return datapoints
 
 
-def collect_folder(root, ext, is_valid_datapoint=None):
+def collect_folder(root, ext, is_valid_datapoint=None,
+                   fpath_offset=None, fpath_tmpl=None):
     """Collecting datapoints from a folder dataset with datapoints
     distributed in seperate class folders.
     Args:
         root: dataset root path
         ext: datapoint file extension
         is_valid_datapoint (function): validation function
+        fpath_offset (int)[1]: frame path offset
+        fpath_tmpl (str)[1]: frame path template
+        [1] Only valid for image sequence.
     Return:
         list (DataPoint)
     """
@@ -121,8 +137,15 @@ def collect_folder(root, ext, is_valid_datapoint=None):
                 # image sequence
                 pass
 
-            datapoint = DataPoint(root=root, reldir=label,
-                                  name=name, ext=ext, label=label)
+            # set other key-word arguments
+            kwargs = {}
+            if fpath_offset is not None:
+                kwargs["fpath_offset"] = fpath_offset
+            if fpath_tmpl is not None:
+                kwargs["fpath_tmpl"] = fpath_tmpl  
+
+            datapoint = DataPoint(root=root, reldir=label, name=name,
+                                  ext=ext, label=label, **kwargs)
 
             # bypass invalid datapoint
             if is_valid_datapoint is not None:

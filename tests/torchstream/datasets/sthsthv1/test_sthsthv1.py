@@ -1,10 +1,11 @@
 import collections
-from torchstream.datasets.ucf101 import UCF101
+from torchstream.datasets.sthsthv1 import SomethingSomethingV1
 
 
-def test_ucf101():
-    dataset_path = "~/Datasets/UCF101/UCF101-avi"
-    dataset = UCF101(root=dataset_path, train=True)
+def test_sthsthv1():
+    # dataset_len = 6766
+    dataset_path = "~/Datasets/Sth-sth/Sth-sth-v1-jpg"
+    dataset = SomethingSomethingV1(root=dataset_path, train=True)
     print(dataset.__len__())
 
     num_samples_per_class = collections.OrderedDict()
@@ -16,4 +17,4 @@ def test_ucf101():
     print(num_samples_per_class)
 
 if __name__ == "__main__":
-    test_ucf101()
+    test_sthsthv1()

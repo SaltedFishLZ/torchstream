@@ -1,13 +1,13 @@
 """Collecting DataPoints for different configurations of
-the `Something Something V1` dataset  and dump the pickle file
+the `Something Something v1` dataset  and dump the pickle file
 """
 import os
 import pickle
 import argparse
 
+from torchstream.io.datapoint import UNKNOWN_LABEL
 from torchstream.utils.metadata import collect_flat
 
-import label
 import annotation
 
 FILE_PATH = os.path.realpath(__file__)
@@ -20,36 +20,37 @@ parser.add_argument("--ext", default="jpg", type=str,
 
 
 def main(args):
-    # collecting data points
-    all_datapoints = collect_folder(
-        root=args.root, ext=args.ext,
-        annotations=label.class_to_idx
-    )
 
-    # get all sample names of given split plan
-    train_set_names = split.train_sample_names(split_num=args.split)
-    test_set_names = split.test_sample_names(split_num=args.split)
+    # collecting all data points
+    all_datapoints = collect_flat(
+        root=args.root, ext=args.ext,
+        annotations=annotation.full_annot_dict
+    )
 
     # filter data points
     training_datapoints = []
+    validation_datapoints = []
     testing_datapoints = []
     for dp in all_datapoints:
-        if dp.name in train_set_names:
+        if dp.name in annotation.train_annot_dict:
             training_datapoints.append(dp)
-        elif dp.name in test_set_names:
+        elif dp.name in annotation.val_annot_dict:
+            validation_datapoints.append(dp)
+        elif dp.label == UNKNOWN_LABEL:
             testing_datapoints.append(dp)
+        else:
+            raise ValueError
 
     # dump files
-    training_pickle = os.path.join(
-        DIR_PATH,
-        "hmdb51_training_split{}.pkl".format(args.split)
-    )
-    testing_pickle = os.path.join(
-        DIR_PATH,
-        "hmdb51_testing_split{}.pkl".format(args.split)
-    )
+    training_pickle = os.path.join(DIR_PATH, "sthsthv1_training.pkl")
     with open(training_pickle, "wb") as fout:
         pickle.dump(training_datapoints, fout)
+
+    validation_pickle = os.path.join(DIR_PATH, "sthsthv1_validation.pkl")
+    with open(validation_pickle, "wb") as fout:
+        pickle.dump(validation_datapoints, fout)
+
+    testing_pickle = os.path.join(DIR_PATH, "sthsthv1_testing.pkl")
     with open(testing_pickle, "wb") as fout:
         pickle.dump(testing_datapoints, fout)
 

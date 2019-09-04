@@ -55,3 +55,10 @@ with open(val_annot_path, "r") as fin:
         _text = _line.split('\n')[0]
         _name, _label = _text.split(';')
         val_annot_dict[_name] = _label
+
+# merge into full annotations
+full_annot_dict = dict()
+for _k in train_annot_dict:
+    full_annot_dict[_k] = train_annot_dict[_k]
+for _k in val_annot_dict:
+    full_annot_dict[_k] = val_annot_dict[_k]
