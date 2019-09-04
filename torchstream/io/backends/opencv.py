@@ -390,10 +390,11 @@ def frame2ndarray(frame, cin="BGR", cout="RGB"):
 def frames2ndarray(frames, cin="BGR", cout="RGB", **kwargs):
     """Read all frames, take them as a continuous video, and get a varray
     Args:
-        frames : input frames' file paths
-        cin : input video's color space
-        cout : output ndarray's color space
-        return value : the corresponding varray of all the frames
+        frames (list) : input frames' file paths
+        cin (str): input video's color space
+        cout (str): output ndarray's color space
+    Return:
+        (ndarray) the corresponding varray of all the frames
     """
     # get video shape & check sanity
     _f = len(frames)

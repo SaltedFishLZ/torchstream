@@ -36,6 +36,8 @@
     "test_dataset": {
         "name": "SomethingSomethingV1",
         "argv": {
+            "root": "~/Datasets/Sth-sth/Sth-sth-v1-avi",
+            "ext": "avi",
             "train": false
         }
     },

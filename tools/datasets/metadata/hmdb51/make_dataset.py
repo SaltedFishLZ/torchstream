@@ -7,7 +7,6 @@ import argparse
 
 from torchstream.utils.metadata import collect_folder
 
-import label
 import split
 
 FILE_PATH = os.path.realpath(__file__)
@@ -23,10 +22,7 @@ parser.add_argument("--split", default=1, type=int,
 
 def main(args):
     # collecting data points
-    all_datapoints = collect_folder(
-        root=args.root, ext=args.ext,
-        annotations=label.class_to_idx
-    )
+    all_datapoints = collect_folder(root=args.root, ext=args.ext)
 
     # get all sample names of given split plan
     train_set_names = split.train_sample_names(split_num=args.split)
@@ -44,11 +40,11 @@ def main(args):
     # dump files
     training_pickle = os.path.join(
         DIR_PATH,
-        "hmdb51_training_split{}.pkl".format(args.split)
+        "hmdb51_{}_training_split{}.pkl".format(args.ext, args.split)
     )
     testing_pickle = os.path.join(
         DIR_PATH,
-        "hmdb51_testing_split{}.pkl".format(args.split)
+        "hmdb51_{}_testing_split{}.pkl".format(args.ext, args.split)
     )
     with open(training_pickle, "wb") as fout:
         pickle.dump(training_datapoints, fout)

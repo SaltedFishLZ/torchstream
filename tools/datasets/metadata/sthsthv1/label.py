@@ -1,4 +1,5 @@
 import os
+import pickle
 import collections
 
 from torchstream.utils.download import download
@@ -28,6 +29,7 @@ with open(label_path, "r") as fin:
     for _line in fin:
         text = _line.split('\n')[0]
         labels.append(text)
+labels = sorted(labels)
 
 class_to_idx = collections.OrderedDict()
 for cid, label in enumerate(labels):
@@ -36,3 +38,7 @@ for cid, label in enumerate(labels):
 
 if __name__ == "__main__":
     print(class_to_idx)
+
+    cls2idx_path = os.path.join(DIR_PATH, "sthsthv1_class_to_idx.pkl")    
+    with open(cls2idx_path, "wb") as fout:
+        pickle.dump(class_to_idx, fout)

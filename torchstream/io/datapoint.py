@@ -23,9 +23,15 @@ class DataPoint(object):
         name (str): file name of the sample (without any extension and path)
         ext (str): file extension of the sample (e.g., "avi", "mp4").
             NOTE: '.' excluded.
+        fpath_offset (int): frame number offset
+        fpath_tmpl (str): frame name template (e.g., some datasets name frames
+        as 00001.jpg, 00002.jpg..., so the fpath_offset is 1, and fpath_tmpl is
+        {:05d})
         label (str): class label of this sample
     """
-    def __init__(self, root, reldir, name, ext="jpg", label=UNKNOWN_LABEL):
+    def __init__(self, root, reldir, name, ext="jpg",
+                 fpath_offset=0, fpath_tmpl="{}",
+                 label=UNKNOWN_LABEL):
         assert isinstance(root, str), TypeError
         assert isinstance(reldir, str), TypeError
         assert isinstance(name, str), TypeError
@@ -41,8 +47,11 @@ class DataPoint(object):
         self.reldir = reldir
         self.name = name
         self.ext = ext
+        self.fpath_offset = fpath_offset
+        self.fpath_tmpl = fpath_tmpl
         self.label = label
 
+        # cache attributes
         self._seq = self.seq
         self._path = self.path
         self._fcount = self.fcount
@@ -58,7 +67,7 @@ class DataPoint(object):
     @property
     def filename(self):
         """
-        return: file name with extension for videos,
+        Return: file name with extension for videos,
             folder name for image sequence.
         """
         if not self.seq:
@@ -69,7 +78,7 @@ class DataPoint(object):
     @property
     def path(self):
         """
-        return: absolute file path for videos, absolute
+        Return: absolute file path for videos, absolute
             folder path for image sequence.
         """
         return os.path.join(self.absdir, self.filename)
@@ -77,13 +86,31 @@ class DataPoint(object):
     @property
     def fcount(self):
         """
-        return: None for videos, # frames for image sequence.
+        Return:
+            None for videos;
+            # frames for image sequence;
         """
         if self.seq:
             # TODO: os.scandir compatibility
             # TODO: check valid files, bypass invalid files
             return(len(os.listdir(self.path)))
         return -1
+
+    @property
+    def framepaths(self):
+        """
+        Return:
+            list (str), frame path string with extension
+        """
+        assert self.seq, TypeError("Only image sequences have framepaths")
+
+        framepaths = []
+        for _i in range(self.fcount):
+            fpath = self.fpath_tmpl.format(_i + self.fpath_offset)
+            fpath += "." + self.ext
+            fpath = os.path.join(self.path, fpath)
+            framepaths.append(fpath)
+        return framepaths
 
     def __repr__(self, idents=0):
         string = idents * "\t" + "DataPoint: \n"
@@ -109,7 +136,7 @@ class DataPoint(object):
 
     def __lt__(self, other):
         """
-        NOTE: comparison between 2 datapoint with only file extension being
+        NOTE: comparison between 2 datapoints with only file extension being
             different is an undefined behavior.
         """
         assert isinstance(other, DataPoint), TypeError

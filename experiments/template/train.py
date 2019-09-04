@@ -25,7 +25,7 @@ parser.add_argument("config", type=str,
 parser.add_argument('--distributed', action='store_true')
 parser.add_argument('--nodes', default=1, type=int,
                     help='number of nodes for distributed training')
-parser.add_argument('--rank', default=-1, type=int,
+parser.add_argument('--rank', default=0, type=int,
                     help='node rank for distributed training')
 parser.add_argument('--dist-url', default='tcp://127.0.0.1:23456', type=str,
                     help='master node url used to set up distributed training')
@@ -200,7 +200,7 @@ def worker(pid, ngpus_per_node, args):
                                 rank=args.rank)
 
     if args.distributed:
-        print("Proc [{:2d}], Rank [{:2d}], Uses GPU [{:2d}]".format(
+        print("Proc [{:2d}] rank-[{:2d}], GPU-[{:2d}]".format(
                 pid, args.rank, args.gid
             )
         )
@@ -278,6 +278,8 @@ def worker(pid, ngpus_per_node, args):
     #                 Construct Neural Network                 #
     # -------------------------------------------------------- #
 
+    print("Proc [{:2d}] constructing model...".format(pid))
+
     model = cfgs.config2model(configs["model"])
 
     # load checkpoint
@@ -286,31 +288,32 @@ def worker(pid, ngpus_per_node, args):
         resume_config = configs["train"]["resume"]
         checkpoint = utils.load_checkpoint(**resume_config)
         if checkpoint is None:
-            print("Load Checkpoint Failed")
+            print("Proc [{:2d}] load checkpoint failed".format(pid))
         if checkpoint is not None:
             # check checkpoint device mapping
             model_state_dict = checkpoint["model_state_dict"]
-            print("Loading Checkpoint...")
+            print("Proc [{:2d}] loading checkpoint...".format(pid))
             model.load_state_dict(model_state_dict)
     # ignore finetune if there is a checkpoint
     if (checkpoint is None) and ("finetune" in configs["train"]):
         finetune_config = configs["train"]["finetune"]
         checkpoint = utils.load_checkpoint(**finetune_config)
         if checkpoint is None:
-            raise ValueError("Load Finetune Model Failed")
+            raise ValueError("load finetune model failed")
         # TODO: move load finetune model into model's method
         # not all models replace FCs only
         model_state_dict = checkpoint["model_state_dict"]
         for key in model_state_dict:
             if "fc" in key:
                 # use FC from new network
-                print("Replacing ", key)
+                print("Proc [{:2d}] replacing ".format(pid), key)
                 model_state_dict[key] = model.state_dict()[key]
         model.load_state_dict(model_state_dict)
         # set to None to prevent loading other states
         checkpoint = None
 
     # move to device
+    print("Proc [{:2d}] moving model to device...".format(pid))
     model = model.cuda(args.gid)
     if args.distributed:
         model = torch.nn.parallel.DistributedDataParallel(
@@ -323,14 +326,14 @@ def worker(pid, ngpus_per_node, args):
     # -------------------------------------------------------- #
     #            Construct Optimizer, Scheduler etc            #
     # -------------------------------------------------------- #
-    print("Setting Optimizer & Lr Scheduler...")
+    print("Proc [{:2d}] setting optimizer & lr scheduler...".format(pid))
 
     if configs["optimizer"]["argv"]["params"] == "model_specified":
         print("Use Model Specified Training Policies")
         configs["optimizer"]["argv"]["params"] = \
             model.module.get_optim_policies()
     else:
-        print("Train All Parameters")
+        print("Proc [{:2d}] train all parameters".format(pid))
         configs["optimizer"]["argv"]["params"] = model.parameters()
     optimizer = cfgs.config2optimizer(configs["optimizer"])
     lr_scheduler = cfgs.config2lrscheduler(optimizer, configs["lr_scheduler"])
@@ -345,8 +348,8 @@ def worker(pid, ngpus_per_node, args):
 
             optimizer.load_state_dict(optimizer_state_dict)
             lr_scheduler.load_state_dict(lr_scheduler_state_dict)
-            print("Resume from epoch [{}], best prec1 [{}]".
-                  format(start_epoch - 1, best_prec1))
+            print("Proc[{:2d}] resume from epoch [{}], best prec1 [{}]".
+                  format(pid, start_epoch - 1, best_prec1))
 
     criterion = cfgs.config2criterion(configs["criterion"])
     criterion = criterion.cuda(args.gid)
@@ -360,7 +363,7 @@ def worker(pid, ngpus_per_node, args):
         backup_config = configs["train"]["backup"]
     epochs = configs["train"]["epochs"]
 
-    print("Training Begins")
+    print("Proc [{:2d}] training begins".format(pid))
 
     for epoch in range(start_epoch, epochs):
         if args.distributed:
@@ -399,8 +402,10 @@ def worker(pid, ngpus_per_node, args):
             print("Best Prec@1: %.3f" % (best_prec1))
             print("*" * 80)
 
-        # save checkpoint at rank 0 (not process 0, NFS!!!)
-        if args.rank == 0:
+        # not distributed: directly save model
+        # distributed: save checkpoint at rank 0 (not process 0, NFS!!!)
+        # default rank is 0
+        if (args.rank == 0) or (not args.distributed):
             if backup_config is not None:
                 dir_path = backup_config["dir_path"]
                 pth_name = backup_config["pth_name"]
