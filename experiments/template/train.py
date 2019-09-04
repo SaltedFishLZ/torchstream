@@ -278,6 +278,8 @@ def worker(pid, ngpus_per_node, args):
     #                 Construct Neural Network                 #
     # -------------------------------------------------------- #
 
+    print("Proc [{:2d}] constructing model...".format(pid))
+
     model = cfgs.config2model(configs["model"])
 
     # load checkpoint
@@ -311,6 +313,7 @@ def worker(pid, ngpus_per_node, args):
         checkpoint = None
 
     # move to device
+    print("Proc [{:2d}] moving model to device...".format(pid))
     model = model.cuda(args.gid)
     if args.distributed:
         model = torch.nn.parallel.DistributedDataParallel(
@@ -323,7 +326,7 @@ def worker(pid, ngpus_per_node, args):
     # -------------------------------------------------------- #
     #            Construct Optimizer, Scheduler etc            #
     # -------------------------------------------------------- #
-    print("Setting Optimizer & Lr Scheduler...")
+    print("Proc [{:2d}]: setting Optimizer & Lr Scheduler...".format(pid))
 
     if configs["optimizer"]["argv"]["params"] == "model_specified":
         print("Use Model Specified Training Policies")

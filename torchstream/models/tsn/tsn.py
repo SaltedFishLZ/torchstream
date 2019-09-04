@@ -81,7 +81,7 @@ class TSN(nn.Module):
         if self._enable_pbn:
             print("Freezing BatchNorm2D except the first one.")
             for m in self.base_model.modules():
-                if isinstance(m, nn.BatchNorm2d):
+                if isinstance(m, nn.modules.batchnorm._BatchNorm):
                     count += 1
                     if count >= 2:
                         # shutdown update in frozen mode for BN layers
