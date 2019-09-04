@@ -25,7 +25,7 @@ parser.add_argument("config", type=str,
 parser.add_argument('--distributed', action='store_true')
 parser.add_argument('--nodes', default=1, type=int,
                     help='number of nodes for distributed training')
-parser.add_argument('--rank', default=-1, type=int,
+parser.add_argument('--rank', default=0, type=int,
                     help='node rank for distributed training')
 parser.add_argument('--dist-url', default='tcp://127.0.0.1:23456', type=str,
                     help='master node url used to set up distributed training')
@@ -402,8 +402,10 @@ def worker(pid, ngpus_per_node, args):
             print("Best Prec@1: %.3f" % (best_prec1))
             print("*" * 80)
 
-        # save checkpoint at rank 0 (not process 0, NFS!!!)
-        if args.rank == 0:
+        # not distributed: directly save model
+        # distributed: save checkpoint at rank 0 (not process 0, NFS!!!)
+        # default rank is 0
+        if (args.rank == 0) or (not args.distributed):
             if backup_config is not None:
                 dir_path = backup_config["dir_path"]
                 pth_name = backup_config["pth_name"]
