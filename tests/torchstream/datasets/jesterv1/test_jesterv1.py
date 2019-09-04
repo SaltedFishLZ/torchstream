@@ -6,19 +6,19 @@ def test_jesterv1():
     # training set size: 118562
     dataset_size = 118562
     dataset_path = "~/Datasets/Jester/Jester-v1-jpg"
-    dataset = SomethingSomethingV1(root=dataset_path, train=True)
+    dataset = JesterV1(root=dataset_path, train=True)
     assert dataset.__len__() == dataset_size, ValueError
 
     # validation set size 14787
     dataset_size = 14787
     dataset_path = "~/Datasets/Jester/Jester-v1-jpg"
-    dataset = SomethingSomethingV1(root=dataset_path, train=False)
+    dataset = JesterV1(root=dataset_path, train=False)
     assert dataset.__len__() == dataset_size, ValueError
 
     # validation set size 14787
     dataset_size = 14787
     dataset_path = "~/Datasets/Jester/Jester-v1-avi"
-    dataset = SomethingSomethingV1(root=dataset_path, train=False, ext="avi")
+    dataset = JesterV1(root=dataset_path, train=False, ext="avi")
     assert dataset.__len__() == dataset_size, ValueError
 
     num_samples_per_class = collections.OrderedDict()
