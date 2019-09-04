@@ -42,11 +42,17 @@ def main(args):
     # dump files
     training_pickle = os.path.join(
         DIR_PATH,
-        "ucf101_training_split{}.pkl".format(args.split)
+        "ucf101_{}_training_split{}.pkl".format(
+            args.ext,
+            args.split
+        )
     )
     testing_pickle = os.path.join(
         DIR_PATH,
-        "ucf101_testing_split{}.pkl".format(args.split)
+        "ucf101_{}_testing_split{}.pkl".format(
+            args.ext,
+            args.split
+        )
     )
     with open(training_pickle, "wb") as fout:
         pickle.dump(training_datapoints, fout)

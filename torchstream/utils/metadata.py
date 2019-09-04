@@ -39,6 +39,18 @@ def collect_flat(root, ext, annotations=None,
     assert ext in SUPPORTED_FILES["RGB"], \
         NotImplementedError("Unsupport file type [{}]!".format(ext))
 
+    # Echo Parameters
+    echo_str = ("[collect_flat]:\n"
+                "root: {}\n"
+                "ext: {}\n"
+                "is_valid_datapoint: {}\n"
+                "fpath_offset: {}\n"
+                "fpath_tmpl: {}").format(
+                    root, ext, is_valid_datapoint,
+                    fpath_offset, fpath_tmpl
+                )
+    logger.info(echo_str)
+
     datapoints = []
     for sample in os.listdir(root):
 
@@ -109,6 +121,18 @@ def collect_folder(root, ext, is_valid_datapoint=None,
 
     assert ext in SUPPORTED_FILES["RGB"], \
         NotImplementedError("Unsupport file type [{}]!".format(ext))
+
+    # Echo Parameters
+    echo_str = ("[collect_folder]:\n"
+                "root: {}\n"
+                "ext: {}\n"
+                "is_valid_datapoint: {}\n"
+                "fpath_offset: {}\n"
+                "fpath_tmpl: {}").format(
+                    root, ext, is_valid_datapoint,
+                    fpath_offset, fpath_tmpl
+                )
+    logger.info(echo_str)
 
     datapoints = []
     for label in os.listdir(root):

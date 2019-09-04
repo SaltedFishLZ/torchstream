@@ -40,11 +40,11 @@ def main(args):
     # dump files
     training_pickle = os.path.join(
         DIR_PATH,
-        "hmdb51_training_split{}.pkl".format(args.split)
+        "hmdb51_{}_training_split{}.pkl".format(args.ext, args.split)
     )
     testing_pickle = os.path.join(
         DIR_PATH,
-        "hmdb51_testing_split{}.pkl".format(args.split)
+        "hmdb51_{}_testing_split{}.pkl".format(args.ext, args.split)
     )
     with open(training_pickle, "wb") as fout:
         pickle.dump(training_datapoints, fout)

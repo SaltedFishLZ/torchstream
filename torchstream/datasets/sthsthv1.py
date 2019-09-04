@@ -35,9 +35,9 @@ class SomethingSomethingV1(VisionDataset):
                 os.path.isdir(CACHE_DIR)):
             os.makedirs(CACHE_DIR, exist_ok=True)
         if train:
-            datapoint_filename = "sthsthv1_training.pkl"
+            datapoint_filename = "sthsthv1_{}_training.pkl".format(ext)
         else:
-            datapoint_filename = "sthsthv1_validation.pkl"
+            datapoint_filename = "sthsthv1_{}_validation.pkl".format(ext)
         datapoint_filepath = os.path.join(CACHE_DIR, datapoint_filename)
         # download when missing
         if not os.path.exists(datapoint_filepath):
@@ -59,6 +59,8 @@ class SomethingSomethingV1(VisionDataset):
             dp._path = dp.path
             dp.fpath_offset = fpath_offset
             dp.fpath_tmpl = fpath_tmpl
+        # sort datapoints
+        self.datapoints = sorted(self.datapoints)
 
         # ------------------ #
         #  load class_to_idx #

@@ -17,9 +17,8 @@ CACHE_DIR = os.path.expanduser("~/.cache/torchstream/datasets/ucf101/")
 
 class UCF101(VisionDataset):
 
-    def __init__(self, root, train, split=1, class_to_idx=None,
-                 ext="avi",
-                 transform=None, target_transform=None):
+    def __init__(self, root, train, split=1, ext="avi",
+                 class_to_idx=None, transform=None, target_transform=None):
         root = os.path.expanduser(root)
 
         super(UCF101, self).__init__(root=root,
@@ -34,9 +33,11 @@ class UCF101(VisionDataset):
                 os.path.isdir(CACHE_DIR)):
             os.makedirs(CACHE_DIR, exist_ok=True)
         if train:
-            datapoint_filename = "ucf101_training_split{}.pkl".format(split)
+            datapoint_filename = "ucf101_{}_training_split{}.pkl".format(ext,
+                                                                         split)
         else:
-            datapoint_filename = "ucf101_testing_split{}.pkl".format(split)
+            datapoint_filename = "ucf101_{}_testing_split{}.pkl".format(ext,
+                                                                        split)
         datapoint_filepath = os.path.join(CACHE_DIR, datapoint_filename)
         # download when missing
         if not os.path.exists(datapoint_filepath):

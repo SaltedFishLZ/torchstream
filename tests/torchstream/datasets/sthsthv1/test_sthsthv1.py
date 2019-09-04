@@ -3,10 +3,23 @@ from torchstream.datasets.sthsthv1 import SomethingSomethingV1
 
 
 def test_sthsthv1():
-    # dataset_len = 6766
+    # training set size: 86017
+    dataset_size = 86017
     dataset_path = "~/Datasets/Sth-sth/Sth-sth-v1-jpg"
     dataset = SomethingSomethingV1(root=dataset_path, train=True)
-    print(dataset.__len__())
+    assert dataset.__len__() == dataset_size, ValueError
+
+    # validation set size 11522
+    dataset_size = 11522
+    dataset_path = "~/Datasets/Sth-sth/Sth-sth-v1-jpg"
+    dataset = SomethingSomethingV1(root=dataset_path, train=False)
+    assert dataset.__len__() == dataset_size, ValueError
+
+    # validation set size 11522
+    dataset_size = 11522
+    dataset_path = "~/Datasets/Sth-sth/Sth-sth-v1-avi"
+    dataset = SomethingSomethingV1(root=dataset_path, train=False, ext="avi")
+    assert dataset.__len__() == dataset_size, ValueError
 
     num_samples_per_class = collections.OrderedDict()
     for vid, cid in dataset:

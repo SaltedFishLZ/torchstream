@@ -17,6 +17,10 @@ parser = argparse.ArgumentParser()
 parser.add_argument("root", type=str, help="path to dataset root")
 parser.add_argument("--ext", default="jpg", type=str,
                     help="dataset file extension")
+parser.add_argument("--fpath-offset", default=1, type=int,
+                    help="frame index offset")
+parser.add_argument("--fpath-tmpl", default="{:05d}", type=str,
+                    help="frame path template")
 
 
 def main(args):
@@ -24,7 +28,9 @@ def main(args):
     # collecting all data points
     all_datapoints = collect_flat(
         root=args.root, ext=args.ext,
-        annotations=annotation.full_annot_dict
+        annotations=annotation.full_annot_dict,
+        fpath_offset=args.fpath_offset,
+        fpath_tmpl=args.fpath_tmpl
     )
 
     # filter data points
@@ -42,15 +48,24 @@ def main(args):
             raise ValueError
 
     # dump files
-    training_pickle = os.path.join(DIR_PATH, "sthsthv1_training.pkl")
+    training_pickle = os.path.join(
+        DIR_PATH,
+        "sthsthv1_{}_training.pkl".format(args.ext)
+    )
     with open(training_pickle, "wb") as fout:
         pickle.dump(training_datapoints, fout)
 
-    validation_pickle = os.path.join(DIR_PATH, "sthsthv1_validation.pkl")
+    validation_pickle = os.path.join(
+        DIR_PATH,
+        "sthsthv1_{}_validation.pkl".format(args.ext)
+    )
     with open(validation_pickle, "wb") as fout:
         pickle.dump(validation_datapoints, fout)
 
-    testing_pickle = os.path.join(DIR_PATH, "sthsthv1_testing.pkl")
+    testing_pickle = os.path.join(
+        DIR_PATH,
+        "sthsthv1_{}_testing.pkl".format(args.ext)
+    )
     with open(testing_pickle, "wb") as fout:
         pickle.dump(testing_datapoints, fout)
 
