@@ -29,6 +29,7 @@ with open(label_path, "r") as fin:
     for _line in fin:
         text = _line.split('\n')[0]
         labels.append(text)
+labels = sorted(labels)
 
 class_to_idx = collections.OrderedDict()
 for cid, label in enumerate(labels):
