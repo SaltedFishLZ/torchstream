@@ -30,6 +30,7 @@
     "train_dataset": {
         "name": "SomethingSomethingV1",
         "argv": {
+            "root": "~/Datasets/Sth-sth/Sth-sth-v1-jpg",
             "train": true
         }
     },
@@ -71,6 +72,7 @@
     "val_dataset": {
         "name": "SomethingSomethingV1",
         "argv": {
+            "root": "~/Datasets/Sth-sth/Sth-sth-v1-jpg",
             "train": false
         }
     },
