@@ -13,3 +13,7 @@ matplotlib
 # tensorboard
 tensorboard==1.14.0
 future
+
+# psample
+pygmo
+
