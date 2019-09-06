@@ -1,5 +1,5 @@
 """Collecting DataPoints for different configurations of
-the `Something Something v1` dataset  and dump the pickle file
+the `Jester v1` dataset  and dump the pickle file
 """
 import os
 import pickle
@@ -50,21 +50,21 @@ def main(args):
     # dump files
     training_pickle = os.path.join(
         DIR_PATH,
-        "sthsthv1_{}_training.pkl".format(args.ext)
+        "jesterv1_{}_training.pkl".format(args.ext)
     )
     with open(training_pickle, "wb") as fout:
         pickle.dump(training_datapoints, fout)
 
     validation_pickle = os.path.join(
         DIR_PATH,
-        "sthsthv1_{}_validation.pkl".format(args.ext)
+        "jesterv1_{}_validation.pkl".format(args.ext)
     )
     with open(validation_pickle, "wb") as fout:
         pickle.dump(validation_datapoints, fout)
 
     testing_pickle = os.path.join(
         DIR_PATH,
-        "sthsthv1_{}_testing.pkl".format(args.ext)
+        "jesterv1_{}_testing.pkl".format(args.ext)
     )
     with open(testing_pickle, "wb") as fout:
         pickle.dump(testing_datapoints, fout)

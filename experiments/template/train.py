@@ -4,6 +4,7 @@ Runtime configurations are specified in args, usually can be overriden by ENV.
 Training hyper-parameters are specified in JSON files.
 
 """
+import os
 import time
 import json
 import argparse
@@ -12,6 +13,7 @@ import torch
 import torch.multiprocessing as mp
 import torch.distributed as dist
 import torch.utils.data.distributed as datadist
+from torch.utils.tensorboard import SummaryWriter
 import torchstream
 
 import cfgs
@@ -25,7 +27,7 @@ parser.add_argument("config", type=str,
 parser.add_argument('--distributed', action='store_true')
 parser.add_argument('--nodes', default=1, type=int,
                     help='number of nodes for distributed training')
-parser.add_argument('--rank', default=-1, type=int,
+parser.add_argument('--rank', default=0, type=int,
                     help='node rank for distributed training')
 parser.add_argument('--dist-url', default='tcp://127.0.0.1:23456', type=str,
                     help='master node url used to set up distributed training')
@@ -115,6 +117,9 @@ def train(gid, loader, model, criterion,
           log_str=train_log_str, log_interval=20,
           **kwargs):
 
+    if "writer" in kwargs:
+        writer = kwargs["writer"]
+
     batch_time = utils.Meter()
     data_time = utils.Meter()
     loss_meter = utils.Meter()
@@ -157,6 +162,7 @@ def train(gid, loader, model, criterion,
         batch_time.update(time.time() - end)
         end = time.time()
 
+        # print std log
         if i % log_interval == 0:
             print(log_str.format(epoch, i, len(loader),
                                  batch_time=batch_time,
@@ -165,6 +171,29 @@ def train(gid, loader, model, criterion,
                                  top1_meter=top1_meter,
                                  top5_meter=top5_meter,
                                  lr=optimizer.param_groups[-1]['lr']))
+
+        # tensorboard log
+        writer.add_scalar("training loss (batch)",
+                          loss_meter.val,
+                          epoch * len(loader) + i)
+        writer.add_scalar("training loss (running mean)",
+                          loss_meter.avg,
+                          epoch * len(loader) + i)
+        writer.add_scalar("training top-1 accuracy (batch)",
+                          top1_meter.val,
+                          epoch * len(loader) + i)
+        writer.add_scalar("training top-1 accuracy (running mean)",
+                          top1_meter.avg,
+                          epoch * len(loader) + i)
+        writer.add_scalar("training top-5 accuracy (batch)",
+                          top5_meter.val,
+                          epoch * len(loader) + i)
+        writer.add_scalar("training top-5 accuracy (running mean)",
+                          top5_meter.avg,
+                          epoch * len(loader) + i)
+        writer.add_scalar("learning rate",
+                          optimizer.param_groups[-1]['lr'],
+                          epoch * len(loader) + i)
 
     # schedule lr after each epoch, not each batch!
     lr_scheduler.step()
@@ -182,8 +211,10 @@ def worker(pid, ngpus_per_node, args):
     configs = {}
     with open(args.config, "r") as json_config:
         configs = json.load(json_config)
+    experiment = args.config.split("configs/")[1].split(".json")[0]
+    print("Experiment: {}".format(experiment))
 
-    # NOTE: 
+    # NOTE:
     # -- For distributed data parallel, we use 1 process for 1 GPU and
     #    set GPU ID = Process ID
     # -- For data parallel, we only has 1 process and the master GPU is
@@ -200,7 +231,7 @@ def worker(pid, ngpus_per_node, args):
                                 rank=args.rank)
 
     if args.distributed:
-        print("Proc [{:2d}], Rank [{:2d}], Uses GPU [{:2d}]".format(
+        print("Proc [{:2d}] rank-[{:2d}], GPU-[{:2d}]".format(
                 pid, args.rank, args.gid
             )
         )
@@ -208,6 +239,11 @@ def worker(pid, ngpus_per_node, args):
     global best_prec1
     start_epoch = 0
     checkpoint = None
+
+    # config tensorboard writer
+    log_dir = os.path.join("logs", experiment, "rank{}".format(args.rank))
+    print("Proc [{:2d}] tensorboard log dir: {}".format(pid, log_dir))
+    writer = SummaryWriter(log_dir)
 
     # -------------------------------------------------------- #
     #          Construct Datasets & Dataloaders                #
@@ -278,6 +314,8 @@ def worker(pid, ngpus_per_node, args):
     #                 Construct Neural Network                 #
     # -------------------------------------------------------- #
 
+    print("Proc [{:2d}] constructing model...".format(pid))
+
     model = cfgs.config2model(configs["model"])
 
     # load checkpoint
@@ -286,31 +324,32 @@ def worker(pid, ngpus_per_node, args):
         resume_config = configs["train"]["resume"]
         checkpoint = utils.load_checkpoint(**resume_config)
         if checkpoint is None:
-            print("Load Checkpoint Failed")
+            print("Proc [{:2d}] load checkpoint failed".format(pid))
         if checkpoint is not None:
             # check checkpoint device mapping
             model_state_dict = checkpoint["model_state_dict"]
-            print("Loading Checkpoint...")
+            print("Proc [{:2d}] loading checkpoint...".format(pid))
             model.load_state_dict(model_state_dict)
     # ignore finetune if there is a checkpoint
     if (checkpoint is None) and ("finetune" in configs["train"]):
         finetune_config = configs["train"]["finetune"]
         checkpoint = utils.load_checkpoint(**finetune_config)
         if checkpoint is None:
-            raise ValueError("Load Finetune Model Failed")
+            raise ValueError("load finetune model failed")
         # TODO: move load finetune model into model's method
         # not all models replace FCs only
         model_state_dict = checkpoint["model_state_dict"]
         for key in model_state_dict:
             if "fc" in key:
                 # use FC from new network
-                print("Replacing ", key)
+                print("Proc [{:2d}] replacing ".format(pid), key)
                 model_state_dict[key] = model.state_dict()[key]
         model.load_state_dict(model_state_dict)
-        # set to None to prevent loading other states
+        # set to None to prevent loading other states (e.g., optimizer state)
         checkpoint = None
 
     # move to device
+    print("Proc [{:2d}] moving model to device...".format(pid))
     model = model.cuda(args.gid)
     if args.distributed:
         model = torch.nn.parallel.DistributedDataParallel(
@@ -323,14 +362,14 @@ def worker(pid, ngpus_per_node, args):
     # -------------------------------------------------------- #
     #            Construct Optimizer, Scheduler etc            #
     # -------------------------------------------------------- #
-    print("Setting Optimizer & Lr Scheduler...")
+    print("Proc [{:2d}] setting optimizer & lr scheduler...".format(pid))
 
     if configs["optimizer"]["argv"]["params"] == "model_specified":
         print("Use Model Specified Training Policies")
         configs["optimizer"]["argv"]["params"] = \
             model.module.get_optim_policies()
     else:
-        print("Train All Parameters")
+        print("Proc [{:2d}] train all parameters".format(pid))
         configs["optimizer"]["argv"]["params"] = model.parameters()
     optimizer = cfgs.config2optimizer(configs["optimizer"])
     lr_scheduler = cfgs.config2lrscheduler(optimizer, configs["lr_scheduler"])
@@ -345,8 +384,8 @@ def worker(pid, ngpus_per_node, args):
 
             optimizer.load_state_dict(optimizer_state_dict)
             lr_scheduler.load_state_dict(lr_scheduler_state_dict)
-            print("Resume from epoch [{}], best prec1 [{}]".
-                  format(start_epoch - 1, best_prec1))
+            print("Proc[{:2d}] resume from epoch [{}], best prec1 [{}]".
+                  format(pid, start_epoch - 1, best_prec1))
 
     criterion = cfgs.config2criterion(configs["criterion"])
     criterion = criterion.cuda(args.gid)
@@ -360,7 +399,7 @@ def worker(pid, ngpus_per_node, args):
         backup_config = configs["train"]["backup"]
     epochs = configs["train"]["epochs"]
 
-    print("Training Begins")
+    print("Proc [{:2d}] training begins".format(pid))
 
     for epoch in range(start_epoch, epochs):
         if args.distributed:
@@ -370,15 +409,20 @@ def worker(pid, ngpus_per_node, args):
         # train for one epoch
         train(gid=args.gid,
               loader=train_loader,
-              model=model, criterion=criterion,
-              optimizer=optimizer, lr_scheduler=lr_scheduler,
-              epoch=epoch)
+              model=model,
+              criterion=criterion,
+              optimizer=optimizer,
+              lr_scheduler=lr_scheduler,
+              epoch=epoch,
+              writer=writer)
 
-        # evaluate on validation set      
+        # evaluate on validation set
         prec1 = validate(gid=args.gid,
                          loader=val_loader,
-                         model=model, criterion=criterion,
-                         epoch=epoch)
+                         model=model,
+                         criterion=criterion,
+                         epoch=epoch,
+                         writer=writer)
 
         # aproxiamation in distributed mode
         # currently, each process has the same number of samples (via padding)
@@ -399,8 +443,10 @@ def worker(pid, ngpus_per_node, args):
             print("Best Prec@1: %.3f" % (best_prec1))
             print("*" * 80)
 
-        # save checkpoint at rank 0 (not process 0, NFS!!!)
-        if args.rank == 0:
+        # not distributed: directly save model
+        # distributed: save checkpoint at rank 0 (not process 0, NFS!!!)
+        # default rank is 0
+        if (args.rank == 0) or (not args.distributed):
             if backup_config is not None:
                 dir_path = backup_config["dir_path"]
                 pth_name = backup_config["pth_name"]
@@ -423,6 +469,10 @@ def worker(pid, ngpus_per_node, args):
                                       is_best=is_best,
                                       dir_path=dir_path,
                                       pth_name=pth_name)
+
+        # record tensorboard log
+        writer.add_scalar("validation top-1 accuracy (epoch)",
+                          prec1, epoch)
 
 
 def main():

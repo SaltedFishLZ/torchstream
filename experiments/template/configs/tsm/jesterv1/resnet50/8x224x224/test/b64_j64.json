@@ -36,6 +36,8 @@
     "test_dataset": {
         "name": "JesterV1",
         "argv": {
+            "root": "~/Datasets/Jester/Jester-v1-avi",
+            "ext": "avi",
             "train": false
         }
     },

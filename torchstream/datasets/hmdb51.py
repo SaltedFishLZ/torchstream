@@ -17,7 +17,7 @@ CACHE_DIR = os.path.expanduser("~/.cache/torchstream/datasets/hmdb51/")
 
 class HMDB51(VisionDataset):
 
-    def __init__(self, root, train, split=1,
+    def __init__(self, root, train, split=1, ext="avi",
                  transform=None, target_transform=None):
         root = os.path.expanduser(root)
 
@@ -33,9 +33,11 @@ class HMDB51(VisionDataset):
                 os.path.isdir(CACHE_DIR)):
             os.makedirs(CACHE_DIR, exist_ok=True)
         if train:
-            datapoint_file_name = "hmdb51_training_split{}.pkl".format(split)
+            datapoint_file_name = "hmdb51_{}_training_split{}.pkl".format(ext,
+                                                                          split)
         else:
-            datapoint_file_name = "hmdb51_testing_split{}.pkl".format(split)
+            datapoint_file_name = "hmdb51_{}_testing_split{}.pkl".format(ext,
+                                                                         split)
         datapoint_file_path = os.path.join(CACHE_DIR, datapoint_file_name)
         # download when missing
         if not os.path.exists(datapoint_file_path):

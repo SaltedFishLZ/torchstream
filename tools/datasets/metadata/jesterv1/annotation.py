@@ -4,7 +4,7 @@ from torchstream.utils.download import download
 
 DOWNLOAD_SERVER_PREFIX = ("zhen@a18.millennium.berkeley.edu:"
                           "/home/eecs/zhen/video-acc/download/")
-DOWNLOAD_SRC_DIR = "tools/datasets/metadata/sthsthv1"
+DOWNLOAD_SRC_DIR = "tools/datasets/metadata/jesterv1"
 
 FILE_PATH = os.path.realpath(__file__)
 DIR_PATH = os.path.dirname(FILE_PATH)
@@ -15,7 +15,7 @@ DIR_PATH = os.path.dirname(FILE_PATH)
 # -------------------------------- #
 
 # training set annotations
-train_annot_file = "something-something-v1-train.csv"
+train_annot_file = "jester-v1-train.csv"
 train_annot_path = os.path.join(DIR_PATH, train_annot_file)
 if not os.path.exists(train_annot_path):
     train_annot_src = os.path.join(
@@ -26,7 +26,7 @@ if not os.path.exists(train_annot_path):
     download(train_annot_src, train_annot_path)
 
 # validation set annotations
-val_annot_file = "something-something-v1-validation.csv"
+val_annot_file = "jester-v1-validation.csv"
 val_annot_path = os.path.join(DIR_PATH, val_annot_file)
 if not os.path.exists(val_annot_path):
     val_annot_src = os.path.join(
