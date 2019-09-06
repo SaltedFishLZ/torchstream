@@ -211,7 +211,7 @@ def worker(pid, ngpus_per_node, args):
     configs = {}
     with open(args.config, "r") as json_config:
         configs = json.load(json_config)
-    experiment = args.config.split("configs/")[1]
+    experiment = args.config.split("configs/")[1].split(".json")[0]
     print("Experiment: {}".format(experiment))
 
     # NOTE:

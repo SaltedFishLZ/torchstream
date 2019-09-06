@@ -1,4 +1,6 @@
 tqdm
+# eliminate tensorboard warnings
+numpy==1.16.4
 torch==1.2.0
 torchvision==0.4.0
 opencv-python==3.4.5.20
