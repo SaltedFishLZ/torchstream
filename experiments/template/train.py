@@ -12,6 +12,7 @@ import torch
 import torch.multiprocessing as mp
 import torch.distributed as dist
 import torch.utils.data.distributed as datadist
+from torch.utils.tensorboard import SummaryWriter
 import torchstream
 
 import cfgs
@@ -43,6 +44,9 @@ val_log_str = "Validation:[{:4d}/{:4d}],  " + \
 
 def validate(gid, loader, model, criterion, shown_count=False,
              log_str=val_log_str, log_interval=20, **kwargs):
+
+    if "writer" in kwargs:
+        writer = kwargs["writer"]
 
     batch_time = utils.Meter()
     data_time = utils.Meter()
@@ -115,6 +119,9 @@ def train(gid, loader, model, criterion,
           log_str=train_log_str, log_interval=20,
           **kwargs):
 
+    if "writer" in kwargs:
+        writer = kwargs["writer"]
+
     batch_time = utils.Meter()
     data_time = utils.Meter()
     loss_meter = utils.Meter()
@@ -157,6 +164,7 @@ def train(gid, loader, model, criterion,
         batch_time.update(time.time() - end)
         end = time.time()
 
+        # print std log
         if i % log_interval == 0:
             print(log_str.format(epoch, i, len(loader),
                                  batch_time=batch_time,
@@ -165,6 +173,29 @@ def train(gid, loader, model, criterion,
                                  top1_meter=top1_meter,
                                  top5_meter=top5_meter,
                                  lr=optimizer.param_groups[-1]['lr']))
+
+        # tensorboard log
+        writer.add_scalar("training loss (batch)",
+                  loss_meter.val,
+                  epoch * len(loader) + i)
+        writer.add_scalar("training loss (running mean)",
+                  loss_meter.avg,
+                  epoch * len(loader) + i)
+        writer.add_scalar("training accuracy top-1 (batch)",
+                  top1_meter.val,
+                  epoch * len(loader) + i)
+        writer.add_scalar("training accuracy top-1 (running mean)",
+                  top1_meter.avg,
+                  epoch * len(loader) + i)
+        writer.add_scalar("training accuracy top-5 (batch)",
+                  top5_meter.val,
+                  epoch * len(loader) + i)
+        writer.add_scalar("training accuracy top-5 (running mean)",
+                  top5_meter.avg,
+                  epoch * len(loader) + i)
+        writer.add_scalar("learning rate",
+                  lr=optimizer.param_groups[-1]['lr'],
+                  epoch * len(loader) + i)        
 
     # schedule lr after each epoch, not each batch!
     lr_scheduler.step()
@@ -182,6 +213,8 @@ def worker(pid, ngpus_per_node, args):
     configs = {}
     with open(args.config, "r") as json_config:
         configs = json.load(json_config)
+    experiment = args.config.split("configs/")[1]
+    print("Experiment: {}".format(experiment))
 
     # NOTE: 
     # -- For distributed data parallel, we use 1 process for 1 GPU and
@@ -208,6 +241,11 @@ def worker(pid, ngpus_per_node, args):
     global best_prec1
     start_epoch = 0
     checkpoint = None
+
+    # config tensorboard writer
+    log_dir = os.path.join("logs", experiment, str(pid))
+    print("Proc [{:2d}] tensorboard log dir: {}".format(pid, log_dir))
+    writer = SummaryWriter(log_dir)
 
     # -------------------------------------------------------- #
     #          Construct Datasets & Dataloaders                #
@@ -373,15 +411,20 @@ def worker(pid, ngpus_per_node, args):
         # train for one epoch
         train(gid=args.gid,
               loader=train_loader,
-              model=model, criterion=criterion,
-              optimizer=optimizer, lr_scheduler=lr_scheduler,
-              epoch=epoch)
+              model=model,
+              criterion=criterion,
+              optimizer=optimizer,
+              lr_scheduler=lr_scheduler,
+              epoch=epoch,
+              writer=writer)
 
         # evaluate on validation set      
         prec1 = validate(gid=args.gid,
                          loader=val_loader,
-                         model=model, criterion=criterion,
-                         epoch=epoch)
+                         model=model,
+                         criterion=criterion,
+                         epoch=epoch,
+                         writer=writer)
 
         # aproxiamation in distributed mode
         # currently, each process has the same number of samples (via padding)

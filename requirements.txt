@@ -6,3 +6,8 @@ psutil
 pandas
 sklearn
 matplotlib
+
+
+# tensorboard
+tensorboard==1.14.0
+future
