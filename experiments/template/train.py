@@ -4,6 +4,7 @@ Runtime configurations are specified in args, usually can be overriden by ENV.
 Training hyper-parameters are specified in JSON files.
 
 """
+import os
 import time
 import json
 import argparse
@@ -44,9 +45,6 @@ val_log_str = "Validation:[{:4d}/{:4d}],  " + \
 
 def validate(gid, loader, model, criterion, shown_count=False,
              log_str=val_log_str, log_interval=20, **kwargs):
-
-    if "writer" in kwargs:
-        writer = kwargs["writer"]
 
     batch_time = utils.Meter()
     data_time = utils.Meter()
@@ -176,26 +174,26 @@ def train(gid, loader, model, criterion,
 
         # tensorboard log
         writer.add_scalar("training loss (batch)",
-                  loss_meter.val,
-                  epoch * len(loader) + i)
+                          loss_meter.val,
+                          epoch * len(loader) + i)
         writer.add_scalar("training loss (running mean)",
-                  loss_meter.avg,
-                  epoch * len(loader) + i)
+                          loss_meter.avg,
+                          epoch * len(loader) + i)
         writer.add_scalar("training accuracy top-1 (batch)",
-                  top1_meter.val,
-                  epoch * len(loader) + i)
+                          top1_meter.val,
+                          epoch * len(loader) + i)
         writer.add_scalar("training accuracy top-1 (running mean)",
-                  top1_meter.avg,
-                  epoch * len(loader) + i)
+                          top1_meter.avg,
+                          epoch * len(loader) + i)
         writer.add_scalar("training accuracy top-5 (batch)",
-                  top5_meter.val,
-                  epoch * len(loader) + i)
+                          top5_meter.val,
+                          epoch * len(loader) + i)
         writer.add_scalar("training accuracy top-5 (running mean)",
-                  top5_meter.avg,
-                  epoch * len(loader) + i)
+                          top5_meter.avg,
+                          epoch * len(loader) + i)
         writer.add_scalar("learning rate",
-                  lr=optimizer.param_groups[-1]['lr'],
-                  epoch * len(loader) + i)        
+                          optimizer.param_groups[-1]['lr'],
+                          epoch * len(loader) + i)
 
     # schedule lr after each epoch, not each batch!
     lr_scheduler.step()
@@ -216,7 +214,7 @@ def worker(pid, ngpus_per_node, args):
     experiment = args.config.split("configs/")[1]
     print("Experiment: {}".format(experiment))
 
-    # NOTE: 
+    # NOTE:
     # -- For distributed data parallel, we use 1 process for 1 GPU and
     #    set GPU ID = Process ID
     # -- For data parallel, we only has 1 process and the master GPU is
@@ -418,7 +416,7 @@ def worker(pid, ngpus_per_node, args):
               epoch=epoch,
               writer=writer)
 
-        # evaluate on validation set      
+        # evaluate on validation set
         prec1 = validate(gid=args.gid,
                          loader=val_loader,
                          model=model,
