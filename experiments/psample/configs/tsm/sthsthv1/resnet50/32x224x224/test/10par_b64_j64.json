@@ -37,7 +37,11 @@
         "package": "datasets",
         "name": "SubsampledSomethingSomethingV1",
         "argv": {
-            "train": false
+            "root": "~/Datasets/Sth-sth/Sth-sth-v1-avi",
+            "ext": "avi",
+            "train": false,
+            "sample_duration": 10,
+            "inverse": false
         }
     },
 
