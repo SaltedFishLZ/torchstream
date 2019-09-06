@@ -179,16 +179,16 @@ def train(gid, loader, model, criterion,
         writer.add_scalar("training loss (running mean)",
                           loss_meter.avg,
                           epoch * len(loader) + i)
-        writer.add_scalar("training accuracy top-1 (batch)",
+        writer.add_scalar("training top-1 accuracy (batch)",
                           top1_meter.val,
                           epoch * len(loader) + i)
-        writer.add_scalar("training accuracy top-1 (running mean)",
+        writer.add_scalar("training top-1 accuracy (running mean)",
                           top1_meter.avg,
                           epoch * len(loader) + i)
-        writer.add_scalar("training accuracy top-5 (batch)",
+        writer.add_scalar("training top-5 accuracy (batch)",
                           top5_meter.val,
                           epoch * len(loader) + i)
-        writer.add_scalar("training accuracy top-5 (running mean)",
+        writer.add_scalar("training top-5 accuracy (running mean)",
                           top5_meter.avg,
                           epoch * len(loader) + i)
         writer.add_scalar("learning rate",
@@ -345,7 +345,7 @@ def worker(pid, ngpus_per_node, args):
                 print("Proc [{:2d}] replacing ".format(pid), key)
                 model_state_dict[key] = model.state_dict()[key]
         model.load_state_dict(model_state_dict)
-        # set to None to prevent loading other states
+        # set to None to prevent loading other states (e.g., optimizer state)
         checkpoint = None
 
     # move to device
@@ -469,6 +469,10 @@ def worker(pid, ngpus_per_node, args):
                                       is_best=is_best,
                                       dir_path=dir_path,
                                       pth_name=pth_name)
+
+        # record tensorboard log
+        writer.add_scalar("validation top-1 accuracy (epoch)",
+                          prec1, epoch)
 
 
 def main():
