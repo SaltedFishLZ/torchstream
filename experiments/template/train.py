@@ -243,7 +243,7 @@ def worker(pid, ngpus_per_node, args):
     checkpoint = None
 
     # config tensorboard writer
-    log_dir = os.path.join("logs", experiment, str(pid))
+    log_dir = os.path.join("logs", experiment, "rank{}".format(args.rank))
     print("Proc [{:2d}] tensorboard log dir: {}".format(pid, log_dir))
     writer = SummaryWriter(log_dir)
 
