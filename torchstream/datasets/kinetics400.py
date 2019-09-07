@@ -8,14 +8,14 @@ import torchstream.io.backends.opencv as backend
 from torchstream.io.__support__ import SUPPORTED_IMAGES, SUPPORTED_VIDEOS
 from torchstream.utils.download import download
 
-CACHE_DIR = os.path.expanduser("~/.cache/torchstream/datasets/kinetics-400/")
+CACHE_DIR = os.path.expanduser("~/.cache/torchstream/datasets/kinetics400/")
 DOWNLOAD_SERVER_PREFIX = (
     "a18:/home/eecs/zhen/video-acc/download/"
-    "torchstream/datasets/kinetics-400/"
+    "torchstream/datasets/kinetics400/"
 )
 
 
-class Kinetics_400(VisionDataset):
+class Kinetics400(VisionDataset):
 
     def __init__(self, root, train, split=1,
                  transform=None, target_transform=None):
