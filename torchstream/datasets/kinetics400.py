@@ -17,7 +17,7 @@ DOWNLOAD_SERVER_PREFIX = (
 
 class Kinetics400(VisionDataset):
 
-    def __init__(self, root, train, split=1,
+    def __init__(self, root, train,
                  transform=None, target_transform=None):
         root = os.path.expanduser(root)
 
@@ -33,9 +33,9 @@ class Kinetics400(VisionDataset):
                 os.path.isdir(CACHE_DIR)):
             os.makedirs(CACHE_DIR, exist_ok=True)
         if train:
-            datapoint_file_name = "kinetics_training_split{}.pkl".format(split)
+            datapoint_file_name = "kinetics_training.pkl"
         else:
-            datapoint_file_name = "kinetics_val_split{}.pkl".format(split)
+            datapoint_file_name = "kinetics_val.pkl"
         datapoint_file_path = os.path.join(CACHE_DIR, datapoint_file_name)
         # download when missing
         if not os.path.exists(datapoint_file_path):
