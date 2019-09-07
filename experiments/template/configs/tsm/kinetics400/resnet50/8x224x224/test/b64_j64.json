@@ -5,19 +5,19 @@
             "name": "CenterSegment",
             "argv": {
                 "size": 8
-            }      
+            }
         },
         {
             "name": "Resize",
             "argv": {
                 "size": 256
-            }      
+            }
         },
         {
             "name": "CenterCrop",
             "argv": {
                 "size": [224, 224]
-            }      
+            }
         },
         {
             "package": "torchstream.transforms",
@@ -37,7 +37,6 @@
         "name": "Kinetics400",
         "argv": {
             "root": "~/Datasets/Kinetics/Kinetics-400-mp4",
-            "ext": "mp4",
             "train": false
         }
     },
