@@ -1,11 +1,10 @@
 import collections
-from torchstream.datasets.kinetics_400 import Kinetics_400
+from torchstream.datasets.kinetics400 import Kinetics400
 
 
 def test_kinetics_400():
-    # dataset_len = 6766
     dataset_path = "/dnn/data/Kinetics/Kinetics-400-mp4"
-    dataset = Kinetics_400(root=dataset_path, train=False)
+    dataset = Kinetics400(root=dataset_path, train=False)
     print(dataset.__len__())
 
     num_samples_per_class = collections.OrderedDict()
