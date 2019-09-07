@@ -1,6 +1,7 @@
 # logs
 logs
 *.log
+logs
 
 # media files
 *.jpg
