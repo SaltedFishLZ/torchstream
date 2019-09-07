@@ -1,7 +1,10 @@
-""" I/O Conversion
+""" Video I/O Conversion
+
+NOTE:
+vid2vid requires `ffmpeg`
 """
 __all__ = [
-    "vid2vid", "vid2seq"
+    "vid2vid", "vid2seq", "seq2vid"
 ]
 
 import os
@@ -24,32 +27,34 @@ logger = logging.getLogger(__name__)
 logger.setLevel(__config__.LOGGER_LEVEL)
 
 
-def vid2vid(src_sample, dst_sample, **kwargs):
+def vid2vid(src, dst, **kwargs):
     """Video -> Video Conversion
-    using ffmpeg to convert videos
+    using ffmpeg to convert videos types
     Args:
-        src_sample (DataPoint): source video's meta-data
-        dst_sample (DataPoint): destination video's meta-data
+        src (DataPoint): source video's meta-data
+        dst (DataPoint): destination video's meta-data
+    Optional:
+        retries: retry number
     """
-    if __config__.__STRICT__:
-        # Check Source Oprand
-        assert isinstance(src_sample, DataPoint), \
+    if __config__.STRICT:
+        # check source operand
+        assert isinstance(src, DataPoint), \
             TypeError
-        assert not src_sample.seq, \
-            "Source sample is not a video"
-        # Check Destination Oprand
-        assert isinstance(dst_sample, DataPoint), \
+        assert not src.seq, \
+            "source sample is not a video"
+        # check destination operand
+        assert isinstance(dst, DataPoint), \
             TypeError
-        assert not dst_sample.seq, \
-            "Destination sample is not a video"
+        assert not dst.seq, \
+            "destination sample is not a video"
 
     success = False
     fails = 0
     retries = 0
     retries = kwargs.get("retries", 0)
 
-    src_vid = src_sample.path
-    dst_vid = dst_sample.path
+    src_vid = src.path
+    dst_vid = dst.path
 
     dst_dir = os.path.dirname(dst_vid)
     os.makedirs(dst_dir, exist_ok=True)
@@ -67,32 +72,33 @@ def vid2vid(src_sample, dst_sample, **kwargs):
     return success
 
 
-def vid2seq(src_sample, dst_sample, **kwargs):
+def vid2seq(src, dst, **kwargs):
     """Video -> Image Sequence Conversion
     using io.backends to slicing videos
     Args:
-        src_sample (DataPoint): source video's meta-data
-        dst_sample (DataPoint): destination video's meta-data
+        src (DataPoint): source video's meta-data
+        dst (DataPoint): destination video's meta-data
+    Optional:
+        retries: retry number
     """
-    # Santity Check
-    if __config__.__STRICT__:
-        # Check Source Oprand
-        assert isinstance(src_sample, DataPoint), \
+    if __config__.STRICT:
+        # check source operand
+        assert isinstance(src, DataPoint), \
             TypeError
-        assert not src_sample.seq, \
-            "Source sample is not a video"
-        # Check Destination Oprand
-        assert isinstance(dst_sample, DataPoint), \
+        assert not src.seq, \
+            "source sample is not a video"
+        # check destination operand
+        assert isinstance(dst, DataPoint), \
             TypeError
-        assert dst_sample.seq, \
-            "Destination sample is not a image sequence"
+        assert dst.seq, \
+            "destination sample is not an image sequence"
 
     success = False
     fails = 0
     retries = kwargs.get("retries", 0)
 
-    src_vid = src_sample.path
-    dst_seq = dst_sample.path
+    src_vid = src.path
+    dst_seq = dst.path
     os.makedirs(dst_seq, exist_ok=True)
 
     while fails <= retries:
@@ -105,49 +111,35 @@ def vid2seq(src_sample, dst_sample, **kwargs):
     return success
 
 
-def seq2vid(src_sample, dst_sample, tmpl="{}", offset=0, fps=12, **kwargs):
+def seq2vid(src, dst, **kwargs):
     """Image Sequence to Video
+    Args:
+        src (DataPoint): source sequence's meta-data
+        dst (DataPoint): destination video's meta-data
+    Optional:
+        retries: retry number
     """
-    if __config__.__STRICT__:
-        # Check Source Oprand
-        assert isinstance(src_sample, DataPoint), \
+    if __config__.STRICT:
+        # check source operand
+        assert isinstance(src, DataPoint), \
             TypeError
-        assert src_sample.seq, \
-            "Source sample is not a image sequence"
-        # Check Destination Oprand
-        assert isinstance(dst_sample, DataPoint), \
+        assert src.seq, \
+            "source sample is not a image sequence"
+        # check destination operand
+        assert isinstance(dst, DataPoint), \
             TypeError
-        assert not dst_sample.seq, \
-            "Destination sample is not a video"
+        assert not dst.seq, \
+            "destination sample is not a video"
 
-    src_frames = []
-    for i in range(src_sample.fcount):
-        frame_name = tmpl.format(i + offset) + "." + src_sample.ext
-        frame_path = os.path.join(src_sample.path, frame_name)
-        src_frames.append(frame_path)
+    framepaths = src.framepaths
+    varray = frames2ndarray(framepaths)
 
-    varray = frames2ndarray(src_frames)
-
-    dst_vid = dst_sample.path
+    dst_vid = dst.path
     dst_dir = os.path.dirname(dst_vid)
     os.makedirs(dst_dir, exist_ok=True)
 
     ndarray2video(varray, dst_path=dst_vid)
 
-    # currently, always return True
+    # TODO: error report
+    # currently, always return True, pretend always succeed
     return True
-
-
-if __name__ == "__main__":
-
-    # self-testing
-    DIR_PATH = os.path.dirname(os.path.realpath(__file__))
-    SRC_VID_SAMPLE = DataPoint(root=DIR_PATH,
-                               rpath="test.webm", name="test", ext="webm")
-    DST_VID_SAMPLE = DataPoint(root=DIR_PATH,
-                               rpath="test.avi", name="test", ext="avi")
-    print(vid2vid(SRC_VID_SAMPLE, DST_VID_SAMPLE, retries=10))
-
-    DST_SEQ_SAMPLE = DataPoint(root=DIR_PATH,
-                               rpath="test_seq", name="test_seq", ext="jpg")
-    print(vid2seq(DST_VID_SAMPLE, DST_SEQ_SAMPLE))

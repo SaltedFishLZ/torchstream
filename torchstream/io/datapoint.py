@@ -58,17 +58,26 @@ class DataPoint(object):
 
     @property
     def seq(self):
+        """
+        Return:
+            bool, whether this datapoint is a sequence or not.
+        """
         return self.ext in SUPPORTED_IMAGES["RGB"]
 
     @property
     def absdir(self):
+        """
+        Return:
+            str, absolute path of the directory where this datapoint
+            lies.
+        """
         return os.path.join(self.root, self.reldir)
 
     @property
     def filename(self):
         """
-        Return: file name with extension for videos,
-            folder name for image sequence.
+        Return: str, file name with extension for videos,
+            sequence folder name for image sequence.
         """
         if not self.seq:
             if (self.ext != "") and (self.ext is not None):
