@@ -21,7 +21,7 @@ class Kinetics400(VisionDataset):
                  transform=None, target_transform=None):
         root = os.path.expanduser(root)
 
-        super(Kinetics_400, self).__init__(root=root,
+        super(Kinetics400, self).__init__(root=root,
                                      transform=transform,
                                      target_transform=target_transform)
         # -------------------- #
