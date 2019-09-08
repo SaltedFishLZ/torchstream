@@ -105,7 +105,8 @@
             "dropout": 0.8,
             "partial_bn": true,
             "use_softmax": false
-        }
+        },
+        "sync_bn": true
     },
 
     "criterion": {
@@ -131,14 +132,14 @@
     "train": {
         "epochs": 50,
         "backup": {
-            "dir_path": "checkpoints/tsm/sthsthv1/resnet50/32x224x224/",
+            "dir_path": "checkpoints/tsm/sthsthv1/resnet50_syncbn/32x224x224/",
             "pth_name": "kinetics0_lr5e-3_p9e-1_step20_b64_j128_e50",
 
             "COMMENT":
             "kinetics0 means finetune from model 0 pretrained on Kinetics"
         },
         "resume": {
-            "dir_path": "checkpoints/tsm/sthsthv1/resnet50/32x224x224/",
+            "dir_path": "checkpoints/tsm/sthsthv1/resnet50_syncbn/32x224x224/",
             "pth_name": "kinetics0_lr5e-3_p9e-1_step20_b64_j128_e50",
 
             "COMMENT":
