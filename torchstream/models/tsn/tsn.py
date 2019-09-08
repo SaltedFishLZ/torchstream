@@ -79,7 +79,7 @@ class TSN(nn.Module):
         count = 0
 
         if self._enable_pbn:
-            print("Freezing BatchNorm2D except the first one.")
+            print("Freezing BatchNorm except the first one.")
             for m in self.base_model.modules():
                 if isinstance(m, nn.modules.batchnorm._BatchNorm):
                     count += 1
