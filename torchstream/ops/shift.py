@@ -1,12 +1,16 @@
 """
 """
 __all__ = ["TemporalShift"]
+import sys
+import collections
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 
-
+if sys.version_info < (3, 3):
+    Iterable = collections.Iterable
+else:
+    Iterable = collections.abc.Iterable
 
 
 class InplaceTemporalShiftFunction(torch.autograd.Function):
@@ -15,18 +19,21 @@ class InplaceTemporalShiftFunction(torch.autograd.Function):
     Args
         x (Tensor): [N][T][C][H][W]
     """
-    # Special thanks to @raoyongming for the help to this function
     @staticmethod
-    def forward(ctx, input, fold):
+    def forward(ctx, input, fold, step=1):
         # not support higher order gradient
         # input = input.detach_()
+        assert isinstance(step, int), TypeError
         ctx.fold_ = fold
+        ctx.step_ = step
         n, t, c, h, w = input.size()
+        assert (step >= 0 and step <= t), ValueError("Invalid Shift Step")
+
         buffer = input.data.new(n, t, fold, h, w).zero_()
-        buffer[:, :-1] = input.data[:, 1:, :fold]
+        buffer[:, :-step] = input.data[:, step:, :fold]
         input.data[:, :, :fold] = buffer
         buffer.zero_()
-        buffer[:, 1:] = input.data[:, :-1, fold: 2 * fold]
+        buffer[:, step:] = input.data[:, :-step, fold: 2 * fold]
         input.data[:, :, fold: 2 * fold] = buffer
         return input
 
@@ -34,45 +41,63 @@ class InplaceTemporalShiftFunction(torch.autograd.Function):
     def backward(ctx, grad_output):
         # grad_output = grad_output.detach_()
         fold = ctx.fold_
+        step = ctx.step_
         n, t, c, h, w = grad_output.size()
         buffer = grad_output.data.new(n, t, fold, h, w).zero_()
-        buffer[:, 1:] = grad_output.data[:, :-1, :fold]
+        buffer[:, step:] = grad_output.data[:, :-step, :fold]
         grad_output.data[:, :, :fold] = buffer
         buffer.zero_()
-        buffer[:, :-1] = grad_output.data[:, 1:, fold: 2 * fold]
+        buffer[:, :-step] = grad_output.data[:, step:, fold: 2 * fold]
         grad_output.data[:, :, fold: 2 * fold] = buffer
         return grad_output, None
 
 
-
 inplace_temporal_shift_function = InplaceTemporalShiftFunction.apply
 
-def temporal_shift_function(x, fold):
+
+def temporal_shift_function(x, fold, steps=1):
     """
-    Shift `fold` channels
+    Shift `fold` channels for each step size specified
     Args
         x (Tensor): [N][T][C][H][W]
     """
-    out = torch.zeros_like(x)
-    # shift left 
-    out[:, :-1, :fold] = x[:, 1:, :fold]
-    # shift right
-    out[:, 1:, fold: 2 * fold] = x[:, :-1, fold: 2 * fold]
-    # not shift
-    out[:, :, 2 * fold:] = x[:, :, 2 * fold:]
-    return out
+    n, t, c, h, w = x.size()
+    assert isinstance(steps, (int, Iterable)), TypeError
+    if isinstance(steps, int):
+        steps = [steps]
+    for step in steps:
+        assert (step >= 0 and step <= t), ValueError("Invalid Shift Step")
+    assert len(steps) * 2 * fold <= c, ValueError("Channel size too small")
 
+    out = torch.zeros_like(x)
+
+    shift_count = 0
+    for step in steps:
+        # shift left
+        out[:, :-step, shift_count * fold: (shift_count + 1) * fold] \
+            = x[:, step:, shift_count * fold: (shift_count + 1) * fold]
+        shift_count += 1
+        # shift right
+        out[:, step:, shift_count * fold: (shift_count + 1) * fold] \
+            = x[:, :-step, shift_count * fold: (shift_count + 1) * fold]
+        shift_count += 1
+    # no shift
+    out[:, :, shift_count * fold:] = x[:, :, shift_count * fold:]
+
+    return out
 
 
 class TemporalShift(nn.Module):
     """
     Args
-        fold_div: (1/fold_div) frames will be shifted
+        fold_div: (1/fold_div) channels will be shifted
     """
-    def __init__(self, seg_num=3, fold_div=8, inplace=False, verbose=False):
+    def __init__(self, seg_num=3, fold_div=8, shift_steps=1,
+                 inplace=False, verbose=False):
         super(TemporalShift, self).__init__()
         self.seg_num = seg_num
         self.fold_div = fold_div
+        self.shift_steps = shift_steps
         self.inplace = inplace
         if verbose:
             if inplace:
@@ -80,35 +105,31 @@ class TemporalShift(nn.Module):
             print('=> Using fold div: {}'.format(self.fold_div))
 
     def __repr__(self):
-        return self.__class__.__name__ + \
-            "fold div: {}, inplace: {}".format(self.fold_div, self.inplace)
+        string = self.__class__.__name__
+        string += "(fold div: {}, inplace: {}, step: )"
+        return string.format(self.fold_div, self.inplace, self.shift_step)
 
     def forward(self, x):
-        ## reshape tensor
+        # reshape tensor
         nt, c, h, w = x.size()
         n = nt // self.seg_num
         t = self.seg_num
         fold = c // self.fold_div
 
+        # unfold to volume
         x = x.view(n, t, c, h, w)
-        
+
+        # call shift function
         if self.inplace:
-            x = inplace_temporal_shift_function(x, fold=fold)
+            # x = inplace_temporal_shift_function(x, fold, self.shift_steps)
+            raise NotImplementedError
         else:
-            x = temporal_shift_function(x, fold=fold)
-        
-        ## reshape tensor
+            x = temporal_shift_function(x, fold, self.shift_steps)
+
+        # reshape tensor
         x = x.view(nt, c, h, w)
 
         return x
-
-
-
-
-
-
-
-
 
 
 if __name__ == '__main__':
