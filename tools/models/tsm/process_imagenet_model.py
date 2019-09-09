@@ -14,18 +14,16 @@ def process_resnets(model_state_dict):
     for key in old_keys:
         val = model_state_dict[key]
         
-        new_key = "base_model."
-        if "layer1.conv1" in key:
-            new_key += key.replace('layer1.conv1', 'layer1.conv1.conv')
-        if "layer2.conv1" in key:
-            new_key += key.replace('layer2.conv1', 'layer2.conv1.conv')
-        if "layer3.conv1" in key:
-            new_key += key.replace('layer3.conv1', 'layer3.conv1.conv')
-        if "layer4.conv1" in key:
-            new_key += key.replace('layer4.conv1', 'layer4.conv1.conv')
-        elif "fc" in key:
-            new_key += key.replace('fc', 'fc.fc')
+        new_key = key
         
+        if "layer" in key:
+            if ".conv1" in key:
+                new_key = "base_model."
+                new_key += key.replace('.conv1', '.conv1.conv')
+        elif "fc" in key:
+            new_key = "base_model."
+            new_key += key.replace('fc', 'fc.fc')
+
         del model_state_dict[key]
         model_state_dict[new_key] = val
     
