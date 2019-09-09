@@ -116,8 +116,8 @@
     "optimizer": {
         "name": "SGD",
         "argv": {
-            "params": "model_specified",
-            "lr": 0.001,
+            "params": "all",
+            "lr": 0.01,
             "momentum": 0.9
         }
     },
@@ -133,15 +133,11 @@
         "epochs": 50,
         "backup": {
             "dir_path": "checkpoints/tsm/ucf101/resnet50/8x224x224/",
-            "pth_name": "imagenet0_lr1e-3_p9e-1_step20_b64_j64_e50"
+            "pth_name": "scratch_lr1e-2_p9e-1_step20_b64_j64_e50"
         },
         "resume": {
             "dir_path": "checkpoints/tsm/ucf101/resnet50/8x224x224",
-            "pth_name": "imagenet0_lr1e-3_p9e-1_step20_b64_j64_e50"
-        },
-        "finetune": {
-            "dir_path": "checkpoints/tsm/imagenet/",
-            "pth_name": "resnet50-19c8e357-tsm"
+            "pth_name": "scratch_lr1e-2_p9e-1_step20_b64_j64_e50"
         }
     }
 
