@@ -15,16 +15,15 @@ def process_resnets(model_state_dict):
         val = model_state_dict[key]
         
         new_key = key
-        
         if "layer" in key:
             if ".conv1" in key:
-                new_key = "base_model."
-                new_key += key.replace('.conv1', '.conv1.conv')
+                new_key = new_key.replace('.conv1', '.conv1.conv')
         elif "fc" in key:
-            new_key = "base_model."
-            new_key += key.replace('fc', 'fc.fc')
-
+            new_key = new_key.replace('fc', 'fc.fc')
+        
         del model_state_dict[key]
+
+        new_key = "base_model." + new_key
         model_state_dict[new_key] = val
     
     dst_sd["model_state_dict"] = model_state_dict
