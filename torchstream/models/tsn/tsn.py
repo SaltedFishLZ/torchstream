@@ -57,7 +57,12 @@ class TSN(nn.Module):
         """
         if 'resnet' in base_model or 'vgg' in base_model:
 
-            self.base_model = getattr(torchvision.models, base_model)(True)
+            # TODO
+            # NOTE
+            # DEBUG
+            self.base_model = getattr(torchvision.models, base_model)(
+                pretrained=False
+            )
 
             ## replace the classifier
             feature_dim = self.base_model.fc.in_features
