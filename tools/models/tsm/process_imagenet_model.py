@@ -28,6 +28,7 @@ def process_resnets(model_state_dict):
         model_state_dict[new_key] = val
     
     dst_sd["model_state_dict"] = model_state_dict
+    return dst_sd
 
 
 if __name__ == "__main__":
