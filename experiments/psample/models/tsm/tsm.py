@@ -28,15 +28,15 @@ class TSM(TSN):
                                   **kwargs)
 
     def _prepare_base_model(self, base_model):
-        """
+        """replace the _prepare_base_model in TSN
         """
         if "resnet" in base_model:
             model_builder = getattr(resnet, base_model)
             self.base_model = model_builder(
                 seg_num=self.input_size[0],
                 shift_enables=self.shift_enables,
-                fold_div= self.fold_div,
-                shift_steps = self.shift_steps
+                fold_div=self.fold_div,
+                shift_steps=self.shift_steps
             )
             # replace the classifier
             feature_dim = self.base_model.fc.in_features
@@ -67,7 +67,7 @@ class TSM(TSN):
 
 if __name__ == "__main__":
     net = TSM(cls_num=101, input_size=(8, 224, 224),
-              shift_enables=[None,] * 3 + [True])
+              shift_enables=None)
     print(net)
     # net = TSM(cls_num=101, input_size=(8, 224, 224), base_model="resnet18")
     # net = TSM(cls_num=101, input_size=(8, 224, 224), base_model="resnet34")
