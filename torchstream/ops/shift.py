@@ -106,8 +106,8 @@ class TemporalShift(nn.Module):
 
     def __repr__(self):
         string = self.__class__.__name__
-        string += "(fold div: {}, inplace: {}, step: )"
-        return string.format(self.fold_div, self.inplace, self.shift_step)
+        string += "(fold div: {}, inplace: {}, step: {})"
+        return string.format(self.fold_div, self.inplace, self.shift_steps)
 
     def forward(self, x):
         # reshape tensor
