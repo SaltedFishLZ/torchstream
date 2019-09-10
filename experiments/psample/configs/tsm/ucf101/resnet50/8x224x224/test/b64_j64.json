@@ -4,20 +4,20 @@
             "package": "torchstream.transforms",
             "name": "CenterSegment",
             "argv": {
-                "size": 32
-            }      
+                "size": 8
+            }
         },
         {
             "name": "Resize",
             "argv": {
                 "size": 256
-            }      
+            }
         },
         {
             "name": "CenterCrop",
             "argv": {
                 "size": [224, 224]
-            }      
+            }
         },
         {
             "package": "torchstream.transforms",
@@ -34,14 +34,10 @@
     ],
 
     "test_dataset": {
-        "package": "datasets",
-        "name": "SubsampledSomethingSomethingV1",
+        "name": "UCF101",
         "argv": {
-            "root": "~/Datasets/Sth-sth/Sth-sth-v1-avi",
-            "ext": "avi",
-            "train": false,
-            "sample_duration": 10,
-            "inverse": false
+            "root": "~/Datasets/UCF101/UCF101-avi",
+            "train": false
         }
     },
 
@@ -54,11 +50,11 @@
     },
 
     "model": {
-        "package": "torchstream.models",
+        "package": "models",
         "name": "TSM",
         "argv": {
-            "cls_num": 174,
-            "input_size": [32, 224, 224],
+            "cls_num": 101,
+            "input_size": [8, 224, 224],
             "base_model": "resnet50",
             "dropout": 0.8,
             "partial_bn": true,
