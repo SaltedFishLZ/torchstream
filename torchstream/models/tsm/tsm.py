@@ -90,25 +90,19 @@ class TSM(TSN):
 
     def __init__(self, cls_num, input_size,
                  base_model='resnet50', dropout=0.8, partial_bn=True,
-                 use_softmax=False,
                  fold_div=8, shift_place='blockres',
                  temporal_pool=False, non_local=False,
                  **kwargs
                 ):
-
-        super(TSM, self).__init__(
-            cls_num=cls_num, input_size=input_size,
+        super(TSM, self).__init__(cls_num=cls_num, input_size=input_size,
             base_model=base_model, dropout=dropout, partial_bn=partial_bn,
-            use_softmax=use_softmax,
-            **kwargs
-            )
-
+            **kwargs)
         self.fold_div = fold_div
         self.shift_place = shift_place
         self.temporal_pool = temporal_pool
         self.non_local = non_local
 
-        ## insert temporal shift modules
+        # insert temporal shift modules
         seg_num, _, _ = input_size
         make_temporal_shift(net=self.base_model,
                             seg_num=seg_num, fold_div=self.fold_div,

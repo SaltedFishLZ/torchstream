@@ -70,7 +70,7 @@ class BasicTemporalShiftBlock(nn.Module):
                  stride=1, downsample=None, groups=1,
                  base_width=64, dilation=1, norm_layer=None,
                  fold_div=8, shift_steps=1):
-        super(BasicBlock, self).__init__()
+        super(BasicTemporalShiftBlock, self).__init__()
         if norm_layer is None:
             norm_layer = nn.BatchNorm2d
         if groups != 1 or base_width != 64:
@@ -81,16 +81,22 @@ class BasicTemporalShiftBlock(nn.Module):
                                       "in BasicBlock")
         # Both self.conv1 and self.downsample layers downsample the input
         # when stride != 1
-        self.conv1 = tshift_conv3x3(inplanes=inplanes, planes=planes,
-                                    seg_num=seg_num, stride=stride,
+        self.conv1 = tshift_conv3x3(in_planes=inplanes,
+                                    out_planes=planes,
+                                    seg_num=seg_num,
+                                    stride=stride,
                                     fold_div=fold_div,
                                     shift_steps=shift_steps)
         self.bn1 = norm_layer(planes)
         self.relu = nn.ReLU(inplace=True)
-        self.conv2 = tshift_conv3x3(inplanes=inplanes, planes=planes,
-                                    seg_num=seg_num, stride=stride,
-                                    fold_div=fold_div,
-                                    shift_steps=shift_steps)
+        # only shift before conv1
+        self.conv2 = conv3x3(in_planes=inplanes,
+                             out_planes=planes,
+                             stride=stride)
+        # self.conv2 = tshift_conv3x3(inplanes=inplanes, planes=planes,
+        #                             seg_num=seg_num, stride=stride,
+        #                             fold_div=fold_div,
+        #                             shift_steps=shift_steps)
         self.bn2 = norm_layer(planes)
         self.downsample = downsample
         self.stride = stride
@@ -121,28 +127,37 @@ class TemporalShiftBottleneck(nn.Module):
                  stride=1, downsample=None, groups=1,
                  base_width=64, dilation=1, norm_layer=None,
                  fold_div=8, shift_steps=1):
-        super(Bottleneck, self).__init__()
+        super(TemporalShiftBottleneck, self).__init__()
         if norm_layer is None:
             norm_layer = nn.BatchNorm2d
         width = int(planes * (base_width / 64.)) * groups
         # Both self.conv2 and self.downsample layers downsample the input
         # when stride != 1
-        self.conv1 = tshift_conv1x1(in_planes=inplanes, out_planes=width,
+        self.conv1 = tshift_conv1x1(in_planes=inplanes,
+                                    out_planes=width,
                                     seg_num=seg_num,
                                     fold_div=fold_div,
                                     shift_steps=shift_steps)
         self.bn1 = norm_layer(width)
-        self.conv2 = tshift_conv3x3(in_planes=width, out_planes=width,
-                                    seg_num=seg_num, stride=stride,
-                                    groups=groups, dilation=dilation,
-                                    fold_div=fold_div,
-                                    shift_steps=shift_steps)
+        # only shift before conv1
+        self.conv2 = conv3x3(in_planes=width,
+                             out_planes=width,
+                             stride=stride,
+                             groups=groups,
+                             dilation=dilation)
+        # self.conv2 = tshift_conv3x3(in_planes=width, out_planes=width,
+        #                             seg_num=seg_num, stride=stride,
+        #                             groups=groups, dilation=dilation,
+        #                             fold_div=fold_div,
+        #                             shift_steps=shift_steps)
         self.bn2 = norm_layer(width)
-        self.conv3 = tshift_conv1x1(in_planes=width,
-                                    out_planes=planes * self.expansion,
-                                    seg_num=seg_num,
-                                    fold_div=fold_div,
-                                    shift_steps=shift_steps)
+        self.conv3 = conv1x1(in_planes=width,
+                             out_planes=planes * self.expansion)
+        # self.conv3 = tshift_conv1x1(in_planes=width,
+        #                             out_planes=planes * self.expansion,
+        #                             seg_num=seg_num,
+        #                             fold_div=fold_div,
+        #                             shift_steps=shift_steps)
         self.bn3 = norm_layer(planes * self.expansion)
         self.relu = nn.ReLU(inplace=True)
         self.downsample = downsample
@@ -171,14 +186,15 @@ class TemporalShiftBottleneck(nn.Module):
         return out
 
 
-class TSMResNet(nn.Module):
+class ResNet(nn.Module):
 
-    def __init__(self, block, layers, num_classes=1000,
+    def __init__(self, seg_num, block, layers, num_classes=1000,
                  zero_init_residual=False,
                  groups=1, width_per_group=64,
                  replace_stride_with_dilation=None,
                  norm_layer=None):
         super(ResNet, self).__init__()
+        self.seg_num = seg_num
         if norm_layer is None:
             norm_layer = nn.BatchNorm2d
         self._norm_layer = norm_layer
@@ -200,12 +216,27 @@ class TSMResNet(nn.Module):
         self.bn1 = norm_layer(self.inplanes)
         self.relu = nn.ReLU(inplace=True)
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
-        self.layer1 = self._make_layer(block, 64, layers[0])
-        self.layer2 = self._make_layer(block, 128, layers[1], stride=2,
+        self.layer1 = self._make_layer(seg_num=seg_num,
+                                       block=block,
+                                       planes=64,
+                                       blocks=layers[0])
+        self.layer2 = self._make_layer(seg_num=seg_num,
+                                       block=block,
+                                       planes=128,
+                                       blocks=layers[1],
+                                       stride=2,
                                        dilate=replace_stride_with_dilation[0])
-        self.layer3 = self._make_layer(block, 256, layers[2], stride=2,
+        self.layer3 = self._make_layer(seg_num=seg_num,
+                                       block=block,
+                                       planes=256,
+                                       blocks=layers[2],
+                                       stride=2,
                                        dilate=replace_stride_with_dilation[1])
-        self.layer4 = self._make_layer(block, 512, layers[3], stride=2,
+        self.layer4 = self._make_layer(seg_num=seg_num,
+                                       block=block,
+                                       planes=512,
+                                       blocks=layers[3],
+                                       stride=2,
                                        dilate=replace_stride_with_dilation[2])
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
         self.fc = nn.Linear(512 * block.expansion, num_classes)
@@ -230,7 +261,9 @@ class TSMResNet(nn.Module):
                 elif isinstance(m, (BasicBlock, BasicTemporalShiftBlock)):
                     nn.init.constant_(m.bn2.weight, 0)
 
-    def _make_layer(self, block, planes, blocks, stride=1, dilate=False):
+    def _make_layer(self, seg_num, 
+                    block, planes, blocks,
+                    stride=1, dilate=False):
         norm_layer = self._norm_layer
         downsample = None
         previous_dilation = self.dilation
@@ -244,12 +277,21 @@ class TSMResNet(nn.Module):
             )
 
         layers = []
-        layers.append(block(self.inplanes, planes, stride, downsample,
-                            self.groups, self.base_width,
-                            previous_dilation, norm_layer))
+        layers.append(block(seg_num=seg_num,
+                            inplanes=self.inplanes,
+                            planes=planes,
+                            stride=stride,
+                            downsample=downsample,
+                            groups=self.groups,
+                            base_width=self.base_width,
+                            dilation=previous_dilation,
+                            norm_layer=norm_layer))
         self.inplanes = planes * block.expansion
         for _ in range(1, blocks):
-            layers.append(block(self.inplanes, planes, groups=self.groups,
+            layers.append(block(seg_num=seg_num,
+                                inplanes=self.inplanes,
+                                planes=planes,
+                                groups=self.groups,
                                 base_width=self.base_width,
                                 dilation=self.dilation,
                                 norm_layer=norm_layer))
@@ -274,22 +316,25 @@ class TSMResNet(nn.Module):
         return x
 
 
-def _resnet(arch, block, layers, pretrained, progress, **kwargs):
-    model = TSMResNet(block, layers, **kwargs)
+def _resnet(seg_num, arch, block, layers, pretrained, progress, **kwargs):
+    model = ResNet(seg_num=seg_num, block=block, layers=layers, **kwargs)
     if pretrained:
+        # TODO: pretrained model
+        raise NotImplementedError("No pretrained model!")
         state_dict = load_state_dict_from_url(model_urls[arch],
                                               progress=progress)
         model.load_state_dict(state_dict)
     return model
 
 
-def resnet18(pretrained=False, progress=True, **kwargs):
+def resnet18(seg_num, pretrained=False, progress=True, **kwargs):
     r"""TSM ResNet-18
     Args:
         pretrained (bool): If True, returns a model pre-trained on Kinetics400
         progress (bool): If True, displays downloading progress bar to stderr
     """
-    return _resnet(arch='resnet18',
+    return _resnet(seg_num=seg_num,
+                   arch='resnet18',
                    block=BasicTemporalShiftBlock,
                    layers=[2, 2, 2, 2],
                    pretrained=pretrained,
@@ -297,13 +342,14 @@ def resnet18(pretrained=False, progress=True, **kwargs):
                    **kwargs)
 
 
-def resnet34(pretrained=False, progress=True, **kwargs):
+def resnet34(seg_num, pretrained=False, progress=True, **kwargs):
     r"""TSM ResNet-34
     Args:
         pretrained (bool): If True, returns a model pre-trained on Kinetics400
         progress (bool): If True, displays downloading progress bar to stderr
     """
-    return _resnet(arch='resnet34',
+    return _resnet(seg_num=seg_num,
+                   arch='resnet34',
                    block=BasicTemporalShiftBlock,
                    layers=[3, 4, 6, 3],
                    pretrained=pretrained,
@@ -311,13 +357,14 @@ def resnet34(pretrained=False, progress=True, **kwargs):
                    **kwargs)
 
 
-def resnet50(pretrained=False, progress=True, **kwargs):
+def resnet50(seg_num, pretrained=False, progress=True, **kwargs):
     r"""ResNet-50 model from
     Args:
         pretrained (bool): If True, returns a model pre-trained on Kinetics400
         progress (bool): If True, displays downloading progress bar to stderr
     """
-    return _resnet(arch='resnet50',
+    return _resnet(seg_num=seg_num,
+                   arch='resnet50',
                    block=TemporalShiftBottleneck,
                    layers=[3, 4, 6, 3],
                    pretrained=pretrained,
@@ -325,13 +372,14 @@ def resnet50(pretrained=False, progress=True, **kwargs):
                    **kwargs)
 
 
-def resnet101(pretrained=False, progress=True, **kwargs):
+def resnet101(seg_num, pretrained=False, progress=True, **kwargs):
     r"""TSM ResNet-101
     Args:
         pretrained (bool): If True, returns a model pre-trained on Kinetics400
         progress (bool): If True, displays downloading progress bar to stderr
     """
-    return _resnet(arch='resnet101',
+    return _resnet(seg_num=seg_num,
+                   arch='resnet101',
                    block=TemporalShiftBottleneck,
                    layers=[3, 4, 23, 3],
                    pretrained=pretrained,
@@ -339,13 +387,14 @@ def resnet101(pretrained=False, progress=True, **kwargs):
                    **kwargs)
 
 
-def resnet152(pretrained=False, progress=True, **kwargs):
+def resnet152(seg_num, pretrained=False, progress=True, **kwargs):
     r"""TSM ResNet-152
     Args:
         pretrained (bool): If True, returns a model pre-trained on Kinetics400
         progress (bool): If True, displays downloading progress bar to stderr
     """
-    return _resnet(arch='resnet152',
+    return _resnet(seg_num=seg_num,
+                   arch='resnet152',
                    block=TemporalShiftBottleneck,
                    layers=[3, 8, 36, 3],
                    pretrained=pretrained,
