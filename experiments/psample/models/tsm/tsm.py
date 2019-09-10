@@ -1,5 +1,6 @@
 from collections import OrderedDict
 
+import torch
 from torch import nn
 from torchstream.models import TSN
 
@@ -69,5 +70,5 @@ if __name__ == "__main__":
     net = TSM(cls_num=101, input_size=(8, 224, 224),
               shift_enables=None)
     print(net)
-    # net = TSM(cls_num=101, input_size=(8, 224, 224), base_model="resnet18")
-    # net = TSM(cls_num=101, input_size=(8, 224, 224), base_model="resnet34")
+    volume = torch.rand(1, 3, 8, 224, 224)
+    out = net(volume)

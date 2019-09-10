@@ -337,7 +337,10 @@ class ResNet(nn.Module):
             stride = 1
         if stride != 1 or self.inplanes != planes * block.expansion:
             downsample = nn.Sequential(
-                conv1x1(self.inplanes, planes * block.expansion, stride),
+                conv1x1(in_planes=self.inplanes,
+                        out_planes=planes * block.expansion,
+                        seg_num=seg_num,
+                        stride=stride),
                 norm_layer(planes * block.expansion),
             )
 
