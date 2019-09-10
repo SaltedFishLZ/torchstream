@@ -3,7 +3,7 @@
         {
             "name": "RandomSegment",
             "argv": {
-                "size": 4
+                "size": 2
             }
         },
         {
@@ -43,7 +43,7 @@
             "package": "torchstream.transforms",
             "name": "CenterSegment",
             "argv": {
-                "size": 4
+                "size": 2
             }
         },
         {
@@ -101,7 +101,7 @@
         "name": "TSM",
         "argv": {
             "cls_num": 101,
-            "input_size": [4, 224, 224],
+            "input_size": [2, 224, 224],
             "base_model": "resnet50",
             "dropout": 0.8,
             "partial_bn": true,
@@ -132,11 +132,11 @@
     "train": {
         "epochs": 50,
         "backup": {
-            "dir_path": "checkpoints/tsm/ucf101/resnet50/4x224x224/",
+            "dir_path": "checkpoints/tsm/ucf101/resnet50/2x224x224/",
             "pth_name": "kinetics0_lr1e-3_p9e-1_step20_b64_j64_e50"
         },
         "resume": {
-            "dir_path": "checkpoints/tsm/ucf101/resnet50/4x224x224",
+            "dir_path": "checkpoints/tsm/ucf101/resnet50/2x224x224",
             "pth_name": "kinetics0_lr1e-3_p9e-1_step20_b64_j64_e50"
         },
         "finetune": {
