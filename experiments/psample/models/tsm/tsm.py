@@ -4,7 +4,7 @@ from torch import nn
 from torchstream.models import TSN
 from torchstream.ops import Consensus, Identity, TemporalShift, TemporalPool
 
-import models.tsm.backbones.resnet as resnet
+from .backbones import resnet
 
 
 class TSM(TSN):
