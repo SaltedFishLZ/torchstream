@@ -3,7 +3,10 @@ ResNet:
     conv2 -> conv2.conv
     conv3 -> conv3.conv
 """
+import sys
 import copy
+import torch
+
 
 def process_resnets(src):
     """
@@ -13,7 +16,7 @@ def process_resnets(src):
         processed model state dict
     """
     dst = copy.deepcopy(src)
-    old_keys = list(model_state_dict.keys())
+    old_keys = list(dst.keys())
     for key in old_keys:
         val = dst[key]
         new_key = key
