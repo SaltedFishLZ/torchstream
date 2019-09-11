@@ -3,7 +3,7 @@
         {
             "name": "RandomSegment",
             "argv": {
-                "size": 2
+                "size": 16
             }
         },
         {
@@ -12,9 +12,6 @@
                 "output_size": [224, 224],
                 "scales": [1, 0.875, 0.75, 0.66]
             }
-        },
-        {
-            "name": "RandomHorizontalFlip"
         },
         {
             "package": "torchstream.transforms",
@@ -31,9 +28,8 @@
     ],
 
     "train_dataset": {
-        "name": "UCF101",
+        "name": "SomethingSomethingV2",
         "argv": {
-            "root": "~/Datasets/UCF101/UCF101-avi",
             "train": true
         }
     },
@@ -43,7 +39,7 @@
             "package": "torchstream.transforms",
             "name": "CenterSegment",
             "argv": {
-                "size": 2
+                "size": 16
             }
         },
         {
@@ -73,9 +69,8 @@
     ],
 
     "val_dataset": {
-        "name": "UCF101",
+        "name": "SomethingSomethingV2",
         "argv": {
-            "root": "~/Datasets/UCF101/UCF101-avi",
             "train": false
         }
     },
@@ -97,11 +92,11 @@
     },
 
     "model": {
-        "package": "models",
+        "package": "torchstream.models",
         "name": "TSM",
         "argv": {
-            "cls_num": 101,
-            "input_size": [2, 224, 224],
+            "cls_num": 174,
+            "input_size": [16, 224, 224],
             "base_model": "resnet50",
             "dropout": 0.8,
             "partial_bn": true,
@@ -130,18 +125,24 @@
     },
 
     "train": {
-        "epochs": 50,
+        "epochs": 100,
         "backup": {
-            "dir_path": "checkpoints/tsm/ucf101/resnet50/2x224x224/",
-            "pth_name": "kinetics0_lr1e-3_p9e-1_step20_b64_j64_e50"
+            "dir_path": "checkpoints/tsm/sthsthv2/resnet50/16x224x224",
+            "pth_name": "kinetics0_lr1e-3_p9e-1_step20_b64_j64_e100",
+
+            "COMMENT":
+            "kinetics0 means finetune from model 0 pretrained on Kinetics"
         },
         "resume": {
-            "dir_path": "checkpoints/tsm/ucf101/resnet50/2x224x224",
-            "pth_name": "kinetics0_lr1e-3_p9e-1_step20_b64_j64_e50"
+            "dir_path": "checkpoints/tsm/sthsthv2/resnet50/16x224x224",
+            "pth_name": "kinetics0_lr1e-3_p9e-1_step20_b64_j64_e100",
+
+            "COMMENT":
+            "kinetics0 means finetune from model 0 pretrained on Kinetics"
         },
         "finetune": {
             "dir_path": "checkpoints/tsm/tonylin/kinetics/",
-            "pth_name": "TSM_kinetics_RGB_resnet50_shift8_blockres_avg_segment8_e50.new"
+            "pth_name": "TSM_kinetics_RGB_resnet50_shift8_blockres_avg_segment8_e50"
         }
     }
 

@@ -3,7 +3,7 @@
         {
             "name": "RandomSegment",
             "argv": {
-                "size": 4
+                "size": 8
             }
         },
         {
@@ -30,6 +30,8 @@
     "train_dataset": {
         "name": "SomethingSomethingV2",
         "argv": {
+            "root": "~/Datasets/Sth-sth/Sth-sth-v2-avi",
+            "ext": "avi",
             "train": true
         }
     },
@@ -39,7 +41,7 @@
             "package": "torchstream.transforms",
             "name": "CenterSegment",
             "argv": {
-                "size": 4
+                "size": 8
             }
         },
         {
@@ -71,6 +73,8 @@
     "val_dataset": {
         "name": "SomethingSomethingV2",
         "argv": {
+            "root": "~/Datasets/Sth-sth/Sth-sth-v2-avi",
+            "ext": "avi",
             "train": false
         }
     },
@@ -96,7 +100,7 @@
         "name": "TSM",
         "argv": {
             "cls_num": 174,
-            "input_size": [4, 224, 224],
+            "input_size": [8, 224, 224],
             "base_model": "resnet50",
             "dropout": 0.8,
             "partial_bn": true,
@@ -120,21 +124,21 @@
     "lr_scheduler": {
         "name": "StepLR",
         "argv": {
-            "step_size": 10
+            "step_size": 20
         }
     },
 
     "train": {
         "epochs": 100,
         "backup": {
-            "dir_path": "checkpoints/tsm/sthsthv2/resnet50/32x224x224",
+            "dir_path": "checkpoints/tsm/sthsthv2/resnet50/8x224x224/",
             "pth_name": "kinetics0_lr1e-3_p9e-1_step10_b64_j64_e100",
 
             "COMMENT":
             "kinetics0 means finetune from model 0 pretrained on Kinetics"
         },
         "resume": {
-            "dir_path": "checkpoints/tsm/sthsthv2/resnet50/32x224x224",
+            "dir_path": "checkpoints/tsm/sthsthv2/resnet50/8x224x224",
             "pth_name": "kinetics0_lr1e-3_p9e-1_step10_b64_j64_e100",
 
             "COMMENT":
