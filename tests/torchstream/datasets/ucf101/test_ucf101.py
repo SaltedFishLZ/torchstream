@@ -21,10 +21,11 @@ def test_ucf101():
 
     num_samples_per_class = collections.OrderedDict()
     for vid, cid in tqdm.tqdm(dataloader):
-        if cid in num_samples_per_class:
-            num_samples_per_class[cid] += 1
-        else:
-            num_samples_per_class[cid] = 1
+        for _cid in cid.numpy():
+            if _cid in num_samples_per_class:
+                num_samples_per_class[_cid] += 1
+            else:
+                num_samples_per_class[_cid] = 1
     print(num_samples_per_class)
 
 

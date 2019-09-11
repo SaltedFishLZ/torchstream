@@ -17,7 +17,7 @@ DOWNLOAD_SERVER_PREFIX = (
 
 class Kinetics400(VisionDataset):
 
-    def __init__(self, root, train, ext="mp4",
+    def __init__(self, root, train, ext="avi",
                  transform=None, target_transform=None):
         root = os.path.expanduser(root)
 
