@@ -17,7 +17,7 @@ DOWNLOAD_SERVER_PREFIX = (
 
 class Kinetics400(VisionDataset):
 
-    def __init__(self, root, train,
+    def __init__(self, root, train, ext="avi",
                  transform=None, target_transform=None):
         root = os.path.expanduser(root)
 
@@ -33,13 +33,13 @@ class Kinetics400(VisionDataset):
                 os.path.isdir(CACHE_DIR)):
             os.makedirs(CACHE_DIR, exist_ok=True)
         if train:
-            datapoint_file_name = "kinetics_training.pkl"
+            datapoint_file_name = "kinetics400_{}_training.pkl".format(ext)
         else:
-            datapoint_file_name = "kinetics_val.pkl"
+            datapoint_file_name = "kinetics400_{}_validation.pkl".format(ext)
         datapoint_file_path = os.path.join(CACHE_DIR, datapoint_file_name)
         # download when missing
         if not os.path.exists(datapoint_file_path):
-            print("downloading Kinetics datapoints...")
+            print("downloading Kinetics400 datapoints...")
             download(src=os.path.join(DOWNLOAD_SERVER_PREFIX,
                                       datapoint_file_name),
                      dst=datapoint_file_path)
@@ -56,10 +56,10 @@ class Kinetics400(VisionDataset):
         #  load class_to_idx #
         # ------------------ #
         # download labels
-        label_file = "kinetics-400_labels.txt"
+        label_file = "kinetics400_labels.txt"
         label_path = os.path.join(CACHE_DIR, label_file)
         if not os.path.exists(label_path):
-            print("downloading Kinetics-400 label_path...")
+            print("downloading Kinetics400 label...")
             label_src = os.path.join(DOWNLOAD_SERVER_PREFIX, label_file)
             download(label_src, label_path)
         # build class label to class id mapping (a dictionary)
