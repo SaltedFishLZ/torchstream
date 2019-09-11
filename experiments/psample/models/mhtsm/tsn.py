@@ -1,38 +1,54 @@
-from collections import OrderedDict
+import sys
+import collections
 
-import torchvision
 from torch import nn
-from torch.nn.init import normal, constant
+from torchstream.ops import Consensus
 
-from torchstream.ops import Consensus, Identity
-from torchstream.transforms import *
+if sys.version_info < (3, 3):
+    Sequence = collections.Sequence
+else:
+    Sequence = collections.abc.Sequence
 
 
 class TSN(nn.Module):
     """
     Args:
-        input_size (tuple): (T, H, W), shape of the input blob. channel == 3 only
+        input_size (tuple): (T, H, W), shape of the input blob.
+        channel == 3 only
     """
-    def __init__(self, cls_num, input_size, base_model="resnet50",
+    def __init__(self, cls_num, input_size, slices,
+                 base_model="resnet50",
                  dropout=0.8, partial_bn=True,
                  **kwargs):
-
+        print("Multi-Head TSN implementation")
         super(TSN, self).__init__()
 
         assert isinstance(input_size, (tuple, list)), TypeError
         assert len(input_size) == 3, ValueError
 
         self.cls_num = cls_num
-
         self.input_size = tuple(input_size)
+        assert isinstance(slices, Sequence), TypeError
+        for _s in slices:
+            assert isinstance(_s, Sequence), TypeError
+            for idx in _s:
+                assert isinstance(idx, int), TypeError
+                assert idx in range(self.seg_num), \
+                    ValueError("{} out of range({})".format(
+                        idx, self.seg_num
+                        ))
+        self.slices = slices
+        self.branches = len(slices)
 
         self.dropout = dropout
-
+        self._enable_pbn = partial_bn
         self._prepare_base_model(base_model)
 
-        self.consensus = Consensus("avg")
+        self.consensuses = nn.ModuleList([Consensus("avg"), ] * self.branches)
 
-        self._enable_pbn = partial_bn
+    @property
+    def seg_num(self):
+        return self.input_size[0]
 
     def partialBN(self, enable):
         self._enable_pbn = enable
@@ -47,17 +63,7 @@ class TSN(nn.Module):
                                     self.input_size, self.dropout)
 
     def _prepare_base_model(self, base_model):
-        if "resnet" in base_model or "vgg" in base_model:
-            model_builder = getattr(torchvision.models, base_model)
-            self.base_model = model_builder(pretrained=False)
-            # replace the classifier
-            feature_dim = self.base_model.fc.in_features
-            self.base_model.fc = nn.Sequential(OrderedDict([
-                ("dropout", nn.Dropout(p=self.dropout)),
-                ("fc", nn.Linear(feature_dim, self.cls_num))
-                ]))            
-        else:
-            raise ValueError("Unknown base model: {}".format(base_model))
+        raise NotImplementedError
 
     def train(self, mode=True):
         """Override the default train() to freeze the BN parameters
@@ -89,16 +95,21 @@ class TSN(nn.Module):
         # merge time to batch
         input = input.view(N * T, C, H, W)
 
-        base_out = self.base_model(input)
+        base_outs = self.base_model(input)
 
-        # reshape:
-        base_out = base_out.view((-1, T) + base_out.size()[1:])
+        outputs = []
+        for _i in range(self.branches):
+            _s = self.slices[_i]
+            T = len(_s)
+            base_out = base_outs[_i]
+            # reshape:
+            base_out = base_out.view((-1, T) + base_out.size()[1:])
+            output = self.consensuses[_i](base_out)
+            outputs.append(output.squeeze(1))
 
-        output = self.consensus(base_out)
-        return output.squeeze(1)
+        return outputs
 
     def get_optim_policies(self, fc_lr5=False):
-        
         first_conv_weight = []
         first_conv_bias = []
         normal_weight = []
@@ -144,7 +155,9 @@ class TSN(nn.Module):
 
             elif len(m._modules) == 0:
                 if len(list(m.parameters())) > 0:
-                    raise ValueError("New atomic module type: {}. Need to give it a learning policy".format(type(m)))
+                    raise ValueError(
+                        "Unkown atomic module type: {}.".format(type(m))
+                    )
 
         return [
             {"params": first_conv_weight, "lr_mult": 1, "decay_mult": 1,

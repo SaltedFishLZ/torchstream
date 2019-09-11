@@ -29,7 +29,6 @@ def process_resnets(src):
                 new_key = new_key.replace('downsample.0', 'downsample.0.conv')
         del dst[key]
         dst[new_key] = val
-    
     return dst
 
 
