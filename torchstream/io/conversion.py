@@ -59,7 +59,10 @@ def vid2vid(src, dst, **kwargs):
     dst_dir = os.path.dirname(dst_vid)
     os.makedirs(dst_dir, exist_ok=True)
 
-    command = " ".join(["ffmpeg", "-i", src_vid, dst_vid, "-y"])
+    command = " ".join(["ffmpeg", "-i",
+                        "\"{}\"".format(src_vid),
+                        "\"{}\"".format(dst_vid),
+                        "-y"])
 
     while fails <= retries:
         _subp = subprocess.run(command, shell=True, check=False,
