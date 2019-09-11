@@ -12,8 +12,8 @@ from torchstream.utils.mapreduce import Manager
 parser = argparse.ArgumentParser(description="Convert Dataset (vid2vid)")
 parser.add_argument("src_dp_path", type=str,
                     help="path to source datapoints")
-# parser.add_argument("dst_dp_path", type=str,
-#                     help="path to destination datapoints")
+parser.add_argument("--dst_dp_path", type=str, default=None,
+                    help="path to destination datapoints")
 parser.add_argument("src_root", type=str, help="source dataset root")
 parser.add_argument("dst_root", type=str, help="destination dataset root")
 parser.add_argument("--dst_ext", type=str, default="avi",
@@ -57,6 +57,11 @@ if __name__ == "__main__":
     args = parser.parse_args()
     assert args.dst_ext in SUPPORTED_VIDEOS["RGB"], \
         NotImplementedError("Unknown dst_ext [{}]".format(args.dst_ext))
+    # test permission first to save time
+    test_write_content = [0, 1, 2]
+    if args.dst_dp_path is not None:
+        with open(args.dst_dp_path, "wb") as fout:
+            pickle.dump(test_write_content, fout)
 
     src_datapoints = []
     with open(args.src_dp_path, "rb") as fin:
@@ -81,3 +86,6 @@ if __name__ == "__main__":
     print("Total Videos: [{}]".format(len(src_datapoints)))
     print("Total Failures: [{}]".format(failures))
 
+    if args.dst_dp_path is not None:
+        with open(args.dst_dp_path, "wb") as fout:
+            pickle.dump(dst_datapoints, fout)
