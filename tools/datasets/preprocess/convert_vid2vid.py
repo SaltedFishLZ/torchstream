@@ -6,12 +6,18 @@ import argparse
 
 from torchstream.io.conversion import vid2vid
 from torchstream.io.datapoint import DataPoint
+from torchstream.io.__support__ import SUPPORTED_VIDEOS
 from torchstream.utils.mapreduce import Manager
 
 parser = argparse.ArgumentParser(description="Convert Dataset (vid2vid)")
-parser.add_argument("datapoints", type=str, help="path to source datapoints")
+parser.add_argument("src_dp_path", type=str,
+                    help="path to source datapoints")
+# parser.add_argument("dst_dp_path", type=str,
+#                     help="path to destination datapoints")
+parser.add_argument("src_root", type=str, help="source dataset root")
 parser.add_argument("dst_root", type=str, help="destination dataset root")
-parser.add_argument("--dst_ext", type=str, help="destination dataset video ext")
+parser.add_argument("--dst_ext", type=str, default="avi",
+                    help="destination dataset video file extension")
 parser.add_argument("--workers", type=int, default=32, help="worker number")
 
 
@@ -49,8 +55,11 @@ def dataset_vid2vid(name, src_datapoints, dst_root, dst_ext="avi",
 
 if __name__ == "__main__":
     args = parser.parse_args()
+    assert args.dst_ext in SUPPORTED_VIDEOS["RGB"], \
+        NotImplementedError("Unknown dst_ext [{}]".format(args.dst_ext))
+
     src_datapoints = []
-    with open(args.datapoints, "rb") as fin:
+    with open(args.src_dp_path, "rb") as fin:
         src_datapoints = pickle.load(fin)
     assert isinstance(src_datapoints, list), TypeError
     assert isinstance(src_datapoints[0], DataPoint), TypeError
@@ -63,12 +72,12 @@ if __name__ == "__main__":
         workers=args.workers
     )
 
-    print("Total Videos: [{}]".format(len(src_datapoints)))
     failures = 0
     for idx, dp in enumerate(dst_datapoints):
         if not successes[idx]:
             print("Failure: [{}]".format(idx))
             print(dp)
             failures += 1
+    print("Total Videos: [{}]".format(len(src_datapoints)))
     print("Total Failures: [{}]".format(failures))
 
