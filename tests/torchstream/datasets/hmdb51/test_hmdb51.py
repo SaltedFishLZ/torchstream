@@ -28,5 +28,6 @@ def test_hmdb51():
             num_samples_per_class[cid] = 1
     print(num_samples_per_class)
 
+
 if __name__ == "__main__":
     test_hmdb51()
