@@ -13,7 +13,8 @@ import subprocess
 
 from . import __config__
 from .datapoint import DataPoint
-from .backends.opencv import video2frames, frames2ndarray, ndarray2video
+from .backends.opencv import video2ndarray, video2frames,\
+    frames2ndarray, ndarray2video
 
 try:
     from subprocess import DEVNULL  # python 3.x
@@ -27,12 +28,13 @@ logger = logging.getLogger(__name__)
 logger.setLevel(__config__.LOGGER_LEVEL)
 
 
-def vid2vid(src, dst, **kwargs):
+def vid2vid(src, dst, backend="ffmpeg", **kwargs):
     """Video -> Video Conversion
-    using ffmpeg to convert videos types
+    using ffmpeg/OpenCV to convert videos types
     Args:
         src (DataPoint): source video's meta-data
         dst (DataPoint): destination video's meta-data
+        backend (str)
     Optional:
         retries: retry number
     """
@@ -47,6 +49,7 @@ def vid2vid(src, dst, **kwargs):
             TypeError
         assert not dst.seq, \
             "destination sample is not a video"
+    assert backend in ["ffmpeg", "opencv"]
 
     success = False
     fails = 0
@@ -59,19 +62,34 @@ def vid2vid(src, dst, **kwargs):
     dst_dir = os.path.dirname(dst_vid)
     os.makedirs(dst_dir, exist_ok=True)
 
-    command = " ".join(["ffmpeg", "-i",
-                        "\"{}\"".format(src_vid),
-                        "\"{}\"".format(dst_vid),
-                        "-y"])
-
     while fails <= retries:
-        _subp = subprocess.run(command, shell=True, check=False,
-                               stdout=DEVNULL, stderr=DEVNULL)
-        if _subp.returncode == 0:
-            success = True
-            break
-        else:
-            fails += 1
+        if backend == "ffmpeg":
+            # NOTE: add trailing space!
+            ffmpeg_options = "-strict experimental "
+            if "fps" in kwargs:
+                fps = kwargs["fps"]
+                ffmpeg_options += "-r {} ".format(fps)
+            command = " ".join([
+                "ffmpeg", "-i",
+                "\"{}\"".format(src_vid),
+                ffmpeg_options,
+                "\"{}\"".format(dst_vid),
+                "-y"])
+            _subp = subprocess.run(command, shell=True, check=False,
+                                   stdout=DEVNULL, stderr=DEVNULL)
+            if _subp.returncode == 0:
+                success = True
+                break
+            else:
+                fails += 1
+        elif backend == "opencv":
+            varray = video2ndarray(src_vid)
+            success = ndarray2video(varray, dst_path=dst_vid)
+            if success:
+                break
+            else:
+                fails += 1
+
     return success
 
 
