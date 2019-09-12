@@ -62,19 +62,29 @@ def vid2vid(src, dst, backend="ffmpeg", **kwargs):
     dst_dir = os.path.dirname(dst_vid)
     os.makedirs(dst_dir, exist_ok=True)
 
-    while fails <= retries:
-        if backend == "ffmpeg":
-            # NOTE: add trailing space!
-            ffmpeg_options = "-strict experimental "
-            if "fps" in kwargs:
-                fps = kwargs["fps"]
-                ffmpeg_options += "-r {} ".format(fps)
-            command = " ".join([
-                "ffmpeg", "-i",
-                "\"{}\"".format(src_vid),
-                ffmpeg_options,
-                "\"{}\"".format(dst_vid),
-                "-y"])
+    # branch 0
+    # call ffmpeg in bash to convert video directly
+    if backend == "ffmpeg":
+        # assemble command
+        # NOTE: add trailing space!
+        output_options = " -strict experimental "
+        # fpgs
+        if "fps" in kwargs:
+            fps = kwargs["fps"]
+            output_options += " -r {} ".format(fps)
+        # resolution scaling
+        if "scale" in kwargs:
+            scale = kwargs["scale"]
+            opt_fmt_str = " -vf \"scale=iw*{}:ih*{}\" "
+            output_options += opt_fmt_str.format(scale, scale)
+        # bash command final stage
+        command = " ".join(["ffmpeg", "-i",
+                            "\"{}\"".format(src_vid),
+                            output_options,
+                            "\"{}\"".format(dst_vid),
+                            "-y"])
+        # run bash command
+        while fails <= retries:
             _subp = subprocess.run(command, shell=True, check=False,
                                    stdout=DEVNULL, stderr=DEVNULL)
             if _subp.returncode == 0:
@@ -82,13 +92,20 @@ def vid2vid(src, dst, backend="ffmpeg", **kwargs):
                 break
             else:
                 fails += 1
-        elif backend == "opencv":
+    # branch 1
+    # call torchstream opencv lib in python
+    # video -> varray -> video
+    elif backend == "opencv":
+        while fails <= retries:
+            # TODO: recover fps information
             varray = video2ndarray(src_vid)
             success = ndarray2video(varray, dst_path=dst_vid)
             if success:
                 break
             else:
                 fails += 1
+    else:
+        raise NotImplementedError
 
     return success
 
