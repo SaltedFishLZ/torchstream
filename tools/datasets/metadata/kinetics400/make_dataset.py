@@ -75,7 +75,7 @@ def parse_kinetics_csv(filename, corrupt_files=[]):
 
 
 def populate_datapoints(label_file, split='train', corrupt_files=[]):
-    print(label_file)
+    print("populating datapoints:", label_file)
     labels = parse_kinetics_csv(label_file, corrupt_files=corrupt_files)
 
     datapoints = []
@@ -112,7 +112,7 @@ def clean_datapoints(datapoints):
                       retries=10)
     manager.hire(worker_num=32)
 
-    tasks = datapoints
+    tasks = [{"dp", dp} for dp in datapoints]
     corrupts = manager.launch(tasks=tasks, progress=True)
     print(corrupts)
 
