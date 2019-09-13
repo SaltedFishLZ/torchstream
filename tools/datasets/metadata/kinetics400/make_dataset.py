@@ -114,14 +114,15 @@ def clean_datapoints(datapoints):
 
     tasks = []
     for dp in datapoints:
-        tasks.append({"dp", dp})
+        tasks.append({"dp": dp})
     corrupts = manager.launch(tasks=tasks, progress=True)
-    print(corrupts)
 
     cleanpoints = []
     for idx, dp in enumerate(datapoints):
-        if not corrupts(idx):
+        if not corrupts[idx]:
             cleanpoints.append(dp)
+        else:
+            print("Corrupt ID", idx)
     return cleanpoints
 
 
