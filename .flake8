@@ -1,0 +1,4 @@
+[flake8]
+
+per-file-ignores =
+    tools/datasets/metadata/kinetics400/make_dataset.py: E501

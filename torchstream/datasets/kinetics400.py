@@ -17,7 +17,7 @@ DOWNLOAD_SERVER_PREFIX = (
 
 class Kinetics400(VisionDataset):
 
-    def __init__(self, root, train, ext="avi",
+    def __init__(self, root, train, ext="mp4",
                  transform=None, target_transform=None):
         root = os.path.expanduser(root)
 
@@ -83,6 +83,13 @@ class Kinetics400(VisionDataset):
 
         path = datapoint._path
         varray = loader(path)
+
+        # DEBGU
+        if varray is None:
+            print("*" * 80)
+            print("corrupt datapoint [{}]".format(index))
+            print(datapoint)
+            return None, None
 
         label = datapoint.label
         target = self.class_to_idx[label]

@@ -30,8 +30,8 @@ def dataset_vid2vid(name, src_datapoints, dst_root, dst_ext="avi",
                       retries=10,
                       **kwargs)
     manager.hire(worker_num=workers)
-    tasks = []
 
+    tasks = []
     dst_datapoints = []
     for src in src_datapoints:
         assert isinstance(src, DataPoint), TypeError
