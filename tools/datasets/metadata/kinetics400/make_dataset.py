@@ -112,7 +112,9 @@ def clean_datapoints(datapoints):
                       retries=10)
     manager.hire(worker_num=32)
 
-    tasks = [{"dp", dp} for dp in datapoints]
+    tasks = []
+    for dp in datapoints:
+        tasks.append({"dp", dp})
     corrupts = manager.launch(tasks=tasks, progress=True)
     print(corrupts)
 
