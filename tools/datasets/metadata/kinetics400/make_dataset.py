@@ -32,9 +32,9 @@ KINETICS_VAL_DATA_DIR = os.path.join(KINETICS_DATA_DIR, "val")
 KINETICS_PICKLE_DIR = os.path.expanduser(
     "~/video-acc/download/torchstream/datasets/kinetics400"
     )
-PICKLE_TRAIN_FILE = os.path.join(KINETICS_PICKLE_DIR, "kinetics_training.pkl")
-PICKLE_TEST_FILE = os.path.join(KINETICS_PICKLE_DIR, "kinetics_test.pkl")
-PICKLE_VAL_FILE = os.path.join(KINETICS_PICKLE_DIR, "kinetics_val.pkl")
+PICKLE_TRAIN_FILE = os.path.join(KINETICS_PICKLE_DIR, "kinetics400_mp4_training.pkl")
+PICKLE_TEST_FILE = os.path.join(KINETICS_PICKLE_DIR, "kinetics400_mp4_testing.pkl")
+PICKLE_VAL_FILE = os.path.join(KINETICS_PICKLE_DIR, "kinetics400_mp4_validation.pkl")
 
 # TRAIN_CORRUPT_INDICES = [1139, 6112, 9486, 18162, 23131, 27903, 35247, 39514, 49851, 60177, 61523, 74810, 86195, 105111, 109340, 117082, 117257, 127920, 133607, 134597, 134660, 136602, 146561, 147639, 154674, 157595, 183509, 184997, 191015, 197140, 197402, 217717, 219969]
 # TEST_CORRUPT_INDICES = [14, 15, 22, 23, 41, 43, 57, 62, 65, 66, 68, 73, 79, 3604, 5404, 12957, 15328, 18970, 29697, 36448, 37647, 57586, 58168, 58397, 60725, 76615]
@@ -105,24 +105,40 @@ def clean_datapoints(datapoints):
     """
     def is_corrput(dp):
         assert isinstance(dp, DataPoint), TypeError
-        return backend.video2ndarray(dp.path) is None
+        if backend.video2ndarray(dp.path) is None:
+            return [dp, ]
+        else:
+            return []
+
+    def aggregate_list(list_of_list):
+        assert isinstance(list_of_list, list), TypeError
+        ret = []
+        for l in list_of_list:
+            ret += l
+        return ret
 
     manager = Manager(name="clean Kinetics400 datapoints",
                       mapper=is_corrput,
+                      reducer=aggregate_list,
                       retries=10)
-    manager.hire(worker_num=32)
+    manager.hire(worker_num=64)
 
     tasks = []
     for dp in datapoints:
         tasks.append({"dp": dp})
-    corrupts = manager.launch(tasks=tasks, progress=True)
+    corruptpoints = manager.launch(tasks=tasks, progress=True)
+
+    print(corrputpoints)
+    corrputnames = [dp.name for dp in corruptpoints]
 
     cleanpoints = []
     for idx, dp in enumerate(datapoints):
-        if not corrupts[idx]:
-            cleanpoints.append(dp)
-        else:
+        if dp.name in corruputnames:
             print("Corrupt ID", idx)
+            print(dp)
+        else:
+            cleanpoints.append(dp)
+
     return cleanpoints
 
 
