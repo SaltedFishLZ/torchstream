@@ -7,23 +7,37 @@ import csv
 
 import torchstream.io.backends.opencv as backend
 from torchstream.io.datapoint import DataPoint, UNKNOWN_LABEL
+from torchstream.utils.download import download
 from torchstream.utils.mapreduce import Manager
 
 FILE_PATH = os.path.realpath(__file__)
 DIR_PATH = os.path.dirname(FILE_PATH)
 
-# source links
+# metadata source links
 DOWNLOAD_SERVER_PREFIX = ("zhen@a18.millennium.berkeley.edu:"
                           "/home/eecs/zhen/video-acc/download/")
 DOWNLOAD_SRC_DIR = "tools/datasets/metadata/kinetics400"
-KINETICS_METADATA_DIR = DOWNLOAD_SRC_DIR
+KINETICS_TRAIN_CSV_SRC = os.path.join(DOWNLOAD_SRC_DIR,
+                                      "kinetics-400_train.csv")
+KINETICS_TEST_CSV_SRC = os.path.join(DOWNLOAD_SRC_DIR,
+                                     "kinetics-400_test.csv")
+KINETICS_VAL_CSV_SRC = os.path.join(DOWNLOAD_SRC_DIR,
+                                    "kinetics-400_val.csv")
 
-KINETICS_TRAIN_CSV = os.path.join(KINETICS_METADATA_DIR,
-                                  "kinetics-400_train.csv")
-KINETICS_TEST_CSV = os.path.join(KINETICS_METADATA_DIR,
-                                 "kinetics-400_test.csv")
-KINETICS_VAL_CSV = os.path.join(KINETICS_METADATA_DIR,
-                                "kinetics-400_val.csv")
+# local metadata
+KINETICS_TRAIN_CSV_PATH = os.path.join(DOWNLOAD_SRC_DIR,
+                                       "kinetics-400_train.csv")
+KINETICS_TEST_CSV_PATH = os.path.join(DOWNLOAD_SRC_DIR,
+                                      "kinetics-400_test.csv")
+KINETICS_VAL_CSV_PATH = os.path.join(DOWNLOAD_SRC_DIR,
+                                     "kinetics-400_val.csv")
+# download metadata when missing
+if not os.path.exists(KINETICS_TRAIN_CSV_PATH):
+    download(KINETICS_TRAIN_CSV_SRC, KINETICS_TRAIN_CSV_PATH)
+if not os.path.exists(KINETICS_TEST_CSV_PATH):
+    download(KINETICS_TEST_CSV_SRC, KINETICS_TEST_CSV_PATH)
+if not os.path.exists(KINETICS_VAL_CSV_PATH):
+    download(KINETICS_VAL_CSV_SRC, KINETICS_VAL_CSV_PATH)
 
 # dataset links
 KINETICS_DATA_DIR = os.path.expanduser("~/Datasets/Kinetics/Kinetics-400-mp4")
@@ -147,15 +161,15 @@ if __name__ == "__main__":
     init_cache(KINETICS_TEST_DATA_DIR)
     init_cache(KINETICS_VAL_DATA_DIR)
 
-    # train_datapoints = populate_datapoints(KINETICS_TRAIN_CSV, split="train")
+    # train_datapoints = populate_datapoints(KINETICS_TRAIN_CSV_PATH, split="train")
     # train_file = open(PICKLE_TRAIN_FILE, "wb+")
     # pickle.dump(train_datapoints, train_file)
 
-    # test_datapoints = populate_datapoints(KINETICS_TEST_CSV, split="test")
+    # test_datapoints = populate_datapoints(KINETICS_TEST_CSV_PATH, split="test")
     # test_file = open(PICKLE_TEST_FILE, "wb+")
     # pickle.dump(test_datapoints, test_file)
 
-    val_datapoints = populate_datapoints(KINETICS_VAL_CSV, split="val")
+    val_datapoints = populate_datapoints(KINETICS_VAL_CSV_PATH, split="val")
     val_datapoints = clean_datapoints(val_datapoints)
     val_file = open(PICKLE_VAL_FILE, "wb+")
     pickle.dump(val_datapoints, val_file)
