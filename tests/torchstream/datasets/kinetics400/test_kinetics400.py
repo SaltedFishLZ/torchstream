@@ -22,9 +22,8 @@ def test_kinetics_400():
                                              pin_memory=True)
 
     num_samples_per_class = collections.OrderedDict()
-    for vid, cid in dataset: # tqdm.tqdm(dataloader):
-        for _cid in [int(cid)]:
-        # for _cid in cid.numpy():
+    for vid, cid in tqdm.tqdm(dataloader):
+        for _cid in cid.numpy():
             if _cid in num_samples_per_class:
                 num_samples_per_class[_cid] += 1
             else:

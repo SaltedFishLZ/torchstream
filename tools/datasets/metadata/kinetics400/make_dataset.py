@@ -10,21 +10,21 @@ from torchstream.io.datapoint import DataPoint, UNKNOWN_LABEL
 from torchstream.utils.mapreduce import Manager
 
 
-KINETICS_METADATA_DIR = '/dnn/data/ActivityNet/Crawler/Kinetics/data/'
+KINETICS_METADATA_DIR = "/dnn/data/ActivityNet/Crawler/Kinetics/data/"
 KINETICS_TRAIN_CSV = os.path.join(KINETICS_METADATA_DIR,
-                                  'kinetics-400_train.csv')
+                                  "kinetics-400_train.csv")
 KINETICS_TEST_CSV = os.path.join(KINETICS_METADATA_DIR,
-                                 'kinetics-400_test.csv')
+                                 "kinetics-400_test.csv")
 KINETICS_VAL_CSV = os.path.join(KINETICS_METADATA_DIR,
-                                'kinetics-400_val.csv')
+                                "kinetics-400_val.csv")
 
 DOWNLOAD_SERVER_PREFIX = os.path.expanduser(
-    '~/video-acc/download/torchstream/datasets/kinetics400/'
+    "~/video-acc/download/torchstream/datasets/kinetics400/"
     )
 KINETICS_LABEL_FILE = os.path.join(DOWNLOAD_SERVER_PREFIX,
                                    "kinetics400_labels.txt")
 
-KINETICS_DATA_DIR = '/dnn/data/Kinetics/Kinetics-400-mp4'
+KINETICS_DATA_DIR = "/dnn/data/Kinetics/Kinetics-400-mp4"
 KINETICS_TRAIN_DATA_DIR = os.path.join(KINETICS_DATA_DIR, "train")
 KINETICS_TEST_DATA_DIR = os.path.join(KINETICS_DATA_DIR, "test")
 KINETICS_VAL_DATA_DIR = os.path.join(KINETICS_DATA_DIR, "val")
@@ -51,7 +51,7 @@ def write_classes():
 
         classes.sort()
 
-        with open(KINETICS_LABEL_FILE, 'w') as f:
+        with open(KINETICS_LABEL_FILE, "w") as f:
             for i, cls in enumerate(classes):
                 f.write("{} {}\n".format(i+1, cls))
 
@@ -68,24 +68,24 @@ def parse_kinetics_csv(filename, corrupt_files=[]):
         reader = csv.DictReader(f)
         for i, row in enumerate(reader):
             # if i not in corrupt_files:
-            vid = row['youtube_id']
-            label = row['label'] if 'label' in row.keys() else UNKNOWN_LABEL
+            vid = row["youtube_id"]
+            label = row["label"] if "label" in row.keys() else UNKNOWN_LABEL
             labels.append((vid, label))
     return labels
 
 
-def populate_datapoints(label_file, split='train', corrupt_files=[]):
+def populate_datapoints(label_file, split="train", corrupt_files=[]):
     print("populating datapoints:", label_file)
     labels = parse_kinetics_csv(label_file, corrupt_files=corrupt_files)
 
     datapoints = []
     for vid, label in labels:
         if vid in vid2filename:
-            if split == 'train':
+            if split == "train":
                 rel_path = os.path.join("train", label)
-            elif split == 'val':
+            elif split == "val":
                 rel_path = os.path.join("val", label)
-            elif split == 'test':
+            elif split == "test":
                 rel_path = os.path.join("test", "test")
             else:
                 print("split not valid")
@@ -132,15 +132,15 @@ if __name__ == "__main__":
     init_cache(KINETICS_TEST_DATA_DIR)
     init_cache(KINETICS_VAL_DATA_DIR)
 
-    # train_datapoints = populate_datapoints(KINETICS_TRAIN_CSV, split='train')
-    # train_file = open(PICKLE_TRAIN_FILE, 'wb+')
+    # train_datapoints = populate_datapoints(KINETICS_TRAIN_CSV, split="train")
+    # train_file = open(PICKLE_TRAIN_FILE, "wb+")
     # pickle.dump(train_datapoints, train_file)
 
-    # test_datapoints = populate_datapoints(KINETICS_TEST_CSV, split='test')
-    # test_file = open(PICKLE_TEST_FILE, 'wb+')
+    # test_datapoints = populate_datapoints(KINETICS_TEST_CSV, split="test")
+    # test_file = open(PICKLE_TEST_FILE, "wb+")
     # pickle.dump(test_datapoints, test_file)
 
-    val_datapoints = populate_datapoints(KINETICS_VAL_CSV, split='val')
+    val_datapoints = populate_datapoints(KINETICS_VAL_CSV, split="val")
     clean_datapoints = clean_datapoints(val_datapoints)
-    val_file = open(PICKLE_VAL_FILE, 'wb+')
+    val_file = open(PICKLE_VAL_FILE, "wb+")
     pickle.dump(val_datapoints, val_file)
