@@ -17,19 +17,22 @@ DIR_PATH = os.path.dirname(FILE_PATH)
 DOWNLOAD_SERVER_PREFIX = ("zhen@a18.millennium.berkeley.edu:"
                           "/home/eecs/zhen/video-acc/download/")
 DOWNLOAD_SRC_DIR = "tools/datasets/metadata/kinetics400"
-KINETICS_TRAIN_CSV_SRC = os.path.join(DOWNLOAD_SRC_DIR,
+KINETICS_TRAIN_CSV_SRC = os.path.join(DOWNLOAD_SERVER_PREFIX,
+                                      DOWNLOAD_SRC_DIR,
                                       "kinetics-400_train.csv")
-KINETICS_TEST_CSV_SRC = os.path.join(DOWNLOAD_SRC_DIR,
+KINETICS_TEST_CSV_SRC = os.path.join(DOWNLOAD_SERVER_PREFIX,
+                                     DOWNLOAD_SRC_DIR,
                                      "kinetics-400_test.csv")
-KINETICS_VAL_CSV_SRC = os.path.join(DOWNLOAD_SRC_DIR,
+KINETICS_VAL_CSV_SRC = os.path.join(DOWNLOAD_SERVER_PREFIX,
+                                    DOWNLOAD_SRC_DIR,
                                     "kinetics-400_val.csv")
 
 # local metadata
-KINETICS_TRAIN_CSV_PATH = os.path.join(DOWNLOAD_SRC_DIR,
+KINETICS_TRAIN_CSV_PATH = os.path.join(DIR_PATH,
                                        "kinetics-400_train.csv")
-KINETICS_TEST_CSV_PATH = os.path.join(DOWNLOAD_SRC_DIR,
+KINETICS_TEST_CSV_PATH = os.path.join(DIR_PATH,
                                       "kinetics-400_test.csv")
-KINETICS_VAL_CSV_PATH = os.path.join(DOWNLOAD_SRC_DIR,
+KINETICS_VAL_CSV_PATH = os.path.join(DIR_PATH,
                                      "kinetics-400_val.csv")
 # download metadata when missing
 if not os.path.exists(KINETICS_TRAIN_CSV_PATH):
@@ -127,8 +130,9 @@ def clean_datapoints(datapoints):
         assert isinstance(list_of_list, list), TypeError
         ret = []
         for l in list_of_list:
-            ret += l
-        return ret
+            assert isinstance(l, list), TypeError
+            ret.extend(l)
+        return [ret, ]
 
     manager = Manager(name="clean Kinetics400 datapoints",
                       mapper=is_corrput,
@@ -140,6 +144,7 @@ def clean_datapoints(datapoints):
     for dp in datapoints:
         tasks.append({"dp": dp})
     corruptpoints = manager.launch(tasks=tasks, progress=True)
+    corruptpoints = corruptpoints[0]
 
     print(corruptpoints)
     corruptnames = [dp.name for dp in corruptpoints]
