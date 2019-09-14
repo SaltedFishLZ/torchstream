@@ -141,6 +141,6 @@ if __name__ == "__main__":
     # pickle.dump(test_datapoints, test_file)
 
     val_datapoints = populate_datapoints(KINETICS_VAL_CSV, split="val")
-    clean_datapoints = clean_datapoints(val_datapoints)
+    val_datapoints = clean_datapoints(val_datapoints)
     val_file = open(PICKLE_VAL_FILE, "wb+")
     pickle.dump(val_datapoints, val_file)
