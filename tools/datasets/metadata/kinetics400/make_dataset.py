@@ -9,8 +9,15 @@ import torchstream.io.backends.opencv as backend
 from torchstream.io.datapoint import DataPoint, UNKNOWN_LABEL
 from torchstream.utils.mapreduce import Manager
 
+FILE_PATH = os.path.realpath(__file__)
+DIR_PATH = os.path.dirname(FILE_PATH)
 
-KINETICS_METADATA_DIR = "/dnn/data/ActivityNet/Crawler/Kinetics/data/"
+# source links
+DOWNLOAD_SERVER_PREFIX = ("zhen@a18.millennium.berkeley.edu:"
+                          "/home/eecs/zhen/video-acc/download/")
+DOWNLOAD_SRC_DIR = "tools/datasets/metadata/kinetics400"
+KINETICS_METADATA_DIR = DOWNLOAD_SRC_DIR
+
 KINETICS_TRAIN_CSV = os.path.join(KINETICS_METADATA_DIR,
                                   "kinetics-400_train.csv")
 KINETICS_TEST_CSV = os.path.join(KINETICS_METADATA_DIR,
@@ -18,27 +25,19 @@ KINETICS_TEST_CSV = os.path.join(KINETICS_METADATA_DIR,
 KINETICS_VAL_CSV = os.path.join(KINETICS_METADATA_DIR,
                                 "kinetics-400_val.csv")
 
-DOWNLOAD_SERVER_PREFIX = os.path.expanduser(
-    "~/video-acc/download/torchstream/datasets/kinetics400/"
-    )
-KINETICS_LABEL_FILE = os.path.join(DOWNLOAD_SERVER_PREFIX,
-                                   "kinetics400_labels.txt")
-
-KINETICS_DATA_DIR = "/dnn/data/Kinetics/Kinetics-400-mp4"
+# dataset links
+KINETICS_DATA_DIR = os.path.expanduser("~/Datasets/Kinetics/Kinetics-400-mp4")
 KINETICS_TRAIN_DATA_DIR = os.path.join(KINETICS_DATA_DIR, "train")
 KINETICS_TEST_DATA_DIR = os.path.join(KINETICS_DATA_DIR, "test")
 KINETICS_VAL_DATA_DIR = os.path.join(KINETICS_DATA_DIR, "val")
 
-KINETICS_PICKLE_DIR = os.path.expanduser(
-    "~/video-acc/download/torchstream/datasets/kinetics400"
-    )
+# destination links
+KINETICS_LABEL_FILE = os.path.join(DIR_PATH, "kinetics400_labels.txt")
+KINETICS_PICKLE_DIR = DIR_PATH
 PICKLE_TRAIN_FILE = os.path.join(KINETICS_PICKLE_DIR, "kinetics400_mp4_training.pkl")
 PICKLE_TEST_FILE = os.path.join(KINETICS_PICKLE_DIR, "kinetics400_mp4_testing.pkl")
 PICKLE_VAL_FILE = os.path.join(KINETICS_PICKLE_DIR, "kinetics400_mp4_validation.pkl")
 
-# TRAIN_CORRUPT_INDICES = [1139, 6112, 9486, 18162, 23131, 27903, 35247, 39514, 49851, 60177, 61523, 74810, 86195, 105111, 109340, 117082, 117257, 127920, 133607, 134597, 134660, 136602, 146561, 147639, 154674, 157595, 183509, 184997, 191015, 197140, 197402, 217717, 219969]
-# TEST_CORRUPT_INDICES = [14, 15, 22, 23, 41, 43, 57, 62, 65, 66, 68, 73, 79, 3604, 5404, 12957, 15328, 18970, 29697, 36448, 37647, 57586, 58168, 58397, 60725, 76615]
-# VAL_CORRUPT_INDICES = [12809, 14334]
 
 vid2filename = {}
 
@@ -128,12 +127,12 @@ def clean_datapoints(datapoints):
         tasks.append({"dp": dp})
     corruptpoints = manager.launch(tasks=tasks, progress=True)
 
-    print(corrputpoints)
-    corrputnames = [dp.name for dp in corruptpoints]
+    print(corruptpoints)
+    corruptnames = [dp.name for dp in corruptpoints]
 
     cleanpoints = []
     for idx, dp in enumerate(datapoints):
-        if dp.name in corruputnames:
+        if dp.name in corruptnames:
             print("Corrupt ID", idx)
             print(dp)
         else:
