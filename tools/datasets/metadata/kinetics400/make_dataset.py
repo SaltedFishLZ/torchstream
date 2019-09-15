@@ -166,13 +166,15 @@ if __name__ == "__main__":
     init_cache(KINETICS_TEST_DATA_DIR)
     init_cache(KINETICS_VAL_DATA_DIR)
 
-    # train_datapoints = populate_datapoints(KINETICS_TRAIN_CSV_PATH, split="train")
-    # train_file = open(PICKLE_TRAIN_FILE, "wb+")
-    # pickle.dump(train_datapoints, train_file)
+    train_datapoints = populate_datapoints(KINETICS_TRAIN_CSV_PATH, split="train")
+    train_datapoints = clean_datapoints(train_datapoints)
+    train_file = open(PICKLE_TRAIN_FILE, "wb+")
+    pickle.dump(train_datapoints, train_file)
 
-    # test_datapoints = populate_datapoints(KINETICS_TEST_CSV_PATH, split="test")
-    # test_file = open(PICKLE_TEST_FILE, "wb+")
-    # pickle.dump(test_datapoints, test_file)
+    test_datapoints = populate_datapoints(KINETICS_TEST_CSV_PATH, split="test")
+    test_datapoints = clean_datapoints(test_datapoints)
+    test_file = open(PICKLE_TEST_FILE, "wb+")
+    pickle.dump(test_datapoints, test_file)
 
     val_datapoints = populate_datapoints(KINETICS_VAL_CSV_PATH, split="val")
     val_datapoints = clean_datapoints(val_datapoints)
