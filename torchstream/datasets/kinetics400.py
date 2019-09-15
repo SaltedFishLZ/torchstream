@@ -84,13 +84,6 @@ class Kinetics400(VisionDataset):
         path = datapoint._path
         varray = loader(path)
 
-        # DEBGU
-        if varray is None:
-            print("*" * 80)
-            print("corrupt datapoint [{}]".format(index))
-            print(datapoint)
-            return None, None
-
         label = datapoint.label
         target = self.class_to_idx[label]
 
