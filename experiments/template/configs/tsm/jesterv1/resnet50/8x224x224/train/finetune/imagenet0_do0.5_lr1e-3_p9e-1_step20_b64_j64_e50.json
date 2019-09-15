@@ -96,7 +96,6 @@
     },
 
     "model": {
-        "package": "models",
         "name": "TSM",
         "argv": {
             "cls_num": 27,
