@@ -11,6 +11,7 @@ import os
 import logging
 import subprocess
 
+from torchstream.transforms.functional import resize
 from . import __config__
 from .datapoint import DataPoint
 from .backends.opencv import video2ndarray, video2frames,\
@@ -34,9 +35,15 @@ def vid2vid(src, dst, backend="ffmpeg", **kwargs):
     Args:
         src (DataPoint): source video's meta-data
         dst (DataPoint): destination video's meta-data
-        backend (str)
+        backend (str): video2video conversion backend,
+            options:
+                "ffmpeg" (via bash commands),
+                "opencv" (via opencv-python),
     Optional:
-        retries: retry number
+        retries (int): retry number
+        fps (int): target video's fps, valid for ffmpeg
+        scale (float): resolution scale between target video and
+            source video (e.g., Ho/Hi). We keep the aspect ratio. 
     """
     if __config__.STRICT:
         # check source operand
@@ -68,21 +75,25 @@ def vid2vid(src, dst, backend="ffmpeg", **kwargs):
         # assemble command
         # NOTE: add trailing space!
         output_options = " -strict experimental "
-        # fpgs
+
+        # fps
         if "fps" in kwargs:
             fps = kwargs["fps"]
             output_options += " -r {} ".format(fps)
+
         # resolution scaling
         if "scale" in kwargs:
             scale = kwargs["scale"]
             opt_fmt_str = " -vf \"scale=iw*{}:ih*{}\" "
             output_options += opt_fmt_str.format(scale, scale)
+
         # bash command final stage
         command = " ".join(["ffmpeg", "-i",
                             "\"{}\"".format(src_vid),
                             output_options,
                             "\"{}\"".format(dst_vid),
                             "-y"])
+
         # run bash command
         while fails <= retries:
             _subp = subprocess.run(command, shell=True, check=False,
@@ -92,14 +103,37 @@ def vid2vid(src, dst, backend="ffmpeg", **kwargs):
                 break
             else:
                 fails += 1
+
     # branch 1
     # call torchstream opencv lib in python
     # video -> varray -> video
     elif backend == "opencv":
-        while fails <= retries:
+
+        def convert(src_vid, dst_vid, **kwargs):
+            """Local conversion function
+            Args:
+                src_vid(str): path to source video
+                dst_vid(str): path to desination video
+            Optional:
+                scale(float): resolution scale between target video and
+                source video (e.g., Ho/Hi). We keep the aspect ratio.
+            Return:
+                success(bool)
+            """
             # TODO: recover fps information
             varray = video2ndarray(src_vid)
+            if varray is None:
+                return False
+            if "scale" in kwargs:
+                scale = kwargs["scale"]
+                t, h, w, c = varray.shape
+                oh, ow = int(scale * h), int(scale * w)
+                varray = resize(varray, (oh, ow))
             success = ndarray2video(varray, dst_path=dst_vid)
+            return success
+
+        while fails <= retries:
+            success = convert(src_vid, dst_vid)
             if success:
                 break
             else:

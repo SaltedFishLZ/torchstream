@@ -21,7 +21,7 @@ def resize(varray, size, interpolation=cv2.INTER_LINEAR):
     oh = None
     ow = None
     if isinstance(size, int):
-        ## short path
+        # short path
         if (w <= h and w == size) or (h <= w and h == size):
             return varray 
         if w < h:

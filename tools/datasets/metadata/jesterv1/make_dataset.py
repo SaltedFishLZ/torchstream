@@ -29,8 +29,8 @@ def main(args):
     all_datapoints = collect_flat(
         root=args.root, ext=args.ext,
         annotations=annotation.full_annot_dict,
-        fpath_offset=args.fpath_offset,
-        fpath_tmpl=args.fpath_tmpl
+        frame_offset=args.fpath_offset,
+        frame_tmpl=args.frame_tmpl
     )
 
     # filter data points

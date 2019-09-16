@@ -17,7 +17,7 @@ CACHE_DIR = os.path.expanduser("~/.cache/torchstream/datasets/jesterv1/")
 class JesterV1(VisionDataset):
 
     def __init__(self, root, train, class_to_idx=None, ext="jpg",
-                 fpath_offset=1, fpath_tmpl="{:05d}",
+                 frame_offset=1, frame_tmpl="{:05d}",
                  transform=None, target_transform=None):
         root = os.path.expanduser(root)
 
@@ -57,8 +57,8 @@ class JesterV1(VisionDataset):
             dp.root = root
             dp.ext = ext
             dp._path = dp.path
-            dp.fpath_offset = fpath_offset
-            dp.fpath_tmpl = fpath_tmpl
+            dp.fpath_offset = frame_offset
+            dp.frame_tmpl = frame_tmpl
         # sort datapoints
         self.datapoints = sorted(self.datapoints)
 
