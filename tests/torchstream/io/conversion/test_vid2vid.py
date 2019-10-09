@@ -30,7 +30,6 @@ def benchmark_loadtime(src_datapoint, dst_datapoint, load_times=100):
     print("avg load time:", avg_load_time)
 
     # test load dst time
-    load_times = 100
     st = time.time()
     for _ in range(load_times):
         loader = backend.video2ndarray
@@ -83,9 +82,9 @@ def test_mp42avi(benchmarking=False, scale=0.5, fps=10):
     SRC_DATAPOINT = DataPoint(root=DIR_PATH, reldir="",
                               name=mp4_name, ext="mp4")
 
-    mp4_name += "_scale{}_fps{}".format(scale, fps)
+    avi_name = mp4_name + "_scale{}_fps{}".format(scale, fps)
     DST_DATAPOINT = DataPoint(root=DIR_PATH, reldir="",
-                              name=mp4_name, ext="avi")
+                              name=avi_name, ext="avi")
 
     # convert
     success = vid2vid(SRC_DATAPOINT, DST_DATAPOINT, scale=0.5)

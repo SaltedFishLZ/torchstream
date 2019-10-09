@@ -21,7 +21,8 @@ def center_segment_indices(t, s):
 def center_segment(vid, s):
     """
     Args:
-        s (int) sgement number
+        vid: input video
+        s (int) number of segments
     """
 
     if not _is_varray(vid):
@@ -43,6 +44,10 @@ def center_segment(vid, s):
 
 def random_segment_indices(t, s, bind=False):
     """
+    Args:
+        t
+        s
+        bind
     """
     interval = float(t) / float(s)
     offsets = interval * np.array(range(s))
@@ -65,6 +70,7 @@ def random_segment_indices(t, s, bind=False):
 def random_segment(vid, s, bind=False):
     """
     Args:
+        vid
         s (int): sgement number
         bind (bool): fixed position in each segment
     """

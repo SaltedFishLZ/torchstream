@@ -30,6 +30,7 @@ class RandomSegment(object):
            ^             ^     ^              ^
     Args:
         size (int): how many segments
+        bind (bool)
     """
     def __init__(self, size, bind=False):
         self.size = size
