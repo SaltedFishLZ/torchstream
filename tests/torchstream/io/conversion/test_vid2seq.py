@@ -79,12 +79,61 @@ def test_mp42jpg(benchmarking=False):
         benchmark_loadtime(SRC_DATAPOINT, DST_DATAPOINT,
                            load_times=1)
         # subsampled video loading time
+        print("2 frames")
         frame_sampler = RandomSegmentFrameSampler(2)
         benchmark_loadtime(SRC_DATAPOINT, DST_DATAPOINT,
                            frame_sampler=frame_sampler)
+        print("8 frames")
         frame_sampler = RandomSegmentFrameSampler(8)
         benchmark_loadtime(SRC_DATAPOINT, DST_DATAPOINT,
                            frame_sampler=frame_sampler)
+        print("32 frames")
+        frame_sampler = RandomSegmentFrameSampler(32)
+        benchmark_loadtime(SRC_DATAPOINT, DST_DATAPOINT,
+                           frame_sampler=frame_sampler)
+
+    # clean up
+    shutil.rmtree(DST_DATAPOINT.path)
+
+
+def test_mp42bmp(benchmarking=False):
+    mp4_name = "W5GWm_g9X1s_000095_000105"
+    mp4_path = os.path.join(DIR_PATH, mp4_name + ".mp4")
+
+    # download when missing
+    if not os.path.exists(mp4_path):
+        mp4_src = os.path.join(DOWNLOAD_SERVER_PREFIX,
+                               DOWNLOAD_SRC_DIR,
+                               mp4_name + ".mp4")
+        download(mp4_src, mp4_path)
+
+    SRC_DATAPOINT = DataPoint(root=DIR_PATH, reldir="",
+                              name=mp4_name, ext="mp4")
+
+    bmp_name = mp4_name
+    if not os.path.exists(bmp_name):
+        os.makedirs(os.path.join(DIR_PATH, bmp_name))
+    DST_DATAPOINT = DataPoint(root=DIR_PATH, reldir="",
+                              name=bmp_name, ext="jpg")
+
+    # convert
+    success = vid2seq(SRC_DATAPOINT, DST_DATAPOINT)
+    assert success
+
+    if benchmarking:
+        # whole video loading time
+        benchmark_loadtime(SRC_DATAPOINT, DST_DATAPOINT,
+                           load_times=1)
+        # subsampled video loading time
+        print("2 frames")
+        frame_sampler = RandomSegmentFrameSampler(2)
+        benchmark_loadtime(SRC_DATAPOINT, DST_DATAPOINT,
+                           frame_sampler=frame_sampler)
+        print("8 frames")
+        frame_sampler = RandomSegmentFrameSampler(8)
+        benchmark_loadtime(SRC_DATAPOINT, DST_DATAPOINT,
+                           frame_sampler=frame_sampler)
+        print("32 frames")
         frame_sampler = RandomSegmentFrameSampler(32)
         benchmark_loadtime(SRC_DATAPOINT, DST_DATAPOINT,
                            frame_sampler=frame_sampler)
@@ -94,4 +143,12 @@ def test_mp42jpg(benchmarking=False):
 
 
 if __name__ == "__main__":
+    print("*" * 80)
+    print("Testing Mp4 -> Jpg...")
+    print("*" * 80)
     test_mp42jpg(benchmarking=True)
+
+    print("*" * 80)
+    print("Testing Mp4 -> bmp...")
+    print("*" * 80)
+    test_mp42bmp(benchmarking=True)

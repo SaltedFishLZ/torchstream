@@ -2,6 +2,7 @@
 """
 import os
 import time
+
 from torchstream.io.datapoint import DataPoint
 from torchstream.io.conversion import vid2vid
 import torchstream.io.backends.opencv as backend
@@ -67,6 +68,9 @@ def test_mp42mp4(benchmarking=False, scale=0.5, fps=10):
     if benchmarking:
         benchmark_loadtime(SRC_DATAPOINT, DST_DATAPOINT)
 
+    # clean up
+    os.remove(DST_DATAPOINT.path)
+
 
 def test_mp42avi(benchmarking=False, scale=0.5, fps=10):
     mp4_name = "W5GWm_g9X1s_000095_000105"
@@ -93,6 +97,9 @@ def test_mp42avi(benchmarking=False, scale=0.5, fps=10):
     if benchmarking:
         benchmark_loadtime(SRC_DATAPOINT, DST_DATAPOINT)
 
+    # clean up
+    os.remove(DST_DATAPOINT.path)
+
 
 def test_webm2avi(benchmarking=False, scale=0.5, fps=10):
     webm_name = "1"
@@ -118,6 +125,9 @@ def test_webm2avi(benchmarking=False, scale=0.5, fps=10):
 
     if benchmarking:
         benchmark_loadtime(SRC_DATAPOINT, DST_DATAPOINT)
+
+    # clean up
+    os.remove(DST_DATAPOINT.path)
 
 
 if __name__ == "__main__":

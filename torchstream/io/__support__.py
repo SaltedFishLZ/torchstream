@@ -7,7 +7,7 @@ SUPPORTED_VIDEOS = {
 }
 
 SUPPORTED_IMAGES = {
-    "RGB": ("jpg", )
+    "RGB": ("jpg", "bmp", )
 }
 
 SUPPORTED_FILES = {
