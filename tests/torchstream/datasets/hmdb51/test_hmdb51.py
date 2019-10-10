@@ -1,7 +1,9 @@
 import collections
-import torch
+
 import tqdm
+import torch
 from torchstream.transforms import Compose, Resize, CenterCrop, CenterSegment
+from torchstream.io.framesampler import CenterSegmentFrameSampler
 from torchstream.datasets.hmdb51 import HMDB51
 
 
@@ -15,6 +17,22 @@ def test_hmdb51():
                                         CenterCrop(224)]),
                      train=True)
     # assert dataset.__len__() == 6766, ValueError
+
+    dataset_path = "~/Datasets/HMDB51/HMDB51-jpg"
+    dataset = HMDB51(root=dataset_path,
+                     transform=Compose([CenterSegment(32),
+                                        Resize(256),
+                                        CenterCrop(224)]),
+                     train=True)
+
+    frame_sampler = CenterSegmentFrameSampler(8)
+    dataset_path = "~/Datasets/HMDB51/HMDB51-jpg"
+    dataset = HMDB51(root=dataset_path,
+                     transform=Compose([CenterSegment(32),
+                                        Resize(256),
+                                        CenterCrop(224)]),
+                     train=True, ext="jpg",
+                     frame_sampler=frame_sampler)
 
     dataloader = torch.utils.data.DataLoader(dataset=dataset,
                                              batch_size=16,
@@ -41,7 +59,6 @@ def test_hmdb51():
                                         CenterCrop(224)]),
                      train=False)
     assert dataset.__len__() == 3750, ValueError
-
 
 
 if __name__ == "__main__":

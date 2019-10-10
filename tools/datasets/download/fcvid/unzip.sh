@@ -9,4 +9,3 @@ for f in *.tar; do
     echo $d
     rm -r $f
 done
-rm -r *.tar

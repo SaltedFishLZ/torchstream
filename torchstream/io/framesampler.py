@@ -1,13 +1,25 @@
 """Frame sampler for image sequence
 """
-__all__ = ["CenterSegmentFrameSampler", "RandomSegmentFrameSampler"]
+__all__ = ["FrameSampler",
+           "CenterSegmentFrameSampler",
+           "RandomSegmentFrameSampler"]
 import copy
 
 from .datapoint import DataPoint
 import torchstream.transforms.functional.segment as segment
 
 
-class CenterSegmentFrameSampler(object):
+class FrameSampler(object):
+    """Abstract base class
+    """
+    def __init__(self):
+        pass
+
+    def __call__(self, framepaths):
+        return framepaths
+
+
+class CenterSegmentFrameSampler(FrameSampler):
     """
     Args:
         size (int) number of segments
@@ -30,7 +42,7 @@ class CenterSegmentFrameSampler(object):
         return results
 
 
-class RandomSegmentFrameSampler(object):
+class RandomSegmentFrameSampler(FrameSampler):
     """
     Args:
         size (int) number of segments

@@ -83,13 +83,16 @@ class HMDB51(VisionDataset):
     def __getitem__(self, index):
         datapoint = self.datapoints[index]
 
+        # handle videos
         if datapoint.ext in SUPPORTED_VIDEOS["RGB"]:
             loader = backend.video2ndarray
+            path = datapoint.path
+            varray = loader(path)
+        # handle image sequence
         elif datapoint.ext in SUPPORTED_IMAGES["RGB"]:
             loader = backend.frames2ndarray
-
-        path = datapoint._path
-        varray = loader(path)
+            fpaths = datapoint.framepaths
+            varray = loader(fpaths)
 
         label = datapoint.label
         target = self.class_to_idx[label]

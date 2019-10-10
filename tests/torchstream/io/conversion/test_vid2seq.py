@@ -76,8 +76,7 @@ def test_mp42jpg(benchmarking=False):
 
     if benchmarking:
         # whole video loading time
-        benchmark_loadtime(SRC_DATAPOINT, DST_DATAPOINT,
-                           load_times=1)
+        benchmark_loadtime(SRC_DATAPOINT, DST_DATAPOINT)
         # subsampled video loading time
         print("2 frames")
         frame_sampler = RandomSegmentFrameSampler(2)
