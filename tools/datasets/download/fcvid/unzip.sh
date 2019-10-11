@@ -1,11 +1,8 @@
 #!/bin/bash
 
-# all classed
-
+# all classes
 for f in *.tar; do
+    tar xf $f
     d=`basename $f .tar`
-    mkdir $d
-    (cd $d && tar xf ../$f)
-    echo $d
-    rm -r $f
+    rm $f
 done

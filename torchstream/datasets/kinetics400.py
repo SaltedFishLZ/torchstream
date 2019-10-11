@@ -35,6 +35,7 @@ class Kinetics400(VisionDataset):
                                           transform=transform,
                                           target_transform=target_transform)
 
+        self.frame_sampler = None
         if frame_sampler is not None:
             assert ext in SUPPORTED_IMAGES["RGB"], \
                 ValueError("frame_sampler is valid for image sequence only!")
@@ -101,7 +102,8 @@ class Kinetics400(VisionDataset):
         elif datapoint.ext in SUPPORTED_IMAGES["RGB"]:
             loader = backend.frames2ndarray
             fpaths = datapoint.framepaths
-            fpaths = self.frame_sampler(fpaths)
+            if self.frame_sampler is not None:
+                fpaths = self.frame_sampler(fpaths)
             varray = loader(fpaths)
 
         label = datapoint.label
