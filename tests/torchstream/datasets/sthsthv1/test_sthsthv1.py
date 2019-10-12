@@ -5,27 +5,27 @@ from torchstream.transforms import Compose, Resize, CenterCrop, CenterSegment
 from torchstream.datasets.sthsthv1 import SomethingSomethingV1
 
 
-def test_sthsthv1():
+def test_sthsthv1(ext="avi"):
     # training set size: 86017
     dataset_size = 86017
-    dataset_path = "~/Datasets/Sth-sth/Sth-sth-v1-jpg"
+    dataset_path = "~/Datasets/Sth-sth/Sth-sth-v1-{}".format(ext)
     dataset = SomethingSomethingV1(root=dataset_path, train=True)
     assert dataset.__len__() == dataset_size, ValueError
 
     # validation set size 11522
     dataset_size = 11522
-    dataset_path = "~/Datasets/Sth-sth/Sth-sth-v1-jpg"
+    dataset_path = "~/Datasets/Sth-sth/Sth-sth-v1-{}".format(ext)
     dataset = SomethingSomethingV1(root=dataset_path, train=False)
     assert dataset.__len__() == dataset_size, ValueError
 
     # validation set size 11522
     dataset_size = 11522
-    dataset_path = "~/Datasets/Sth-sth/Sth-sth-v1-avi"
+    dataset_path = "~/Datasets/Sth-sth/Sth-sth-v1-{}".format(ext)
     dataset = SomethingSomethingV1(root=dataset_path,
                                    transform=Compose([CenterSegment(32),
                                                       Resize(256),
                                                       CenterCrop(224)]),
-                                   train=False, ext="avi")
+                                   train=False, ext=ext)
     assert dataset.__len__() == dataset_size, ValueError
 
     dataloader = torch.utils.data.DataLoader(dataset=dataset,
@@ -44,4 +44,5 @@ def test_sthsthv1():
 
 
 if __name__ == "__main__":
-    test_sthsthv1()
+    test_sthsthv1(ext="avi")
+    test_sthsthv1(ext="jpg")

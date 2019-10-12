@@ -5,14 +5,14 @@ from torchstream.transforms import Compose, Resize, CenterCrop, CenterSegment
 from torchstream.datasets.hmdb51 import HMDB51
 
 
-def test_hmdb51():
+def test_hmdb51(ext="avi", split=1):
     # dataset_len = 6766
     dataset_path = "~/Datasets/HMDB51/HMDB51-avi"
-    dataset = HMDB51(root=dataset_path,
+    dataset = HMDB51(root=dataset_path, ext=ext, split=split,
                      transform=Compose([CenterSegment(32),
                                         Resize(256),
                                         CenterCrop(224)]),
-                     train=True)
+                     train=False)
     print(dataset.__len__())
 
     dataloader = torch.utils.data.DataLoader(dataset=dataset,
@@ -31,4 +31,6 @@ def test_hmdb51():
 
 
 if __name__ == "__main__":
-    test_hmdb51()
+    test_hmdb51(ext="avi", split=1)
+    test_hmdb51(ext="avi", split=2)
+    test_hmdb51(ext="avi", split=3)

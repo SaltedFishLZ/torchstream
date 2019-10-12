@@ -5,9 +5,9 @@ from torchstream.transforms import Compose, Resize, CenterCrop, CenterSegment
 from torchstream.datasets.ucf101 import UCF101
 
 
-def test_ucf101():
+def test_ucf101(ext="avi", split=1):
     dataset_path = "~/Datasets/UCF101/UCF101-avi"
-    dataset = UCF101(root=dataset_path,
+    dataset = UCF101(root=dataset_path, ext=ext, split=split,
                      transform=Compose([CenterSegment(32),
                                         Resize(256),
                                         CenterCrop(224)]),
@@ -30,4 +30,6 @@ def test_ucf101():
 
 
 if __name__ == "__main__":
-    test_ucf101()
+    test_ucf101(ext="avi", split=1)
+    test_ucf101(ext="avi", split=2)
+    test_ucf101(ext="avi", split=3)

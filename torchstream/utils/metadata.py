@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(__config__.LOGGER_LEVEL)
 
 
-def collect_flat(root, ext, annotations=None,                 
+def collect_flat(root, ext, annotations=None,
                  is_valid_datapoint=None,
                  frame_offset=None, frame_tmpl=None):
     """Collecting datapoints from a flat dataset containing
@@ -44,7 +44,7 @@ def collect_flat(root, ext, annotations=None,
                 "root: {}\n"
                 "ext: {}\n"
                 "is_valid_datapoint: {}\n"
-                "fpath_offset: {}\n"
+                "frame_offset: {}\n"
                 "frame_tmpl: {}").format(
                     root, ext, is_valid_datapoint,
                     frame_offset, frame_tmpl
@@ -78,7 +78,7 @@ def collect_flat(root, ext, annotations=None,
         # set other key-word arguments
         kwargs = {}
         if frame_offset is not None:
-            kwargs["fpath_offset"] = frame_offset
+            kwargs["frame_offset"] = frame_offset
         if frame_tmpl is not None:
             kwargs["frame_tmpl"] = frame_tmpl        
 
@@ -127,7 +127,7 @@ def collect_folder(root, ext, is_valid_datapoint=None,
                 "root: {}\n"
                 "ext: {}\n"
                 "is_valid_datapoint: {}\n"
-                "fpath_offset: {}\n"
+                "frame_offset: {}\n"
                 "frame_tmpl: {}").format(
                     root, ext, is_valid_datapoint,
                     frame_offset, frame_tmpl
@@ -164,7 +164,7 @@ def collect_folder(root, ext, is_valid_datapoint=None,
             # set other key-word arguments
             kwargs = {}
             if frame_offset is not None:
-                kwargs["fpath_offset"] = frame_offset
+                kwargs["frame_offset"] = frame_offset
             if frame_tmpl is not None:
                 kwargs["frame_tmpl"] = frame_tmpl  
 
