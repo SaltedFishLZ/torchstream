@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 # Video / Image IO Utilities
 # Author: Zheng Liang
+#
 # NOTE
 # This module only handle data of a certain modality. To fuse
-# different modalities (e.g., RGB + Flow), please do it at the
-# dataset level
+# different modalities (e.g., RGB + Flow), please do it in your
+# dataset wrapper.
 #
 # Term / Naming Conversion:
 # ┌─────────────┬───────────────────────────────────────────────┐
@@ -30,7 +31,6 @@
 # |             | 'varray', 'v_array', 'vid_array'              |
 # |             |*Type: numpy.ndarray('uint8')                  |
 # └─────────────┴───────────────────────────────────────────────┘
-#
 #
 
 import os

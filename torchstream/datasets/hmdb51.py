@@ -18,12 +18,21 @@ CACHE_DIR = os.path.expanduser("~/.cache/torchstream/datasets/hmdb51/")
 class HMDB51(VisionDataset):
 
     def __init__(self, root, train, split=1, ext="avi",
+                 frame_sampler=None,
                  transform=None, target_transform=None):
         root = os.path.expanduser(root)
 
         super(HMDB51, self).__init__(root=root,
                                      transform=transform,
                                      target_transform=target_transform)
+
+        self.frame_sampler = None
+        if frame_sampler is not None:
+            assert ext in SUPPORTED_IMAGES["RGB"], \
+                ValueError("frame_sampler is valid for image sequence only!")
+            self.frame_sampler = frame_sampler
+            assert isinstance(frame_sampler, FrameSampler), TypeError
+
         # -------------------- #
         #   load datapoints    #
         # -------------------- #
@@ -83,13 +92,18 @@ class HMDB51(VisionDataset):
     def __getitem__(self, index):
         datapoint = self.datapoints[index]
 
+        # handle videos
         if datapoint.ext in SUPPORTED_VIDEOS["RGB"]:
             loader = backend.video2ndarray
+            path = datapoint.path
+            varray = loader(path)
+        # handle image sequence
         elif datapoint.ext in SUPPORTED_IMAGES["RGB"]:
             loader = backend.frames2ndarray
-
-        path = datapoint._path
-        varray = loader(path)
+            fpaths = datapoint.framepaths
+            if self.frame_sampler is not None:
+                fpaths = self.frame_sampler(fpaths)
+            varray = loader(fpaths)
 
         label = datapoint.label
         target = self.class_to_idx[label]

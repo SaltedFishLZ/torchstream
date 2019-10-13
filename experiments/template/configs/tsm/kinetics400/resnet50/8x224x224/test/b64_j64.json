@@ -33,6 +33,13 @@
         }
     ],
 
+    "test_frame_sampler": {
+        "name": "CenterSegmentFrameSampler",
+        "argv": {
+            "size": 8
+        }
+    },
+
     "test_dataset": {
         "name": "Kinetics400",
         "argv": {

@@ -51,7 +51,7 @@ class DataPoint(object):
         self.frame_tmpl = frame_tmpl
         self.label = label
 
-        # cache attributes
+        # cached attributes
         self._seq = self.seq
         self._path = self.path
         self._fcount = self.fcount

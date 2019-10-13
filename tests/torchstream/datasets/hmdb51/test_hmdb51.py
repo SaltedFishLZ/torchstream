@@ -1,36 +1,55 @@
 import collections
-import torch
+
 import tqdm
+import torch
 from torchstream.transforms import Compose, Resize, CenterCrop, CenterSegment
+from torchstream.io.framesampler import CenterSegmentFrameSampler
+from torchstream.io import SUPPORTED_IMAGES
 from torchstream.datasets.hmdb51 import HMDB51
 
 
-def test_hmdb51(ext="avi", split=1):
-    # dataset_len = 6766
-    dataset_path = "~/Datasets/HMDB51/HMDB51-avi"
-    dataset = HMDB51(root=dataset_path, ext=ext, split=split,
-                     transform=Compose([CenterSegment(32),
-                                        Resize(256),
-                                        CenterCrop(224)]),
-                     train=False)
+def test_hmdb51(ext="avi", split=1, train=False,
+                loading_test=True,
+                frame_sampler_test=False):
+
+    dataset_path = "~/Datasets/HMDB51/HMDB51-{}".format(ext)
+
+    if (ext in SUPPORTED_IMAGES) and frame_sampler_test:
+        frame_sampler = CenterSegmentFrameSampler(8)
+        dataset = HMDB51(root=dataset_path,
+                         transform=Compose([CenterSegment(32),
+                                            Resize(256),
+                                            CenterCrop(224)]),
+                         ext=ext, split=split, train=train,
+                         frame_sampler=frame_sampler)
+    else:
+        dataset = HMDB51(root=dataset_path,
+                         transform=Compose([CenterSegment(32),
+                                            Resize(256),
+                                            CenterCrop(224)]),
+                          ext=ext, split=split, train=train)
+
+    print("{} set length".format("training" if train else "validation"))
     print(dataset.__len__())
 
-    dataloader = torch.utils.data.DataLoader(dataset=dataset,
-                                             batch_size=32,
-                                             num_workers=32,
-                                             pin_memory=True)
-
-    num_samples_per_class = collections.OrderedDict()
-    for vid, cid in tqdm.tqdm(dataloader):
-        for _cid in cid.numpy():
-            if _cid in num_samples_per_class:
-                num_samples_per_class[_cid] += 1
-            else:
-                num_samples_per_class[_cid] = 1
-    print(num_samples_per_class)
+    if loading_test:
+        dataloader = torch.utils.data.DataLoader(dataset=dataset,
+                                                 batch_size=16,
+                                                 num_workers=4,
+                                                 pin_memory=True)
+        num_samples_per_class = collections.OrderedDict()
+        for _, cid in tqdm.tqdm(dataloader):
+            for _cid in cid.numpy():
+                if _cid in num_samples_per_class:
+                    num_samples_per_class[_cid] += 1
+                else:
+                    num_samples_per_class[_cid] = 1
+        print(num_samples_per_class)
 
 
 if __name__ == "__main__":
     test_hmdb51(ext="avi", split=1)
-    test_hmdb51(ext="avi", split=2)
-    test_hmdb51(ext="avi", split=3)
+    test_hmdb51(ext="jpg", split=1)
+    test_hmdb51(ext="jpg", split=1, frame_sampler_test=True)
+    # test_hmdb51(ext="avi", split=2)
+    # test_hmdb51(ext="avi", split=3)

@@ -1,12 +1,6 @@
 {
     "train_transforms": [
         {
-            "name": "RandomSegment",
-            "argv": {
-                "size": 8
-            }
-        },
-        {
             "name": "MultiScaleCrop",
             "argv": {
                 "output_size": [224, 224],
@@ -27,6 +21,13 @@
         }
     ],
 
+    "train_frame_sampler": {
+        "name": "RandomSegmentFrameSampler",
+        "argv": {
+            "size": 8
+        }
+    },
+
     "train_dataset": {
         "name": "Kinetics400",
         "argv": {
@@ -37,13 +38,6 @@
     },
 
     "val_transforms": [
-        {
-            "package": "torchstream.transforms",
-            "name": "CenterSegment",
-            "argv": {
-                "size": 8
-            }
-        },
         {
             "name": "Resize",
             "argv": {
@@ -69,6 +63,13 @@
             }
         }
     ],
+
+    "val_frame_sampler": {
+        "name": "CenterSegmentFrameSampler",
+        "argv": {
+            "size": 8
+        }
+    },
 
     "val_dataset": {
         "name": "Kinetics400",
