@@ -15,6 +15,7 @@ logger.setLevel(__config__.LOGGER_LEVEL)
 # constants
 UNKNOWN_LABEL = None
 
+
 class DataPoint(object):
     """Meta-data of a video sample in a certain dataset
     Args:
