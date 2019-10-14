@@ -9,12 +9,12 @@ from torchstream.datasets.hmdb51 import HMDB51
 
 
 def test_hmdb51(ext="avi", split=1, train=False,
-                loading_test=True,
-                frame_sampler_test=False):
+                test_loading=True,
+                test_frame_sampler=False):
 
     dataset_path = "~/Datasets/HMDB51/HMDB51-{}".format(ext)
 
-    if (ext in SUPPORTED_IMAGES) and frame_sampler_test:
+    if (ext in SUPPORTED_IMAGES) and test_frame_sampler:
         frame_sampler = CenterSegmentFrameSampler(8)
         dataset = HMDB51(root=dataset_path,
                          transform=Compose([CenterSegment(32),
@@ -32,7 +32,7 @@ def test_hmdb51(ext="avi", split=1, train=False,
     print("{} set length".format("training" if train else "validation"))
     print(dataset.__len__())
 
-    if loading_test:
+    if test_loading:
         dataloader = torch.utils.data.DataLoader(dataset=dataset,
                                                  batch_size=16,
                                                  num_workers=4,
@@ -50,6 +50,6 @@ def test_hmdb51(ext="avi", split=1, train=False,
 if __name__ == "__main__":
     test_hmdb51(ext="avi", split=1)
     test_hmdb51(ext="jpg", split=1)
-    test_hmdb51(ext="jpg", split=1, frame_sampler_test=True)
-    # test_hmdb51(ext="avi", split=2)
-    # test_hmdb51(ext="avi", split=3)
+    test_hmdb51(ext="jpg", split=1, test_frame_sampler=True)
+    test_hmdb51(ext="avi", split=2)
+    test_hmdb51(ext="avi", split=3)
