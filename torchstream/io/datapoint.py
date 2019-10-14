@@ -115,7 +115,7 @@ class DataPoint(object):
 
         framepaths = []
         for _i in range(self.fcount):
-            fpath = self.frame_tmpl.format(_i + self.fpath_offset)
+            fpath = self.frame_tmpl.format(_i + self.frame_offset)
             fpath += "." + self.ext
             fpath = os.path.join(self.path, fpath)
             framepaths.append(fpath)

@@ -4,6 +4,7 @@ import tqdm
 import torch
 from torchstream.transforms import Compose, Resize, CenterCrop, CenterSegment
 from torchstream.io.framesampler import CenterSegmentFrameSampler
+from torchstream.io import SUPPORTED_IMAGES
 from torchstream.datasets.kinetics400 import Kinetics400
 
 
@@ -15,18 +16,18 @@ def test_kinetics400(ext="jpg", train=False,
 
     if (ext in SUPPORTED_IMAGES) and test_frame_sampler:
         frame_sampler = CenterSegmentFrameSampler(8)
-        dataset = HMDB51(root=dataset_path,
-                         transform=Compose([CenterSegment(32),
-                                            Resize(256),
-                                            CenterCrop(224)]),
-                         ext=ext, split=split, train=train,
-                         frame_sampler=frame_sampler)
+        dataset = Kinetics400(root=dataset_path,
+                              transform=Compose([CenterSegment(32),
+                                                 Resize(256),
+                                                 CenterCrop(224)]),
+                              ext=ext, train=train,
+                              frame_sampler=frame_sampler)
     else:
-        dataset = HMDB51(root=dataset_path,
-                         transform=Compose([CenterSegment(32),
-                                            Resize(256),
-                                            CenterCrop(224)]),
-                          ext=ext, split=split, train=train)
+        dataset = Kinetics400(root=dataset_path,
+                              transform=Compose([CenterSegment(32),
+                                                 Resize(256),
+                                                 CenterCrop(224)]),
+                              ext=ext, train=train)
 
     print("{} set length".format("training" if train else "validation"))
     print(dataset.__len__())

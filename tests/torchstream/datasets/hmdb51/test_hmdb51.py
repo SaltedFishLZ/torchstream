@@ -49,7 +49,6 @@ def test_hmdb51(ext="avi", split=1, train=False,
 
 if __name__ == "__main__":
     test_hmdb51(ext="avi", split=1)
-    test_hmdb51(ext="jpg", split=1)
     test_hmdb51(ext="jpg", split=1, test_frame_sampler=True)
+    test_hmdb51(ext="jpg", split=1)
     test_hmdb51(ext="avi", split=2)
-    test_hmdb51(ext="avi", split=3)
