@@ -55,7 +55,7 @@ def dataset_vid2seq(name, src_datapoints, dst_root, dst_ext="jpg",
 
     # count frame numbers
     print("counting frame numbers for each image sequence")
-    for datapoint in dst_datapoints:
+    for datapoint in tqdm.tqdm(dst_datapoints):
         datapoint._fcount = datapoint.fcount
 
     return successes, dst_datapoints

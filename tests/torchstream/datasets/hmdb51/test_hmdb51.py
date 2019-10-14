@@ -17,7 +17,7 @@ def test_hmdb51(ext="avi", split=1, train=False,
 
     dataset_path = "~/Datasets/HMDB51/HMDB51-{}".format(ext)
 
-    if (ext in SUPPORTED_IMAGES) and test_frame_sampler:
+    if (ext in SUPPORTED_IMAGES["RGB"]) and test_frame_sampler:
         frame_sampler = CenterSegmentFrameSampler(8)
         dataset = HMDB51(root=dataset_path,
                          transform=Compose([Resize(256),
@@ -50,7 +50,22 @@ def test_hmdb51(ext="avi", split=1, train=False,
 
 
 if __name__ == "__main__":
+    print("*" * 80)
+    print("AVI, Split 1, Val")
+    print("*" * 80)
     test_hmdb51(ext="avi", split=1)
-    test_hmdb51(ext="jpg", split=1, test_frame_sampler=True)
-    test_hmdb51(ext="jpg", split=1)
+
+    print("*" * 80)
+    print("AVI, Split 2, Val")
+    print("*" * 80)
     test_hmdb51(ext="avi", split=2)
+
+    print("*" * 80)
+    print("JPG, Split 1, Val, FrameSampler(8)")
+    print("*" * 80)
+    test_hmdb51(ext="jpg", split=1, test_frame_sampler=True)
+
+    print("*" * 80)
+    print("JPG, Split 1, Val")
+    print("*" * 80)
+    test_hmdb51(ext="jpg", split=1)

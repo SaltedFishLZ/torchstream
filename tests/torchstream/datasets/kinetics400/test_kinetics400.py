@@ -17,7 +17,7 @@ def test_kinetics400(ext="jpg", train=False,
 
     dataset_path = "~/Datasets/Kinetics/Kinetics-400-{}".format(ext)
 
-    if (ext in SUPPORTED_IMAGES) and test_frame_sampler:
+    if (ext in SUPPORTED_IMAGES["RGB"]) and test_frame_sampler:
         frame_sampler = CenterSegmentFrameSampler(8)
         dataset = Kinetics400(root=dataset_path,
                               transform=Compose([Resize(256),
@@ -52,5 +52,12 @@ def test_kinetics400(ext="jpg", train=False,
 
 
 if __name__ == "__main__":
+    print("*" * 80)
+    print("JPG, Split 1, Val, FrameSampler(8)")
+    print("*" * 80)
     test_kinetics400(ext="jpg", test_frame_sampler=True)
+
+    print("*" * 80)
+    print("JPG, Split 1, Val")
+    print("*" * 80)
     test_kinetics400(ext="jpg")
