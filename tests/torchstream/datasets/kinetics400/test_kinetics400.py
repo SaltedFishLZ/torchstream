@@ -20,11 +20,11 @@ def test_kinetics_400():
     dataset.datapoints = dataset.datapoints[12700:]
     print(dataset.__len__())
 
+    """
     # jpg data
     frame_sampler = CenterSegmentFrameSampler(8)
     dataset_path = "~/Datasets/Kinetics/Kinetics-400-jpg"
     dataset = Kinetics400(root=dataset_path,
-                          ext="jpg",
                           # remove segment
                           transform=Compose([Resize(256),
                                              CenterCrop(224)]),
@@ -34,6 +34,7 @@ def test_kinetics_400():
     # HACK
     dataset.datapoints = dataset.datapoints[12700:]
     print(dataset.__len__())
+    """
 
     # loading test
     dataloader = torch.utils.data.DataLoader(dataset=dataset,
