@@ -58,6 +58,6 @@ if __name__ == "__main__":
     test_kinetics400(ext="jpg", test_frame_sampler=True)
 
     print("*" * 80)
-    print("JPG, Split 1, Val")
+    print("JPG, Split 1, Train, FrameSampler(8)")
     print("*" * 80)
-    test_kinetics400(ext="jpg")
+    test_kinetics400(ext="jpg", test_frame_sampler=True, train=True)

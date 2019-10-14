@@ -29,7 +29,7 @@ def config2transform(cfg):
     package = "torchstream.transforms"
     if "package" in cfg:
         package = cfg["package"]
-    
+
     transform_package = importlib.import_module(package)
     transform_class = getattr(transform_package, cfg["name"])
 
@@ -79,17 +79,6 @@ def config2dataset(cfg):
     dataset = None
     if "argv" in cfg:
         argv = cfg["argv"]
-
-        # inject frame_sampler
-        if "frame_sampler" in argv:
-            package = "torchstream.io.framesampler"
-            frame_sampler_package = importlib.import_module(package)
-            frame_sampler_class = getattr(frame_sampler_package,
-                                          argv["frame_sampler"]["name"])
-            frame_sampler_argv = argv["frame_sampler"]["argv"]
-            frame_sampler = frame_sampler_class(**frame_sampler_argv)
-            argv["frame_sampler"] = frame_sampler
-
         dataset = dataset_class(**argv)
     else:
         dataset = dataset_class()
