@@ -21,7 +21,7 @@ parser.add_argument("--dst_ext", type=str, default="avi",
 parser.add_argument("--workers", type=int, default=32, help="worker number")
 
 
-def dataset_vid2vid(name, src_datapoints, dst_root, dst_ext="avi",
+def dataset_vid2vid(name, src_datapoints, src_root, dst_root, dst_ext="avi",
                     workers=16, **kwargs):
     """transform video files
     """
@@ -35,10 +35,14 @@ def dataset_vid2vid(name, src_datapoints, dst_root, dst_ext="avi",
     dst_datapoints = []
     for src in src_datapoints:
         assert isinstance(src, DataPoint), TypeError
+        src.root = src_root
+        src._path = src.path
+
         dst = copy.deepcopy(src)
         dst.root = dst_root
         dst.ext = dst_ext
         dst._path = dst.path
+
         dst_datapoints.append(dst)
         tasks.append({"src": src, "dst": dst})
 
@@ -72,6 +76,7 @@ if __name__ == "__main__":
     successes, dst_datapoints = dataset_vid2vid(
         name=src_datapoints[0].root,
         src_datapoints=src_datapoints,
+        src_root=args.src_root,
         dst_root=args.dst_root,
         dst_ext=args.dst_ext,
         workers=args.workers
