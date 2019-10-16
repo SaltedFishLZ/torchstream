@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 # Video / Image IO Utilities
 # Author: Zheng Liang
+#
 # NOTE
 # This module only handle data of a certain modality. To fuse
-# different modalities (e.g., RGB + Flow), please do it at the
-# dataset level
+# different modalities (e.g., RGB + Flow), please do it in your
+# dataset wrapper.
 #
 # Term / Naming Conversion:
 # ┌─────────────┬───────────────────────────────────────────────┐
@@ -30,7 +31,6 @@
 # |             | 'varray', 'v_array', 'vid_array'              |
 # |             |*Type: numpy.ndarray('uint8')                  |
 # └─────────────┴───────────────────────────────────────────────┘
-#
 #
 
 import os
@@ -131,14 +131,15 @@ def video2ndarray(video, cin="BGR", cout="RGB", **kwargs):
         video (str): input video file path
         cin (str): input video's color space
         cout (str): output ndarray's color space
-        return(ndarray): a Numpy ndarray for the video
+    Return(ndarray):
+            a Numpy ndarray for the video, None means failed
     """
     # TODO: currenly only support input BGR video
     assert "BGR" == cin, NotImplementedError("Only supported BGR video")
 
     if __config__.STRICT:
         if not os.path.exists(video):
-            warn_str = "[video2frames] src video {} missing".format(video)
+            warn_str = "[video2ndarray] src video {} missing".format(video)
             logger.error(warn_str)
             return False
 
@@ -167,7 +168,7 @@ def video2ndarray(video, cin="BGR", cout="RGB", **kwargs):
             via cv2.VideoCapture.read(): ".format(cnt, video)
         warn_str += failure_suspection(vpath=video)
         logger.warning(warn_str)
-        return(None)
+        return None
     f_c = frame.shape[2]
     if (cout == "GRAY"):
         varray_shape = (f_n, f_h, f_w, 1)
@@ -222,32 +223,34 @@ def video2ndarray(video, cin="BGR", cout="RGB", **kwargs):
     return buf
 
 
-def video2frames(video, dst_path, cin="BGR", cout="BGR", **kwargs):
-    """Read 1 video from ${video} and dump to frames in ${dst_path}.
+def video2frames(video, frames, cin="BGR", cout="BGR",
+                 frame_offset=0, frame_tmpl="{}", **kwargs):
+    """Read a video file and dump it to frames.
     Args:
-        video : the input video file path
-        dst_path : destination directory for images
-        cin : input video's color space
-        cout : output frames' color space
-        return : (False, 0) if failed; (True, frame count) if succeeded.
-            TODO: format string for frames
+        video(str) : the input video file path
+        frames(str) : destination directory for images
+        cin(str) : input video's color space
+        cout(str) : output frames' color space
+        frame_offset(int): frame index offset
+        frame_tmpl(str): frame name template string (placeholder is index)
+    Return:
+        (False, 0) if failed;
+        (True, frame count) if succeeded.
     """
-    # check sanity
-    # TODO: currenly only support input BGR video
-    assert ("BGR" == cin), "Only supported BGR video"
+    assert ("BGR" == cin), NotImplementedError("Only supported BGR video")
     if os.path.exists(video):
         pass
     else:
         warn_str = "[video2frames] src video {} missing".format(video)
         logger.warning(warn_str)
         return (False, 0)
-    if os.path.exists(dst_path):
+    if os.path.exists(frames):
         pass
     else:
-        warn_str = "[video2frames] dst path {} missing".format(dst_path)
-        warn_str += ", makedirs for it"
-        logger.warning(warn_str)
-        os.makedirs(dst_path)
+        info_str = "[video2frames] dst directory {} missing".format(frames)
+        info_str += ", makedirs for it"
+        logger.warning(info_str)
+        os.makedirs(info_str)
 
     # open VideoCapture
     cap = cv2.VideoCapture(video)
@@ -262,16 +265,18 @@ def video2frames(video, dst_path, cin="BGR", cout="BGR", **kwargs):
 
     # dump frames, don't need to get shape of frames
     f_n = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-    while ((cnt < f_n) and ret):
+    while (cnt < f_n) and ret:
         ret, farray = cap.read()
         if not ret:
             break
         # color space conversion
         farray = convert_farray_color(farray, cin, cout)
         # write image files
-        frame = os.path.join(dst_path, "{}.jpg".format(cnt))
-        ret = cv2.imwrite(frame, farray)
-        assert ret, "Cannot write image file {}".format(frame)
+        findex = frame_offset + cnt
+        fname = frame_tmpl.format(findex) + ".jpg"
+        fpath = os.path.join(frames, fname)
+        ret = cv2.imwrite(fpath, farray)
+        assert ret, "Cannot write image file {}".format(fpath)
         # dump frame successfully
         cnt += 1
 
@@ -290,7 +295,7 @@ def video2frames(video, dst_path, cin="BGR", cout="BGR", **kwargs):
 
     # output status
     info_str = "[video2frames] successful: dst {}, {} frames".\
-        format(dst_path, cnt)
+        format(frames, cnt)
     logger.info(info_str)
 
     # release & return
@@ -298,23 +303,23 @@ def video2frames(video, dst_path, cin="BGR", cout="BGR", **kwargs):
     return (True, cnt)
 
 
-def ndarray2frames(varray, dst_path, cin="RGB", cout="BGR", **kwargs):
+def ndarray2frames(varray, frames, cin="RGB", cout="BGR",
+                   frame_offset=0, frame_tmpl="{}", **kwargs):
+    """Dump 1 video array into frames
+    Args:
+        varray(ndarray): input numpy.ndarray format video
+        dst_path(str): output directory for dumped frames.
+        cin(str): input ndarray's color space
+        cout(str): output frames' color space
+    Return:
+        (False, 0) if failed;
+        (True, frame count) if succeeded.
     """
-    Dump 1 video array ${varray} to frames in ${dst_path}
-    - varray : input numpy.ndarray format video
-    - cin : input ndarray's color space
-    - cout : output frames' color space
-    - dst_path : output directory for dumped frames.
-    TODO: format string for file name
-    """
-    # check sanity
-    if (os.path.exists(dst_path)):
-        pass
-    else:
-        warn_str = "[ndarray2frames]: target {} missing".format(dst_path)
-        warn_str += ", makedirs for it"
-        logger.warning(warn_str)
-        os.makedirs(dst_path)
+    if not os.path.exists(frames):
+        info_str = "[ndarray2frames]: target {} missing".format(frames)
+        info_str += ", makedirs for it"
+        logger.info(info_str)
+        os.makedirs(frames)
     assert not ((varray.shape[3] != 1) and (cin == "GRAY")), \
         "Video array is not a grayscale one, mismatch."
     assert not ((varray.shape[3] != 3) and (cin in ["RGB", "BGR"])), \
@@ -323,29 +328,32 @@ def ndarray2frames(varray, dst_path, cin="RGB", cout="BGR", **kwargs):
     # dump pictures
     f_n = varray.shape[0]
     cnt = 0
-    for _i in range(f_n):
-        frame = os.path.join(dst_path, "{}.jpg".format(_i))
-        farray = varray[_i, :, :, :]
+    for _ in range(f_n):
+        farray = varray[cnt, :, :, :]
         farray = convert_farray_color(farray, cin, cout)
-        ret = cv2.imwrite(frame, farray)
-        assert ret, "Cannot write image file {}".format(frame)
+        # write image files
+        findex = frame_offset + cnt
+        fname = frame_tmpl.format(findex) + ".jpg"
+        fpath = os.path.join(frames, fname)
+        ret = cv2.imwrite(fpath, farray)
+        assert ret, "Cannot write image file {}".format(fpath)
         cnt += 1
 
     # output status
-    info_str = "[ndarray2frames] successful, dst {}".format(dst_path)
+    info_str = "[ndarray2frames] successful, dst {}".format(frames)
     info_str += ", shape {}".format(varray.shape)
     logger.info(info_str)
 
-    return(True, cnt)
+    return (True, cnt)
 
 
-def ndarray2video(varray, dst_path, cin="RGB", cout="BGR", fps=12, **kwargs):
-    """Write a 4d array to a video file
+def ndarray2video(varray, video, cin="RGB", cout="BGR", fps=12, **kwargs):
+    """Write a video array (4d) to a video file
     """
     t, h, w, c = varray.shape
     assert c == 3, NotImplementedError("Only accept color video now")
 
-    writer = cv2.VideoWriter(dst_path,
+    writer = cv2.VideoWriter(video,
                              cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'),
                              fps, (w, h))
 
@@ -423,62 +431,3 @@ def frames2ndarray(frames, cin="BGR", cout="RGB", **kwargs):
     logger.info(info_str)
 
     return(buff)
-
-
-# ------------------------------------------------------------------------- #
-#              Self-test Utilities (Not To Be Used outside)                 #
-# ------------------------------------------------------------------------- #
-
-def test_functions(test_configuration):
-    """
-    Basic OpenCV video IO tools testing
-    """
-    vpath = os.path.join(DIR_PATH, "test.avi")
-
-    # read video to varray
-    varray = video2ndarray(vpath,
-            cin=test_configuration['video_color'],
-            cout=test_configuration['varray_color'])
-    print(varray.shape)
-
-    # dump video to frames
-    ret, f_n = video2frames(vpath,
-            os.path.join(DIR_PATH, "test_video2frames"), 
-            cin=test_configuration['video_color'],
-            cout=test_configuration['frames_color'])
-    print('Dumping frames from video finished, {} frames'.format(f_n))
-
-    # dump varray to frames
-    ret, f_n = ndarray2frames(varray,
-            os.path.join(DIR_PATH, "test_ndarray2frames"), 
-            cin=test_configuration['varray_color'],
-            cout=test_configuration['frames_color'])
-    print('Dumping frames from varray finished, {} frames'.format(f_n))
-
-    # video array to video
-    ndarray2video(varray, 
-        os.path.join(DIR_PATH, "test_ndarray2video.avi")
-        )
-
-
-def test_cleanup():
-    """
-    clean up function for all testing
-    """
-    DIR_PATH = os.path.dirname(os.path.realpath(__file__))
-    import shutil
-    shutil.rmtree(os.path.join(DIR_PATH, "test_video2frames"))
-    shutil.rmtree(os.path.join(DIR_PATH, "test_array2frames"))
-
-
-def test():
-    test_configuration = {
-        "video_color"   : "BGR",
-        "varray_color"  : "RGB",
-        "frames_color"  : "BGR",
-        "imgseq_color"  : "RGB"}
-    test_functions(test_configuration)
-
-
-if __name__ == "__main__":
-    test()

@@ -3,8 +3,9 @@ import pickle
 import collections
 
 from .vision import VisionDataset
-from torchstream.io.datapoint import DataPoint
 import torchstream.io.backends.opencv as backend
+from torchstream.io.datapoint import DataPoint
+from torchstream.io.framesampler import FrameSampler
 from torchstream.io.__support__ import SUPPORTED_IMAGES, SUPPORTED_VIDEOS
 from torchstream.utils.download import download
 
@@ -16,14 +17,31 @@ DOWNLOAD_SERVER_PREFIX = (
 
 
 class Kinetics400(VisionDataset):
-
-    def __init__(self, root, train,
+    """
+    Args:
+        root (str)
+        train (bool)
+        ext (str)
+        frame_sampler (): only valid for image sequences, 
+        transform
+        target_transform
+    """
+    def __init__(self, root, train, ext="mp4",
+                 frame_sampler=None,
                  transform=None, target_transform=None):
         root = os.path.expanduser(root)
 
         super(Kinetics400, self).__init__(root=root,
-                                     transform=transform,
-                                     target_transform=target_transform)
+                                          transform=transform,
+                                          target_transform=target_transform)
+
+        self.frame_sampler = None
+        if frame_sampler is not None:
+            assert ext in SUPPORTED_IMAGES["RGB"], \
+                ValueError("frame_sampler is valid for image sequence only!")
+            self.frame_sampler = frame_sampler
+            assert isinstance(frame_sampler, FrameSampler), TypeError
+
         # -------------------- #
         #   load datapoints    #
         # -------------------- #
@@ -33,13 +51,13 @@ class Kinetics400(VisionDataset):
                 os.path.isdir(CACHE_DIR)):
             os.makedirs(CACHE_DIR, exist_ok=True)
         if train:
-            datapoint_file_name = "kinetics_training.pkl"
+            datapoint_file_name = "kinetics400_{}_training.pkl".format(ext)
         else:
-            datapoint_file_name = "kinetics_val.pkl"
+            datapoint_file_name = "kinetics400_{}_validation.pkl".format(ext)
         datapoint_file_path = os.path.join(CACHE_DIR, datapoint_file_name)
         # download when missing
         if not os.path.exists(datapoint_file_path):
-            print("downloading Kinetics datapoints...")
+            print("downloading Kinetics400 datapoints...")
             download(src=os.path.join(DOWNLOAD_SERVER_PREFIX,
                                       datapoint_file_name),
                      dst=datapoint_file_path)
@@ -52,14 +70,15 @@ class Kinetics400(VisionDataset):
         for dp in self.datapoints:
             dp.root = root
             dp._path = dp.path
+
         # ------------------ #
         #  load class_to_idx #
         # ------------------ #
         # download labels
-        label_file = "kinetics-400_labels.txt"
+        label_file = "kinetics400_labels.txt"
         label_path = os.path.join(CACHE_DIR, label_file)
         if not os.path.exists(label_path):
-            print("downloading Kinetics-400 label_path...")
+            print("downloading Kinetics400 label...")
             label_src = os.path.join(DOWNLOAD_SERVER_PREFIX, label_file)
             download(label_src, label_path)
         # build class label to class id mapping (a dictionary)
@@ -78,11 +97,14 @@ class Kinetics400(VisionDataset):
 
         if datapoint.ext in SUPPORTED_VIDEOS["RGB"]:
             loader = backend.video2ndarray
+            path = datapoint.path
+            varray = loader(path)
         elif datapoint.ext in SUPPORTED_IMAGES["RGB"]:
             loader = backend.frames2ndarray
-
-        path = datapoint._path
-        varray = loader(path)
+            fpaths = datapoint.framepaths
+            if self.frame_sampler is not None:
+                fpaths = self.frame_sampler(fpaths)
+            varray = loader(fpaths)
 
         label = datapoint.label
         target = self.class_to_idx[label]

@@ -15,6 +15,7 @@ logger.setLevel(__config__.LOGGER_LEVEL)
 # constants
 UNKNOWN_LABEL = None
 
+
 class DataPoint(object):
     """Meta-data of a video sample in a certain dataset
     Args:
@@ -23,14 +24,14 @@ class DataPoint(object):
         name (str): file name of the sample (without any extension and path)
         ext (str): file extension of the sample (e.g., "avi", "mp4").
             NOTE: '.' excluded.
-        fpath_offset (int): frame number offset
-        fpath_tmpl (str): frame name template (e.g., some datasets name frames
-        as 00001.jpg, 00002.jpg..., so the fpath_offset is 1, and fpath_tmpl is
+        frame_offset (int): frame index offset
+        frame_tmpl (str): frame name template (e.g., some datasets name frames
+        as 00001.jpg, 00002.jpg..., so the frame_offset is 1, and frame_tmpl is
         {:05d})
         label (str): class label of this sample
     """
     def __init__(self, root, reldir, name, ext="jpg",
-                 fpath_offset=0, fpath_tmpl="{}",
+                 frame_offset=0, frame_tmpl="{}",
                  label=UNKNOWN_LABEL):
         assert isinstance(root, str), TypeError
         assert isinstance(reldir, str), TypeError
@@ -47,28 +48,37 @@ class DataPoint(object):
         self.reldir = reldir
         self.name = name
         self.ext = ext
-        self.fpath_offset = fpath_offset
-        self.fpath_tmpl = fpath_tmpl
+        self.fpath_offset = frame_offset
+        self.frame_tmpl = frame_tmpl
         self.label = label
 
-        # cache attributes
+        # cached attributes
         self._seq = self.seq
         self._path = self.path
         self._fcount = self.fcount
 
     @property
     def seq(self):
+        """
+        Return:
+            bool, whether this datapoint is a sequence or not.
+        """
         return self.ext in SUPPORTED_IMAGES["RGB"]
 
     @property
     def absdir(self):
+        """
+        Return:
+            str, absolute path of the directory where this datapoint
+            lies.
+        """
         return os.path.join(self.root, self.reldir)
 
     @property
     def filename(self):
         """
-        Return: file name with extension for videos,
-            folder name for image sequence.
+        Return: str, file name with extension for videos,
+            sequence folder name for image sequence.
         """
         if not self.seq:
             if (self.ext != "") and (self.ext is not None):
@@ -106,7 +116,7 @@ class DataPoint(object):
 
         framepaths = []
         for _i in range(self.fcount):
-            fpath = self.fpath_tmpl.format(_i + self.fpath_offset)
+            fpath = self.frame_tmpl.format(_i + self.frame_offset)
             fpath += "." + self.ext
             fpath = os.path.join(self.path, fpath)
             framepaths.append(fpath)

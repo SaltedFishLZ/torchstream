@@ -90,11 +90,12 @@ class UCF101(VisionDataset):
 
         if datapoint.ext in SUPPORTED_VIDEOS["RGB"]:
             loader = backend.video2ndarray
+            path = datapoint.path
+            varray = loader(path)
         elif datapoint.ext in SUPPORTED_IMAGES["RGB"]:
             loader = backend.frames2ndarray
-
-        path = datapoint._path
-        varray = loader(path)
+            fpaths = datapoint.framepaths
+            varray = loader(fpaths)
 
         label = datapoint.label
         target = self.class_to_idx[label]

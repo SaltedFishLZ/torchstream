@@ -16,9 +16,9 @@ logger = logging.getLogger(__name__)
 logger.setLevel(__config__.LOGGER_LEVEL)
 
 
-def collect_flat(root, ext, annotations=None,                 
+def collect_flat(root, ext, annotations=None,
                  is_valid_datapoint=None,
-                 fpath_offset=None, fpath_tmpl=None):
+                 frame_offset=None, frame_tmpl=None):
     """Collecting datapoints from a flat dataset containing
     all datapoints in one folder.
     Args:
@@ -26,8 +26,8 @@ def collect_flat(root, ext, annotations=None,
         ext: datapoint file extension
         annotations (dict): key: datapoint name (str), value: label (str)
         is_valid_datapoint (function): validation function
-        fpath_offset (int)[1]: frame path offset
-        fpath_tmpl (str)[1]: frame path template
+        frame_offset (int)[1]: frame path offset
+        frame_tmpl (str)[1]: frame path template
         [1] Only valid for image sequence.
     Return:
         list (DataPoint)
@@ -44,10 +44,10 @@ def collect_flat(root, ext, annotations=None,
                 "root: {}\n"
                 "ext: {}\n"
                 "is_valid_datapoint: {}\n"
-                "fpath_offset: {}\n"
-                "fpath_tmpl: {}").format(
+                "frame_offset: {}\n"
+                "frame_tmpl: {}").format(
                     root, ext, is_valid_datapoint,
-                    fpath_offset, fpath_tmpl
+                    frame_offset, frame_tmpl
                 )
     logger.info(echo_str)
 
@@ -77,10 +77,10 @@ def collect_flat(root, ext, annotations=None,
 
         # set other key-word arguments
         kwargs = {}
-        if fpath_offset is not None:
-            kwargs["fpath_offset"] = fpath_offset
-        if fpath_tmpl is not None:
-            kwargs["fpath_tmpl"] = fpath_tmpl        
+        if frame_offset is not None:
+            kwargs["frame_offset"] = frame_offset
+        if frame_tmpl is not None:
+            kwargs["frame_tmpl"] = frame_tmpl        
 
         datapoint = DataPoint(root=root, reldir="", name=name,
                               ext=ext, label=label, **kwargs)
@@ -102,15 +102,15 @@ def collect_flat(root, ext, annotations=None,
 
 
 def collect_folder(root, ext, is_valid_datapoint=None,
-                   fpath_offset=None, fpath_tmpl=None):
+                   frame_offset=None, frame_tmpl=None):
     """Collecting datapoints from a folder dataset with datapoints
     distributed in seperate class folders.
     Args:
         root: dataset root path
         ext: datapoint file extension
         is_valid_datapoint (function): validation function
-        fpath_offset (int)[1]: frame path offset
-        fpath_tmpl (str)[1]: frame path template
+        frame_offset (int)[1]: frame path offset
+        frame_tmpl (str)[1]: frame path template
         [1] Only valid for image sequence.
     Return:
         list (DataPoint)
@@ -127,10 +127,10 @@ def collect_folder(root, ext, is_valid_datapoint=None,
                 "root: {}\n"
                 "ext: {}\n"
                 "is_valid_datapoint: {}\n"
-                "fpath_offset: {}\n"
-                "fpath_tmpl: {}").format(
+                "frame_offset: {}\n"
+                "frame_tmpl: {}").format(
                     root, ext, is_valid_datapoint,
-                    fpath_offset, fpath_tmpl
+                    frame_offset, frame_tmpl
                 )
     logger.info(echo_str)
 
@@ -163,10 +163,10 @@ def collect_folder(root, ext, is_valid_datapoint=None,
 
             # set other key-word arguments
             kwargs = {}
-            if fpath_offset is not None:
-                kwargs["fpath_offset"] = fpath_offset
-            if fpath_tmpl is not None:
-                kwargs["fpath_tmpl"] = fpath_tmpl  
+            if frame_offset is not None:
+                kwargs["frame_offset"] = frame_offset
+            if frame_tmpl is not None:
+                kwargs["frame_tmpl"] = frame_tmpl  
 
             datapoint = DataPoint(root=root, reldir=label, name=name,
                                   ext=ext, label=label, **kwargs)

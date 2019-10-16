@@ -1,5 +1,5 @@
 import os
-from torchstream.utils.download import download
+from torchstream.utils.download import download, download_rsync
 
 DOWNLOAD_SERVER_PREFIX = ("zhen@a18.millennium.berkeley.edu:"
                           "/home/eecs/zhen/video-acc/download")

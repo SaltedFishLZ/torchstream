@@ -159,14 +159,19 @@ def main(args):
     #          Construct Datasets & Dataloaders                #
     # -------------------------------------------------------- #
 
-    test_transforms = []
-    for _t in configs["test_transforms"]:
-        test_transforms.append(cfgs.config2transform(_t))
-    test_transforms = torchstream.transforms.Compose(
-        transforms=test_transforms
-        )
+    if "test_transforms" in configs:
+        test_transforms = []
+        for _t in configs["test_transforms"]:
+            test_transforms.append(cfgs.config2transform(_t))
+        test_transforms = \
+            torchstream.transforms.Compose(transforms=test_transforms)
+        configs["test_dataset"]["argv"]["transform"] = test_transforms
 
-    configs["test_dataset"]["argv"]["transform"] = test_transforms
+    if "test_frame_sampler" in configs:
+        test_frame_sampler = \
+            cfgs.config2framesampler(configs["test_frame_sampler"])
+        configs["test_dataset"]["argv"]["frame_sampler"] = test_frame_sampler
+
     test_dataset = cfgs.config2dataset(configs["test_dataset"])
 
     configs["test_loader"]["dataset"] = test_dataset

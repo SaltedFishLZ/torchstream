@@ -21,7 +21,7 @@
         },
         {
             "package": "torchstream.transforms",
-            "name": "ToTensor"  
+            "name": "ToTensor"
         },
         {
             "package": "torchstream.transforms",
@@ -33,10 +33,18 @@
         }
     ],
 
+    "test_frame_sampler": {
+        "name": "CenterSegmentFrameSampler",
+        "argv": {
+            "size": 8
+        }
+    },
+
     "test_dataset": {
         "name": "Kinetics400",
         "argv": {
-            "root": "~/Datasets/Kinetics/Kinetics-400-mp4",
+            "root": "~/Datasets/Kinetics/Kinetics-400-jpg",
+            "ext": "jpg",
             "train": false
         }
     },

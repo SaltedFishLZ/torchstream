@@ -252,14 +252,19 @@ def worker(pid, ngpus_per_node, args):
     # construct training set
     print("Proc [{:2d}] constructing training set...".format(pid))
 
-    train_transforms = []
-    for _t in configs["train_transforms"]:
-        train_transforms.append(cfgs.config2transform(_t))
-    train_transform = torchstream.transforms.Compose(
-        transforms=train_transforms
-        )
+    if "train_transforms" in configs:
+        train_transforms = []
+        for _t in configs["train_transforms"]:
+            train_transforms.append(cfgs.config2transform(_t))
+        train_transforms = \
+            torchstream.transforms.Compose(transforms=train_transforms)
+        configs["train_dataset"]["argv"]["transform"] = train_transforms
 
-    configs["train_dataset"]["argv"]["transform"] = train_transform
+    if "train_frame_sampler" in configs:
+        train_frame_sampler = \
+            cfgs.config2framesampler(configs["train_frame_sampler"])
+        configs["train_dataset"]["argv"]["frame_sampler"] = train_frame_sampler
+
     train_dataset = cfgs.config2dataset(configs["train_dataset"])
 
     # TODO: integrate into configuration?
@@ -284,14 +289,19 @@ def worker(pid, ngpus_per_node, args):
     # construct validation set
     print("Proc [{:2d}] constructing validation set...".format(pid))
 
-    val_transforms = []
-    for _t in configs["val_transforms"]:
-        val_transforms.append(cfgs.config2transform(_t))
-    val_transform = torchstream.transforms.Compose(
-        transforms=val_transforms
-        )
+    if "val_transforms" in configs:
+        val_transforms = []
+        for _t in configs["val_transforms"]:
+            val_transforms.append(cfgs.config2transform(_t))
+        val_transforms = \
+            torchstream.transforms.Compose(transforms=val_transforms)
+        configs["val_dataset"]["argv"]["transform"] = val_transforms
 
-    configs["val_dataset"]["argv"]["transform"] = val_transform
+    if "val_frame_sampler" in configs:
+        val_frame_sampler = \
+            cfgs.config2framesampler(configs["val_frame_sampler"])
+        configs["val_dataset"]["argv"]["frame_sampler"] = val_frame_sampler
+
     val_dataset = cfgs.config2dataset(configs["val_dataset"])
 
     if args.distributed:

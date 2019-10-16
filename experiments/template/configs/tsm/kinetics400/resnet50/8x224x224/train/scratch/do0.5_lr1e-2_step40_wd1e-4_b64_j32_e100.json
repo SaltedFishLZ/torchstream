@@ -1,0 +1,145 @@
+{
+    "train_transforms": [
+        {
+            "name": "MultiScaleCrop",
+            "argv": {
+                "output_size": [224, 224],
+                "scales": [1, 0.875, 0.75, 0.66]
+            }
+        },
+        {
+            "package": "torchstream.transforms",
+            "name": "ToTensor"
+        },
+        {
+            "package": "torchstream.transforms",
+            "name": "Normalize" ,
+            "argv": {
+                "mean": [0.485, 0.456, 0.406],
+                "std": [0.229, 0.224, 0.225]
+            }
+        }
+    ],
+
+    "train_frame_sampler": {
+        "name": "RandomSegmentFrameSampler",
+        "argv": {
+            "size": 8
+        }
+    },
+
+    "train_dataset": {
+        "name": "Kinetics400",
+        "argv": {
+            "root": "~/Datasets/Kinetics/Kinetics-400-jpg",
+            "ext": "jpg",
+            "train": true
+        }
+    },
+
+    "val_transforms": [
+        {
+            "name": "Resize",
+            "argv": {
+                "size": 256
+            }
+        },
+        {
+            "name": "CenterCrop",
+            "argv": {
+                "size": [224, 224]
+            }
+        },
+        {
+            "package": "torchstream.transforms",
+            "name": "ToTensor"  
+        },
+        {
+            "package": "torchstream.transforms",
+            "name": "Normalize" ,
+            "argv": {
+                "mean": [0.485, 0.456, 0.406],
+                "std": [0.229, 0.224, 0.225]
+            }
+        }
+    ],
+
+    "val_frame_sampler": {
+        "name": "CenterSegmentFrameSampler",
+        "argv": {
+            "size": 8
+        }
+    },
+
+    "val_dataset": {
+        "name": "Kinetics400",
+        "argv": {
+            "root": "~/Datasets/Kinetics/Kinetics-400-jpg",
+            "ext": "jpg",
+            "train": false
+        }
+    },
+
+    "train_loader":{
+        "batch_size": 64,
+        "num_workers": 32,
+        "shuffle": true,
+        "pin_memory": true,
+        "drop_last": false
+    },
+
+    "val_loader":{
+        "batch_size": 64,
+        "num_workers": 32,
+        "shuffle": false,
+        "pin_memory": true,
+        "drop_last": false
+    },
+
+    "model": {
+        "package": "torchstream.models",
+        "name": "TSM",
+        "argv": {
+            "cls_num": 400,
+            "input_size": [8, 224, 224],
+            "base_model": "resnet50",
+            "dropout": 0.5,
+            "partial_bn": true,
+            "use_softmax": false
+        }
+    },
+
+    "criterion": {
+        "name": "CrossEntropyLoss"
+    },
+
+    "optimizer": {
+        "name": "SGD",
+        "argv": {
+            "params": "all",
+            "lr": 0.01,
+            "momentum": 0.9,
+            "weight_decay": 0.0001
+        }
+    },
+
+    "lr_scheduler": {
+        "name": "StepLR",
+        "argv": {
+            "step_size": 40
+        }
+    },
+
+    "train": {
+        "epochs": 100,
+        "backup": {
+            "dir_path": "checkpoints/tsm/kinetics400/resnet50/8x224x224/",
+            "pth_name": "do0.5_lr1e-2_p9e-1_step40_b64_j32_e100"
+        },
+        "resume": {
+            "dir_path": "checkpoints/tsm/kinetics400/resnet50/8x224x224/",
+            "pth_name": "do0.5_lr1e-2_p9e-1_step40_b64_j32_e100"
+        }
+    }
+
+}

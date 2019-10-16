@@ -17,9 +17,9 @@ parser = argparse.ArgumentParser()
 parser.add_argument("root", type=str, help="path to dataset root")
 parser.add_argument("--ext", default="jpg", type=str,
                     help="dataset file extension")
-parser.add_argument("--fpath-offset", default=1, type=int,
+parser.add_argument("--frame-offset", default=1, type=int,
                     help="frame index offset")
-parser.add_argument("--fpath-tmpl", default="{:05d}", type=str,
+parser.add_argument("--frame-tmpl", default="{:05d}", type=str,
                     help="frame path template")
 
 
@@ -29,8 +29,8 @@ def main(args):
     all_datapoints = collect_flat(
         root=args.root, ext=args.ext,
         annotations=annotation.full_annot_dict,
-        fpath_offset=args.fpath_offset,
-        fpath_tmpl=args.fpath_tmpl
+        frame_offset=args.frame_offset,
+        frame_tmpl=args.frame_tmpl
     )
 
     # filter data points
