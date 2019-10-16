@@ -12,8 +12,8 @@ NUM_CPU = multiprocessing.cpu_count()
 
 
 def test_kinetics400(ext="jpg", train=False,
-                      test_loading=True,
-                      test_frame_sampler=False):
+                     test_loading=True,
+                     test_frame_sampler=False):
 
     dataset_path = "~/Datasets/Kinetics/Kinetics-400-{}".format(ext)
 
@@ -47,8 +47,6 @@ def test_kinetics400(ext="jpg", train=False,
                 else:
                     num_samples_per_class[_cid] = 1
         print(num_samples_per_class)
-
-
 
 
 if __name__ == "__main__":
