@@ -5,6 +5,8 @@ import copy
 import pickle
 import argparse
 
+import tqdm
+
 from torchstream.io.conversion import vid2seq
 from torchstream.io.datapoint import DataPoint
 from torchstream.io.__support__ import SUPPORTED_IMAGES
@@ -22,7 +24,7 @@ parser.add_argument("--dst_ext", type=str, default="jpg",
 parser.add_argument("--workers", type=int, default=32, help="worker number")
 
 
-def dataset_vid2seq(name, src_datapoints, dst_root, dst_ext="jpg",
+def dataset_vid2seq(name, src_datapoints, src_root, dst_root, dst_ext="jpg",
                     workers=16, **kwargs):
     """slicing video files into frames
     """
@@ -36,10 +38,14 @@ def dataset_vid2seq(name, src_datapoints, dst_root, dst_ext="jpg",
     dst_datapoints = []
     for src in src_datapoints:
         assert isinstance(src, DataPoint), TypeError
+        src.root = src_root
+        src._path = src.path
+
         dst = copy.deepcopy(src)
         dst.root = dst_root
         dst.ext = dst_ext
         dst._path = dst.path
+
         os.makedirs(dst._path)
         dst._seq = dst.seq
         dst_datapoints.append(dst)
@@ -80,6 +86,7 @@ if __name__ == "__main__":
     successes, dst_datapoints = dataset_vid2seq(
         name=src_datapoints[0].root,
         src_datapoints=src_datapoints,
+        src_root=args.src_root,
         dst_root=args.dst_root,
         dst_ext=args.dst_ext,
         workers=args.workers

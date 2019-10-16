@@ -48,7 +48,7 @@ class DataPoint(object):
         self.reldir = reldir
         self.name = name
         self.ext = ext
-        self.fpath_offset = frame_offset
+        self.frame_offset = frame_offset
         self.frame_tmpl = frame_tmpl
         self.label = label
 
