@@ -55,3 +55,4 @@ class Resize(object):
         _, h, w, _ = vid.shape
         if (self.threshold is None) or (min(h, w) >= self.threshold):
             return F.resize(vid, self.size, self.interpolation)
+        return vid
