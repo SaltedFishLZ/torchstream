@@ -51,6 +51,9 @@ def get_norm_params(name, root, datapoints, worker_num, **kwargs):
     results = manager.launch(tasks=tasks, progress=True)
 
     sums, nums = results[0]
+    # DEBUG:
+    print("Sum: ", sums)
+    print("Num: ", nums)
     means = sums / nums
 
     print("means: ", means)
@@ -79,6 +82,9 @@ def get_norm_params(name, root, datapoints, worker_num, **kwargs):
     results = manager.launch(tasks=tasks, progress=True)
 
     rsses, nums = results[0]
+    # DEBUG:
+    print("Rss: ", rsses)
+    print("Num: ", nums)
     stds = np.sqrt(rsses / nums)
 
     print("stds: ", stds)
