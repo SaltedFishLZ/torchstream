@@ -8,6 +8,7 @@ from torchstream.io.datapoint import DataPoint
 from torchstream.io.conversion import vid2seq
 from torchstream.io.framesampler import RandomSegmentFrameSampler
 import torchstream.io.backends.opencv as backend
+from torchstream.transforms import Resize
 from torchstream.utils.download import download
 
 DOWNLOAD_SERVER_PREFIX = ("zhen@a18.millennium.berkeley.edu:"
@@ -21,7 +22,7 @@ DIR_PATH = os.path.dirname(FILE_PATH)
 def benchmark_loadtime(src_datapoint,
                        dst_datapoint,
                        frame_sampler=None,
-                       load_times=100):
+                       load_times=10):
     """test load time
     """
     # test load src time
@@ -42,7 +43,7 @@ def benchmark_loadtime(src_datapoint,
         framepaths = frame_sampler(framepaths)
     st = time.time()
     for _ in range(load_times):
-        varray = loader(framepaths)
+        varray = loader(framepaths)  # noqa F841
     ed = time.time()
     avg_load_time = (ed - st) / load_times
     print("[dst]:")
@@ -50,8 +51,8 @@ def benchmark_loadtime(src_datapoint,
     print("avg load time:", avg_load_time)
 
 
-def test_mp42jpg(benchmarking=False):
-    mp4_name = "W5GWm_g9X1s_000095_000105"
+def test_mp42jpg(benchmarking=False, transform=None):
+    mp4_name = "klwBy72NyFc_000179_000189"
     mp4_path = os.path.join(DIR_PATH, mp4_name + ".mp4")
 
     # download when missing
@@ -65,18 +66,23 @@ def test_mp42jpg(benchmarking=False):
                               name=mp4_name, ext="mp4")
 
     jpg_name = mp4_name
-    if not os.path.exists(jpg_name):
+    if not os.path.exists(os.path.join(DIR_PATH, jpg_name)):
+        os.makedirs(os.path.join(DIR_PATH, jpg_name))
+    else:
+        shutil.rmtree(os.path.join(DIR_PATH, jpg_name))
         os.makedirs(os.path.join(DIR_PATH, jpg_name))
     DST_DATAPOINT = DataPoint(root=DIR_PATH, reldir="",
                               name=jpg_name, ext="jpg")
 
     # convert
-    success = vid2seq(SRC_DATAPOINT, DST_DATAPOINT)
+    success = vid2seq(SRC_DATAPOINT, DST_DATAPOINT,
+                      transform=transform)
     assert success
 
     if benchmarking:
         # whole video loading time
-        benchmark_loadtime(SRC_DATAPOINT, DST_DATAPOINT)
+        benchmark_loadtime(SRC_DATAPOINT, DST_DATAPOINT,
+                           load_times=10)
         # subsampled video loading time
         print("2 frames")
         frame_sampler = RandomSegmentFrameSampler(2)
@@ -95,8 +101,8 @@ def test_mp42jpg(benchmarking=False):
     shutil.rmtree(DST_DATAPOINT.path)
 
 
-def test_mp42bmp(benchmarking=False):
-    mp4_name = "W5GWm_g9X1s_000095_000105"
+def test_mp42bmp(benchmarking=False, transform=None):
+    mp4_name = "klwBy72NyFc_000179_000189"
     mp4_path = os.path.join(DIR_PATH, mp4_name + ".mp4")
 
     # download when missing
@@ -110,19 +116,24 @@ def test_mp42bmp(benchmarking=False):
                               name=mp4_name, ext="mp4")
 
     bmp_name = mp4_name
-    if not os.path.exists(bmp_name):
+    if not os.path.exists(os.path.join(DIR_PATH, bmp_name)):
         os.makedirs(os.path.join(DIR_PATH, bmp_name))
+    else:
+        shutil.rmtree(os.path.join(DIR_PATH, bmp_name))
+        os.makedirs(os.path.join(DIR_PATH, bmp_name))
+
     DST_DATAPOINT = DataPoint(root=DIR_PATH, reldir="",
                               name=bmp_name, ext="jpg")
 
     # convert
-    success = vid2seq(SRC_DATAPOINT, DST_DATAPOINT)
+    success = vid2seq(SRC_DATAPOINT, DST_DATAPOINT,
+                      transform=transform)
     assert success
 
     if benchmarking:
         # whole video loading time
         benchmark_loadtime(SRC_DATAPOINT, DST_DATAPOINT,
-                           load_times=1)
+                           load_times=10)
         # subsampled video loading time
         print("2 frames")
         frame_sampler = RandomSegmentFrameSampler(2)
@@ -151,3 +162,9 @@ if __name__ == "__main__":
     print("Testing Mp4 -> bmp...")
     print("*" * 80)
     test_mp42bmp(benchmarking=True)
+
+    print("*" * 80)
+    print("Testing Mp4 -> Jpg with Transform...")
+    print("*" * 80)
+    transform = Resize(331)
+    test_mp42jpg(benchmarking=True, transform=transform)
