@@ -42,6 +42,9 @@ def get_norm_params(name, root, datapoints, worker_num, **kwargs):
     print("assembling tasks")
     tasks = []
     for datapoint in datapoints:
+        # change root
+        datapoint.root = root
+        datapoint._path = datapoint.path
         tasks.append({"datapoint": datapoint})
 
     print("lanuching jobs")
@@ -67,6 +70,9 @@ def get_norm_params(name, root, datapoints, worker_num, **kwargs):
     print("assembling tasks")
     tasks = []
     for datapoint in datapoints:
+        # change root
+        datapoint.root = root
+        datapoint._path = datapoint.path
         tasks.append({"datapoint": datapoint})
 
     print("lanuching jobs")
