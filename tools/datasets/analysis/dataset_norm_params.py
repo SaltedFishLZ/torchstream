@@ -1,4 +1,6 @@
-"""
+"""Get CV normalization parameters:
+channel-wise means
+channel-wise stds
 """
 import os
 import sys
@@ -7,7 +9,6 @@ import pickle
 import numpy as np
 import matplotlib.pyplot as plt
 
-
 from torchstream.datasets import analysis
 from torchstream.datasets.utils.mapreduce import Manager
 from torchstream.datasets.metadata.collect import collect_datapoints
@@ -15,6 +16,7 @@ from torchstream.datasets.metadata.collect import collect_datapoints
 FILE_PATH = os.path.realpath(__file__)
 DIR_PATH = os.path.dirname(__file__)
 ANALY_PATH = os.path.join(DIR_PATH, ".analyzed.d")
+
 
 def norm_params(name, samples, worker_num=80, **kwargs):
     """Normalization Parameters
