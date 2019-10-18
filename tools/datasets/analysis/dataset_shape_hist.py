@@ -5,6 +5,7 @@ import pickle
 import argparse
 
 import numpy as np
+import matplotlib
 import matplotlib.pyplot as plt
 
 from torchstream.io.analysis import datapoint_hxw
@@ -14,6 +15,8 @@ from torchstream.utils.mapreduce import Manager
 FILE_PATH = os.path.realpath(__file__)
 DIR_PATH = os.path.dirname(__file__)
 ANALY_PATH = os.path.join(DIR_PATH, ".analyzed.d")
+
+matplotlib.use("pdf")
 
 parser = argparse.ArgumentParser(description="Video Shape Histogram")
 parser.add_argument("root", type=str,
