@@ -2,7 +2,7 @@ import os
 
 from torchstream.utils.download import download
 from torchstream.io.datapoint import DataPoint
-from torchstream.io.analysis import datapoint_sum
+from torchstream.io.analysis import datapoint_hxw
 
 DOWNLOAD_SERVER_PREFIX = ("zhen@a18.millennium.berkeley.edu:"
                           "/home/eecs/zhen/video-acc/download/")
@@ -12,7 +12,7 @@ FILE_PATH = os.path.realpath(__file__)
 DIR_PATH = os.path.dirname(FILE_PATH)
 
 
-def test_datapoint_sum():
+def test_datapoint_hxw():
     mp4_name = "W5GWm_g9X1s_000095_000105"
     mp4_path = os.path.join(DIR_PATH, mp4_name + ".mp4")
 
@@ -26,8 +26,8 @@ def test_datapoint_sum():
     SRC_DATAPOINT = DataPoint(root=DIR_PATH, reldir="",
                               name=mp4_name, ext="mp4")
 
-    print(datapoint_sum(SRC_DATAPOINT))
+    print(datapoint_hxw(SRC_DATAPOINT))
 
 
 if __name__ == "__main__":
-    test_datapoint_sum()
+    test_datapoint_hxw()

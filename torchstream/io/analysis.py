@@ -171,13 +171,3 @@ def datapoint_hxw(datapoint, **kwargs):
         hxw = varray_hxw(varray)
 
     return hxw
-
-
-def test_datapoint_fps():
-    file_name = "Climbing_roof_in_TCA_climb_f_cm_np1_ba_med_2.avi"
-    datapoint = DataPoint(root="~/Datasets/HMDB51/HMDB51-avi/",
-                          rpath="climb/{}".format(file_name),
-                          name=file_name,
-                          ext="avi")
-    print(datapoint_fps(datapoint))
-
