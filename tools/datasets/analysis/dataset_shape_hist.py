@@ -56,7 +56,7 @@ def get_shape_hist(name, root, datapoints,
     print(nphist[1][0])
     print(nphist[1][1])
 
-    plt.hist2d(heights, widths, density=True)
+    plt.hist2d(heights, widths, normed=True)
 
     os.makedirs(ANALY_PATH, exist_ok=True)
     plt.savefig(os.path.join(ANALY_PATH,
@@ -70,6 +70,7 @@ if __name__ == "__main__":
     with open(args.datapoints, "rb") as fin:
         datapoints = pickle.load(fin)
 
-    get_shape_hist(root=args.root,
+    get_shape_hist(name=args.datapoints.split('/')[-1],
+                   root=args.root,
                    datapoints=datapoints,
                    worker_num=args.workers)
