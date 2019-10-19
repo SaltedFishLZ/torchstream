@@ -34,7 +34,7 @@ def dataset_vid2seq(name, src_datapoints, src_root, dst_root, dst_ext="jpg",
     """
     manager = Manager(name="converting dataset [{}]".format(name),
                       mapper=vid2seq,
-                      retries=10,
+                      retries=2,
                       **kwargs)
     manager.hire(worker_num=workers)
 

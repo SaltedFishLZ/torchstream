@@ -180,19 +180,26 @@ def vid2seq(src, dst, transform=None, **kwargs):
             success = ret[0]
             if success:
                 break
-            else:
-                fails += 1
+            fails += 1
     else:
         assert callable(transform), TypeError
         while fails <= retries:
             varray = video2ndarray(src_vid)
+            if varray is None:
+                fails += 1
+                continue
+
             varray = transform(varray)
+            if varray is None:
+                fails += 1
+                continue
+
             ret = ndarray2frames(varray, dst_seq)
             success = ret[0]
             if success:
                 break
-            else:
-                fails += 1        
+
+            fails += 1        
 
     return success
 
