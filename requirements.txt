@@ -5,7 +5,6 @@ torch==1.2.0
 torchvision==0.4.0
 opencv-python==3.4.5.20
 psutil
-pandas
 sklearn
 matplotlib==3.0.3
 
