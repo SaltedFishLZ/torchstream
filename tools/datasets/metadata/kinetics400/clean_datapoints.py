@@ -20,7 +20,7 @@ def remove_empty_videos(datapoints, root=None):
             datapoint._path = datapoint.path
 
         if datapoint.seq:
-            if len(datapoint.framepaths) == 300:
+            if len(datapoint.framepaths) > 31:
                 cleanpoints.append(datapoint)
             else:
                 print(datapoint)
@@ -28,7 +28,7 @@ def remove_empty_videos(datapoints, root=None):
             vpath = datapoint.path
             varray = backend.video2ndarray(vpath)
             t, h, w, c = varray.shape
-            if t == 300:
+            if t > 31:
                 cleanpoints.append(datapoint)
             else:
                 print(datapoint)
