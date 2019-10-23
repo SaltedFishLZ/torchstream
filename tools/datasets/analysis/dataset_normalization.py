@@ -20,7 +20,7 @@ parser = argparse.ArgumentParser(description="Video Pixel Normalization")
 parser.add_argument("root", type=str,
                     help="path to dataset root")
 parser.add_argument("datapoints", type=str,
-                    help="path to dataset root")
+                    help="path to datapoint file")
 parser.add_argument("--name", default=None, type=str,
                     help="histogram file name")
 parser.add_argument("--workers", default=32, type=int,
