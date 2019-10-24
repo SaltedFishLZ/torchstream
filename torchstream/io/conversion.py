@@ -15,7 +15,7 @@ from torchstream.transforms.functional import resize
 from . import __config__
 from .datapoint import DataPoint
 from .backends.opencv import video2ndarray, video2frames,\
-    frames2ndarray, ndarray2video
+    frames2ndarray, ndarray2video, ndarray2frames
 
 try:
     from subprocess import DEVNULL  # python 3.x
@@ -144,13 +144,14 @@ def vid2vid(src, dst, backend="ffmpeg", **kwargs):
     return success
 
 
-def vid2seq(src, dst, **kwargs):
+def vid2seq(src, dst, transform=None, **kwargs):
     """Video -> Image Sequence Conversion
     using io.backends to slicing videos
     Args:
         src (DataPoint): source video's meta-data
         dst (DataPoint): destination video's meta-data
     Optional:
+        transform (callale): varray transformation
         retries: retry number
     """
     if __config__.STRICT:
@@ -173,13 +174,33 @@ def vid2seq(src, dst, **kwargs):
     dst_seq = dst.path
     os.makedirs(dst_seq, exist_ok=True)
 
-    while fails <= retries:
-        ret = video2frames(src_vid, dst_seq)
-        success = ret[0]
-        if success:
-            break
-        else:
+    if transform is None:
+        while fails <= retries:
+            ret = video2frames(src_vid, dst_seq)
+            success = ret[0]
+            if success:
+                break
             fails += 1
+    else:
+        assert callable(transform), TypeError
+        while fails <= retries:
+            varray = video2ndarray(src_vid)
+            if varray is None:
+                fails += 1
+                continue
+
+            varray = transform(varray)
+            if varray is None:
+                fails += 1
+                continue
+
+            ret = ndarray2frames(varray, dst_seq)
+            success = ret[0]
+            if success:
+                break
+
+            fails += 1        
+
     return success
 
 

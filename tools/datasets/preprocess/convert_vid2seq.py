@@ -10,6 +10,7 @@ import tqdm
 from torchstream.io.conversion import vid2seq
 from torchstream.io.datapoint import DataPoint
 from torchstream.io.__support__ import SUPPORTED_IMAGES
+from torchstream.transforms import Resize
 from torchstream.utils.mapreduce import Manager
 
 parser = argparse.ArgumentParser(description="Convert Dataset (vid2seq)")
@@ -22,15 +23,18 @@ parser.add_argument("dst_root", type=str, help="destination dataset root")
 parser.add_argument("--dst_ext", type=str, default="jpg",
                     help="destination dataset image sequence file extension")
 parser.add_argument("--workers", type=int, default=32, help="worker number")
+parser.add_argument("--downsample", type=int, default=-1,
+                    help="downsampled spatial resolution, equals to min(H, W)\
+                        , negative means no downsample")
 
 
 def dataset_vid2seq(name, src_datapoints, src_root, dst_root, dst_ext="jpg",
-                    workers=16, **kwargs):
+                    workers=16, transform=None, **kwargs):
     """slicing video files into frames
     """
     manager = Manager(name="converting dataset [{}]".format(name),
                       mapper=vid2seq,
-                      retries=10,
+                      retries=2,
                       **kwargs)
     manager.hire(worker_num=workers)
 
@@ -49,7 +53,7 @@ def dataset_vid2seq(name, src_datapoints, src_root, dst_root, dst_ext="jpg",
         os.makedirs(dst._path)
         dst._seq = dst.seq
         dst_datapoints.append(dst)
-        tasks.append({"src": src, "dst": dst})
+        tasks.append({"src": src, "dst": dst, "transform": transform})
 
     successes = manager.launch(tasks=tasks, progress=True)
 
@@ -71,6 +75,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     assert args.dst_ext in SUPPORTED_IMAGES["RGB"], \
         NotImplementedError("Unknown dst_ext [{}]".format(args.dst_ext))
+
     # test permission first to save time
     test_write_content = [0, 1, 2]
     if args.dst_dp_path is not None:
@@ -83,13 +88,19 @@ if __name__ == "__main__":
     assert isinstance(src_datapoints, list), TypeError
     assert isinstance(src_datapoints[0], DataPoint), TypeError
 
+    transform = None
+    if args.downsample > 0:
+        # TODO make threshold an argument
+        transform = Resize(args.downsample, threshold=720)
+
     successes, dst_datapoints = dataset_vid2seq(
         name=src_datapoints[0].root,
         src_datapoints=src_datapoints,
         src_root=args.src_root,
         dst_root=args.dst_root,
         dst_ext=args.dst_ext,
-        workers=args.workers
+        workers=args.workers,
+        transform=transform
     )
 
     failures = 0

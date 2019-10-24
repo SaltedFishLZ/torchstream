@@ -31,7 +31,7 @@
     "train_dataset": {
         "name": "Kinetics400",
         "argv": {
-            "root": "~/Datasets/Kinetics/Kinetics-400-jpg",
+            "root": "~/Datasets/Kinetics/Kinetics-400-jpg-downsampled",
             "ext": "jpg",
             "train": true
         }
@@ -74,7 +74,7 @@
     "val_dataset": {
         "name": "Kinetics400",
         "argv": {
-            "root": "~/Datasets/Kinetics/Kinetics-400-jpg",
+            "root": "~/Datasets/Kinetics/Kinetics-400-jpg-downsampled",
             "ext": "jpg",
             "train": false
         }
