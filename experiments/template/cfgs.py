@@ -83,6 +83,13 @@ def config2dataset(cfg):
     else:
         dataset = dataset_class()
 
+    if "holdout" in cfg:
+        holdout = cfg["holdout"]
+        path = holdout["path"]
+        remove = holdout["remove"]
+        holdout_index = torch.load(path)
+        dataset.holdout(holdout_index, remove=remove)
+
     return dataset
 
 

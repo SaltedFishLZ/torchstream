@@ -2,3 +2,5 @@
 
 per-file-ignores =
     tools/datasets/metadata/kinetics400/make_dataset.py: E501
+    */resnet.py: E501
+    *.py: E501

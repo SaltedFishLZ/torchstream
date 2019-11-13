@@ -1,0 +1,69 @@
+{
+    "test_transforms": [
+        {
+            "name": "Resize",
+            "argv": {
+                "size": [128, 171]
+            }
+        },
+        {
+            "name": "CenterCrop",
+            "argv": {
+                "size": [112, 112]
+            }
+        },
+        {
+            "package": "torchstream.transforms",
+            "name": "ToTensor"  
+        },
+        {
+            "package": "torchstream.transforms",
+            "name": "Normalize" ,
+            "argv": {
+                "mean": [0.43216, 0.394666, 0.37645],
+                "std": [0.22803, 0.22145, 0.216989]
+            }
+        }
+    ],
+
+    "test_frame_sampler": {
+        "name": "CenterSegmentFrameSampler",
+        "argv": {
+            "size": 16
+        }
+    },
+
+    "test_dataset": {
+        "name": "Kinetics400",
+        "argv": {
+            "root": "~/Datasets/Kinetics/Kinetics-400-jpg",
+            "ext": "jpg",
+            "train": true
+        },
+	"holdout": {
+	    "path": "kinetics400-jpg.holdout",
+	    "remove": false
+	}
+    },
+
+    "test_loader":{
+        "batch_size": 64,
+        "num_workers": 32,
+        "shuffle": false,
+        "pin_memory": true,
+        "drop_last": false
+    },
+
+    "model": {
+        "package": "torchstream.models",
+        "name": "r2plus1d18",
+        "argv": {
+            "num_classes": 400
+        }
+    },
+
+    "criterion": {
+        "name": "CrossEntropyLoss"
+    }
+
+}
