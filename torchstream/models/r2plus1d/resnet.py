@@ -6,10 +6,10 @@ import torch.nn as nn
 from torchstream.models.utils import load_state_dict_from_url
 
 
-__all__ = ['r2plus1d_18']
+__all__ = ['r2plus1d18']
 
 model_urls = {
-    'r2plus1d_18': 'https://download.pytorch.org/models/r2plus1d_18-91a641e6.pth',
+    'r2plus1d18': 'https://download.pytorch.org/models/r2plus1d_18-91a641e6.pth',
 }
 
 
@@ -237,7 +237,7 @@ def _video_resnet(arch, pretrained=False, progress=True, **kwargs):
     return model
 
 
-def r2plus1d_18(pretrained=False, progress=True, **kwargs):
+def r2plus1d18(pretrained=False, progress=True, **kwargs):
     """Constructor for the 18 layer deep R(2+1)D network as in
     https://arxiv.org/abs/1711.11248
     Args:
@@ -246,7 +246,7 @@ def r2plus1d_18(pretrained=False, progress=True, **kwargs):
     Returns:
         nn.Module: R(2+1)D-18 network
     """
-    return _video_resnet('r2plus1d_18',
+    return _video_resnet('r2plus1d18',
                          pretrained, progress,
                          block=BasicBlock,
                          conv_makers=[Conv2Plus1D] * 4,
