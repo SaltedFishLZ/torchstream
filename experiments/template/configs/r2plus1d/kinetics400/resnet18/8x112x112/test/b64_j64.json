@@ -9,7 +9,7 @@
         {
             "name": "CenterCrop",
             "argv": {
-                "size": [224, 224]
+                "size": [112, 112]
             }
         },
         {
