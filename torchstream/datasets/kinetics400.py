@@ -1,5 +1,6 @@
 import os
 import pickle
+import random
 import collections
 
 from .vision import VisionDataset
@@ -34,6 +35,7 @@ class Kinetics400(VisionDataset):
         super(Kinetics400, self).__init__(root=root,
                                           transform=transform,
                                           target_transform=target_transform)
+        self.train = train
 
         self.frame_sampler = None
         if frame_sampler is not None:
@@ -115,3 +117,28 @@ class Kinetics400(VisionDataset):
             target = self.target_transform(target)
 
         return varray, target
+
+    def gen_index(self, num):
+        """generate indices
+        Args:
+            num (int), number of datapoints
+        """
+        assert self.train, ValueError("training set only")
+        total = len(self.datapoints)
+        index = random.sample(range(total), num)
+        index.sort()
+        return index
+
+    def holdout(self, index, remove=True):
+        """
+        Args:
+            index (list), index datapoints needs to be removed/perserved
+                only valid for training set
+        """
+        assert self.train, ValueError("training set only")
+        new_points = []
+        for _idx, _dp in enumerate(self.datapoints):
+            hit = _idx in index
+            if hit ^ remove:
+                new_points.append(_dp)
+        self.datapoints = new_points

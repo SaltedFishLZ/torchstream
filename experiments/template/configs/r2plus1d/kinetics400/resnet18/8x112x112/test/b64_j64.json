@@ -54,7 +54,6 @@
         "package": "torchstream.models",
         "name": "r2plus1d18",
         "argv": {
-            "pretrained": true,
             "num_classes": 400
         }
     },
