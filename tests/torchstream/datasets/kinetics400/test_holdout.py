@@ -34,8 +34,7 @@ def test_kinetics400(ext="jpg", train=False,
     print("{} set length".format("training" if train else "validation"))
     print(dataset.__len__())
 
-    holdout_index = dataset.gen_index(10000)
-    print(holdout_index)
+    holdout_index = dataset.gen_index(5000)
     torch.save(holdout_index, "kinetics400-{}.holdout".format(ext))
 
     dataset.holdout(holdout_index, remove=True)
@@ -43,12 +42,6 @@ def test_kinetics400(ext="jpg", train=False,
 
 
 if __name__ == "__main__":
-    print("*" * 80)
-    print("JPG, Split 1, Val, FrameSampler(8)")
-    print("*" * 80)
-    test_kinetics400(ext="jpg", test_frame_sampler=True)
-
-    print("*" * 80)
     print("JPG, Split 1, Train, FrameSampler(8)")
     print("*" * 80)
     test_kinetics400(ext="jpg", test_frame_sampler=True, train=True)

@@ -38,8 +38,12 @@
         "argv": {
             "root": "~/Datasets/Kinetics/Kinetics-400-jpg",
             "ext": "jpg",
-            "train": false
-        }
+            "train": true
+        },
+	"holdout": {
+	    "path": "kinetics400-jpg.holdout",
+	    "remove": false
+	}
     },
 
     "test_loader":{

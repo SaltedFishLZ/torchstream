@@ -136,6 +136,7 @@ class Kinetics400(VisionDataset):
                 only valid for training set
         """
         assert self.train, ValueError("training set only")
+        index = set(index)
         new_points = []
         for _idx, _dp in enumerate(self.datapoints):
             hit = _idx in index
