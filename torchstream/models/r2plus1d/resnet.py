@@ -223,7 +223,7 @@ class VideoResNet(nn.Module):
         Args:
             state_dict: model state dict
         """
-        pass
+        raise NotImplementedError("channel size mismatch")
 
 
 
