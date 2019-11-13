@@ -1,37 +1,16 @@
+"""
+"""
 import torch
 import torch.nn as nn
 
-from ..utils import load_state_dict_from_url
+from torchstream.models.utils import load_state_dict_from_url
 
 
-__all__ = ['r3d_18', 'mc3_18', 'r2plus1d_18']
+__all__ = ['r2plus1d_18']
 
 model_urls = {
-    'r3d_18': 'https://download.pytorch.org/models/r3d_18-b3b3357e.pth',
-    'mc3_18': 'https://download.pytorch.org/models/mc3_18-a90a0ba3.pth',
     'r2plus1d_18': 'https://download.pytorch.org/models/r2plus1d_18-91a641e6.pth',
 }
-
-
-class Conv3DSimple(nn.Conv3d):
-    def __init__(self,
-                 in_planes,
-                 out_planes,
-                 midplanes=None,
-                 stride=1,
-                 padding=1):
-
-        super(Conv3DSimple, self).__init__(
-            in_channels=in_planes,
-            out_channels=out_planes,
-            kernel_size=(3, 3, 3),
-            stride=stride,
-            padding=padding,
-            bias=False)
-
-    @staticmethod
-    def get_downsample_stride(stride):
-        return (stride, stride, stride)
 
 
 class Conv2Plus1D(nn.Sequential):
@@ -55,28 +34,6 @@ class Conv2Plus1D(nn.Sequential):
     @staticmethod
     def get_downsample_stride(stride):
         return (stride, stride, stride)
-
-
-class Conv3DNoTemporal(nn.Conv3d):
-
-    def __init__(self,
-                 in_planes,
-                 out_planes,
-                 midplanes=None,
-                 stride=1,
-                 padding=1):
-
-        super(Conv3DNoTemporal, self).__init__(
-            in_channels=in_planes,
-            out_channels=out_planes,
-            kernel_size=(1, 3, 3),
-            stride=(1, stride, stride),
-            padding=(0, padding, padding),
-            bias=False)
-
-    @staticmethod
-    def get_downsample_stride(stride):
-        return (1, stride, stride)
 
 
 class BasicBlock(nn.Module):
@@ -159,17 +116,6 @@ class Bottleneck(nn.Module):
         out = self.relu(out)
 
         return out
-
-
-class BasicStem(nn.Sequential):
-    """The default conv-batchnorm-relu stem
-    """
-    def __init__(self):
-        super(BasicStem, self).__init__(
-            nn.Conv3d(3, 64, kernel_size=(3, 7, 7), stride=(1, 2, 2),
-                      padding=(1, 3, 3), bias=False),
-            nn.BatchNorm3d(64),
-            nn.ReLU(inplace=True))
 
 
 class R2Plus1dStem(nn.Sequential):
@@ -272,6 +218,14 @@ class VideoResNet(nn.Module):
                 nn.init.normal_(m.weight, 0, 0.01)
                 nn.init.constant_(m.bias, 0)
 
+    def load_state_dict_imagenet(state_dict):
+        """
+        Args:
+            state_dict: model state dict
+        """
+        pass
+
+
 
 def _video_resnet(arch, pretrained=False, progress=True, **kwargs):
     model = VideoResNet(**kwargs)
@@ -281,41 +235,6 @@ def _video_resnet(arch, pretrained=False, progress=True, **kwargs):
                                               progress=progress)
         model.load_state_dict(state_dict)
     return model
-
-
-def r3d_18(pretrained=False, progress=True, **kwargs):
-    """Construct 18 layer Resnet3D model as in
-    https://arxiv.org/abs/1711.11248
-    Args:
-        pretrained (bool): If True, returns a model pre-trained on Kinetics-400
-        progress (bool): If True, displays a progress bar of the download to stderr
-    Returns:
-        nn.Module: R3D-18 network
-    """
-
-    return _video_resnet('r3d_18',
-                         pretrained, progress,
-                         block=BasicBlock,
-                         conv_makers=[Conv3DSimple] * 4,
-                         layers=[2, 2, 2, 2],
-                         stem=BasicStem, **kwargs)
-
-
-def mc3_18(pretrained=False, progress=True, **kwargs):
-    """Constructor for 18 layer Mixed Convolution network as in
-    https://arxiv.org/abs/1711.11248
-    Args:
-        pretrained (bool): If True, returns a model pre-trained on Kinetics-400
-        progress (bool): If True, displays a progress bar of the download to stderr
-    Returns:
-        nn.Module: MC3 Network definition
-    """
-    return _video_resnet('mc3_18',
-                         pretrained, progress,
-                         block=BasicBlock,
-                         conv_makers=[Conv3DSimple] + [Conv3DNoTemporal] * 3,
-                         layers=[2, 2, 2, 2],
-                         stem=BasicStem, **kwargs)
 
 
 def r2plus1d_18(pretrained=False, progress=True, **kwargs):
